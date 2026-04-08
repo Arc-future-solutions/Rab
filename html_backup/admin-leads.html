@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Leads — RAB CONSULTING</title>
+<meta name="description" content="RAB Assessment Platform front-end package"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/styles.css"/>
+</head><body>
+<header class="topbar"><div class="container nav">
+  <a class="brand" href="index.html"><img class="brand-logo" src="assets/images/logo-rab.png" alt="RAB Consulting logo">
+  <span class="brand-text"><strong>RAB CONSULTING</strong><span>ASSESSMENT PLATFORM</span></span></a>
+  <nav class="nav-links"><a data-nav href="about.html">About</a><a data-nav href="services.html">Services</a><a data-nav href="programme-health-check.html">Programme Health Check</a><a data-nav href="service-health-check.html">Service Health Check</a><a data-nav href="pricing.html">Pricing</a><a data-nav href="rapid-consulting.html">Rapid Consulting</a><a data-nav href="contact.html">Contact</a></nav>
+  <div style="display:flex;gap:12px;align-items:center;">
+    <button class="btn ghost menu-toggle" data-menu-toggle>Menu</button>
+    <a class="nav-cta" href="admin-dashboard.html">Open portal preview</a>
+  </div>
+</div></header>
+
+<section class="section">
+  <div class="container portal-shell">
+    <aside class="sidebar">
+      <div class="sidebar-card">
+        <div class="badge">Internal Portal</div>
+        <h3 style="margin-top:10px;">RAB Assessment Operations</h3>
+        <p class="subtle">Shared workspace for Admin, Assessor, Reviewer and optional Client Viewer.</p>
+      </div>
+      <div class="sidebar-card"><div class="sidebar-nav"><a data-nav href="admin-dashboard.html">Dashboard</a><a data-nav href="admin-leads.html">Leads</a><a data-nav href="admin-clients.html">Clients</a><a data-nav href="admin-assessments.html">Assessments</a><a data-nav href="admin-reports.html">Reports</a><a data-nav href="admin-ai-prompts.html">AI Prompts</a><a data-nav href="admin-settings.html">Settings</a></div></div>
+    </aside>
+    <main class="content-stack">
+      <div class="panel" style="padding:24px;"><div class="badge">Leads</div><h2>Lead triage, tagging, scoring review and conversion workspace.</h2></div>
+      
+<div class="filter-bar" style="padding:18px;"><div class="toolbar"><div class="actions"><span class="tab active">All</span><span class="tab">PHI</span><span class="tab">ITSM</span><span class="tab">High Priority</span></div><div class="actions"><button class="btn ghost">Export CSV</button><button class="btn secondary">Create client</button></div></div></div>
+<div class="table-card"><table><thead><tr><th>Company</th><th>Subject</th><th>Assessment</th><th>Score</th><th>RAG</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td>Atlas Manufacturing</td><td>Atlas ERP Programme</td><td>Programme Health Check</td><td>2.6</td><td class="rag-amber">Amber</td><td><a href="assessment-phi-detail.html">Open</a></td></tr>
+<tr><td>NorthOps</td><td>Service Desk</td><td>Service Health Check</td><td>2.3</td><td class="rag-red">Red</td><td><a href="assessment-itsm-detail.html">Open</a></td></tr>
+<tr><td>Delta Retail</td><td>Rollout Wave 2</td><td>Programme Health Check</td><td>4.0</td><td class="rag-green">Green</td><td><a href="quote-request.html">Convert</a></td></tr>
+</tbody></table></div>
+
+    </main>
+  </div>
+</section>
+
+<footer class="footer"><div class="container">
+  <div class="footer-grid">
+    <div>
+      <div class="brand" style="margin-bottom:16px;"><img class="brand-logo" src="assets/images/logo-rab.png" alt="RAB Consulting logo">
+      <span class="brand-text"><strong>RAB CONSULTING</strong><span>ASSESSMENT PLATFORM</span></span></div>
+      <p>Unified front-end for Programme Health Check, Service Health Check, full consultant-led assessments, reporting workflows and internal review operations.</p>
+    </div>
+    <div><h4>Public Pages</h4><div class="footer-links">
+      <a href="programme-health-check.html">Programme Health Check</a>
+      <a href="service-health-check.html">Service Health Check</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="rapid-consulting.html">Rapid Consulting</a>
+    </div></div>
+    <div><h4>Portal</h4><div class="footer-links">
+      <a href="admin-dashboard.html">Dashboard</a>
+      <a href="admin-leads.html">Leads</a>
+      <a href="admin-assessments.html">Assessments</a>
+      <a href="admin-reports.html">Reports</a>
+    </div></div>
+    <div><h4>Legal</h4><div class="footer-links">
+      <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="terms.html">Terms</a>
+    </div></div>
+  </div>
+  <div class="footer-bottom"><span>© 2026 RAB Consulting Services</span><span>Front-end build aligned to PHI and ITSM-HI platform structure.</span></div>
+</div></footer>
+<script src="assets/js/main.js"></script>
+</body></html>
