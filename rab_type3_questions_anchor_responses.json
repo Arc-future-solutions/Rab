@@ -1,0 +1,3336 @@
+{
+  "source_document": "RAB Type3 Complete Reference.docx",
+  "total_questions": 87,
+  "sections": [
+    {
+      "name": "PIR Snapshot",
+      "count": 8,
+      "questions": [
+        {
+          "id": "P1.S2",
+          "framework": "PIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P1",
+          "area_name": null,
+          "question": "When was the last programme risk or issue formally escalated to the Executive Sponsor for a decision — and how quickly was it resolved?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "I cannot recall a specific escalation to the Executive Sponsor, or none have occurred."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "One or two examples but they were handled informally or took an excessive amount of time."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "I can recall a specific escalation but the resolution timeline was slow or the outcome was not clearly documented."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Regular formal escalations with named decisions and documented outcomes, resolved within a reasonable timeframe."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Consistent pattern of formal escalation, decisions made promptly by the sponsor, outcomes documented and communicated."
+            }
+          ]
+        },
+        {
+          "id": "P2.S2",
+          "framework": "PIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P2",
+          "area_name": null,
+          "question": "Does the current delivery stage have formally defined exit criteria — with a named sign-off authority and a tracked process for managing exceptions?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal exit criteria exist. Stages are completed when the project manager decides."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Criteria exist informally but are not documented or consistently applied."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Criteria are documented but exceptions are managed verbally with no formal tracking."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Criteria are defined, sign-off authority is named, and most exceptions are formally tracked."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Criteria defined from initiation, named sign-off authority, exception register maintained and reviewed at every SteerCo."
+            }
+          ]
+        },
+        {
+          "id": "P3.S1",
+          "framework": "PIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P3",
+          "area_name": null,
+          "question": "Were the business success criteria defined and baselined before the solution was selected — and is there a named business leader accountable for delivering each one after go-live?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No. Success criteria were defined after solution selection, or no named business owner exists."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Criteria exist but were defined after the solution was chosen, or ownership is unclear."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Criteria exist and are broadly owned but the sequence or accountability is not formally confirmed."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Criteria defined before selection, named owners confirmed, though not all are formally documented."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Criteria documented pre-selection, baselined, named business owner for each confirmed in writing."
+            }
+          ]
+        },
+        {
+          "id": "P4.S2",
+          "framework": "PIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P4",
+          "area_name": null,
+          "question": "What would happen to adoption confidence if the two most engaged business champions left the programme today — has the programme built institutional change capability rather than personal dependency?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Adoption momentum would collapse. Everything depends on one or two named individuals with no network or plan behind them."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Significant impact. Some dependency exists and there is no formal change network or documented adoption plan."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Moderate impact. A partial network exists but the programme has not fully transferred change capability to the business."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Limited impact. A change champion network is in place and the adoption plan is documented independently of individuals."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Minimal impact. Change capability is fully embedded in business teams and does not depend on specific individuals."
+            }
+          ]
+        },
+        {
+          "id": "P5.S1",
+          "framework": "PIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P5",
+          "area_name": null,
+          "question": "Has a formal data quality assessment been completed — with results reviewed by the named data owner and a remediation plan actively tracked?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal data quality assessment has been completed."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "An assessment has been started but results have not been reviewed or acted upon."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Assessment completed but not reviewed by the business data owner, or remediation is not formally tracked."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Assessment completed, results reviewed by data owner, remediation plan exists with named owners."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Full profiling completed, results formally accepted by business data owner, remediation tracked weekly with confirmed completion date."
+            }
+          ]
+        },
+        {
+          "id": "P6.S2",
+          "framework": "PIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P6",
+          "area_name": null,
+          "question": "If an independent reviewer examined the UAT evidence pack today — what would they find regarding defect logging, severity triage, re-test evidence, and formal business sign-off?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal defect register. Issues were resolved informally in the room with no audit trail."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A register exists but is incomplete. Many defects were resolved informally without being logged."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Register exists and most defects are logged, but re-test evidence and business sign-off are incomplete."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Most defects formally logged, triaged, and re-tested. Business sign-off present for the majority."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Every defect formally logged, triaged by severity, resolved, independently re-tested, and signed off by the business process owner."
+            }
+          ]
+        },
+        {
+          "id": "P7.S1",
+          "framework": "PIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P7",
+          "area_name": null,
+          "question": "If go-live began tonight and a critical data reconciliation failure was discovered at hour six — is there a tested rollback plan with agreed trigger criteria and a named individual authorised to invoke it?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "There is no rollback plan. If go-live fails the response will be entirely improvised."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A rollback has been discussed but nothing is documented, tested, or formally agreed."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A plan exists on paper but it has not been rehearsed and trigger criteria are not formally defined."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "A rollback plan exists and trigger criteria are agreed, but it has not been formally rehearsed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Rollback plan documented, rehearsed, trigger criteria agreed with the Executive Sponsor, and a named individual is authorised to invoke it."
+            }
+          ]
+        },
+        {
+          "id": "P8.S1",
+          "framework": "PIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P8",
+          "area_name": null,
+          "question": "Have there been key role changes in the programme team in the last 90 days — and if so, was each change formally managed with a documented handover and no knowledge loss?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Two or more key roles changed with no formal handover. Significant knowledge has been lost."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "One or more changes occurred and were handled informally. Some knowledge loss is evident."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Changes occurred and were partially managed, but handover documentation was incomplete."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Any changes were formally managed with documented handover. Minimal knowledge loss."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Full team stability in the last 90 days, or any single change was fully managed with no knowledge loss evidenced."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PIR Full Assessment",
+      "count": 36,
+      "questions": [
+        {
+          "id": "P1.F1",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P1",
+          "area_name": "Governance & Decision-Making",
+          "question": "When was the last item formally escalated to and decided by SteerCo — what was the decision, who made it, and how long did it take from escalation to resolution?",
+          "hidden_risk": "The escalation path exists on paper but is never used. Issues accumulate in the RAID log without resolution.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "I cannot identify a specific recent escalation to SteerCo, or no formal escalations have taken place."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "One example exists but the decision was delayed, deferred, or made informally outside the governance forum."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "I can recall a specific escalation but the resolution timeline was excessive or the decision was not clearly documented in SteerCo minutes."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Regular escalations with named decisions recorded in SteerCo minutes, resolved within a reasonable but not optimal timeframe."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Consistent pattern of formal escalation to SteerCo, decisions made promptly with documented outcomes, resolution within agreed SLA, evidence available in minutes."
+            }
+          ]
+        },
+        {
+          "id": "P1.F5",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P1",
+          "area_name": "Governance & Decision-Making",
+          "question": "What is the RACI for the three most critical programme decisions currently outstanding — who is Responsible, Accountable, Consulted, and Informed — and when was the programme RACI last reviewed and confirmed?",
+          "hidden_risk": "RACI exists from mobilisation and has never been updated. Accountability for current-stage decisions is unclear.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No RACI exists or the one that exists predates the current programme structure and has never been updated."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A RACI exists but has not been reviewed in over six months and does not reflect current roles or stage."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A RACI exists and is broadly current but has not been formally reviewed and confirmed by workstream leads in the last 90 days."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "RACI is current, reviewed within the last 90 days, and confirmed by most workstream leads."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "RACI is current, reviewed within the last 90 days, confirmed by all workstream leads, accessible to the programme team, and referenced in governance decisions."
+            }
+          ]
+        },
+        {
+          "id": "P2.F2",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P2",
+          "area_name": "Planning, Stage Gates & Delivery Control",
+          "question": "How many High and Critical RAID items are currently open — what is the average age of those items, who owns each one, and when is the next formal review?",
+          "hidden_risk": "RAID items roll forward week after week. The log is a historical record not a management tool.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "High and Critical items are open with no named owners. Items have been carried for months without review or resolution."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Items have named owners but average age exceeds 30 days and formal review cadence is absent or inconsistent."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Items have owners and are reviewed, but average age is 14–30 days and some items lack clear resolution timelines."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Most High and Critical items have named owners and active resolution dates. Formal weekly review takes place."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Every High and Critical item has a named owner, a current resolution date, and is formally reviewed weekly with documented outcomes. Average age below 14 days."
+            }
+          ]
+        },
+        {
+          "id": "P2.F5",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P2",
+          "area_name": "Planning, Stage Gates & Delivery Control",
+          "question": "What are the milestone exit criteria for the current and next delivery phase — where are they documented, who has sign-off authority, and what exceptions are currently open and being tracked?",
+          "hidden_risk": "Milestones are met by redefining them. Phase completion is declared without the work being done.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal exit criteria exist for the current or next phase. Milestones are declared complete when the project manager decides."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Criteria exist informally but are not formally documented and sign-off authority is not named."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Criteria are documented for the current phase but not the next. Exceptions exist but are not formally tracked."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Criteria documented for both phases, sign-off authority named, exceptions tracked but not consistently reviewed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Exit criteria formally documented for current and next phase from initiation. Named sign-off authority. Exception register maintained and reviewed at every SteerCo."
+            }
+          ]
+        },
+        {
+          "id": "P2.F8",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P2",
+          "area_name": "Planning, Stage Gates & Delivery Control",
+          "question": "What are the formal exit criteria for the current delivery stage — where are they documented, who owns sign-off authority, and what is the status of all exceptions currently approved to proceed despite not fully meeting criteria?",
+          "hidden_risk": "Programmes move between stages on schedule pressure not readiness. Exceptions are approved verbally and never tracked.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No stage gate criteria exist. The programme moves between stages when the project manager decides."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Criteria exist informally. Exceptions have been approved verbally with no register or tracking."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Criteria documented. Some exceptions formally logged but the register is not consistently maintained or reviewed."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Criteria defined, sign-off authority named, exception register exists and is reviewed at most SteerCo meetings."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Criteria defined from initiation. Named sign-off authority. Exception register maintained, reviewed at every SteerCo, and every exception has an owner and resolution date."
+            }
+          ]
+        },
+        {
+          "id": "P3.F1",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P3",
+          "area_name": "Business Alignment, Value & Financial Control",
+          "question": "Were the business KPIs and measurable success criteria for this programme defined and baselined before the solution was selected — and can the team produce documentary evidence of this sequence?",
+          "hidden_risk": "KPIs were reverse-engineered to justify a preferred solution. There is no baseline to measure against.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "KPIs were defined after the solution was selected. No baseline exists and no evidence of the sequence is available."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "KPIs exist but the sequence is unclear or they were created after solution selection without a formal baseline."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "KPIs exist and are broadly owned but documentary evidence of pre-selection definition and baselining is incomplete."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "KPIs were defined before solution selection with a baseline, but documentary evidence of the sequence is partially available."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "KPIs formally documented before solution selection, baselined, evidence of the complete sequence available on request."
+            }
+          ]
+        },
+        {
+          "id": "P3.F4",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P3",
+          "area_name": "Business Alignment, Value & Financial Control",
+          "question": "What was the last benefit tracking review — when did it happen, who attended, what was measured against baseline, and what actions resulted?",
+          "hidden_risk": "The benefits register exists but no one looks at it. Benefit delivery will not be measured after go-live.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No benefit review has ever taken place. The benefits register exists but has not been reviewed since it was created."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "One review has taken place but it was informal, not all benefit owners attended, and no documented actions resulted."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Reviews have taken place but the cadence is irregular, attendance is inconsistent, and actions are not systematically tracked."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Regular reviews with most benefit owners attending. Actuals measured against baseline. Most actions are tracked."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Monthly benefit reviews with all named benefit owners attending. Actuals measured against baseline every cycle. All actions documented and tracked to completion."
+            }
+          ]
+        },
+        {
+          "id": "P3.F6",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P3",
+          "area_name": "Business Alignment, Value & Financial Control",
+          "question": "What is the current forecast cost at completion — broken down by internal resource, SI fees, licence, infrastructure, and contingency remaining — and how does this compare to the approved business case?",
+          "hidden_risk": "Budget tracking is optimistic. Contingency consumption is not visible to leadership.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No detailed cost breakdown is available. The forecast at completion is not tracked against the business case."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A high-level forecast exists but it is not broken down by category and is not regularly reconciled against the business case."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Breakdown exists but is not current. Contingency drawdown is tracked but not clearly reported to leadership."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Monthly breakdown available by most categories. Reconciled against business case. Contingency position visible to leadership."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Full monthly breakdown by all categories. Actuals vs forecast per category. Contingency drawdown clearly reported. Board has full visibility of variance from approved business case."
+            }
+          ]
+        },
+        {
+          "id": "P3.F9",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P3",
+          "area_name": "Business Alignment, Value & Financial Control",
+          "question": "Has a technical debt assessment been completed for the solution architecture — identifying any shortcuts, workarounds, or compromises that will require significant rework within the next five years?",
+          "hidden_risk": "Technical debt accumulates silently during build under delivery pressure. The next upgrade project inherits compromised foundations.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No technical debt assessment has been conducted. Architectural shortcuts have not been formally identified or recorded."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Some architectural concerns have been noted informally but no formal assessment or acceptance process has taken place."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A partial assessment has been completed but not all areas have been reviewed and findings have not been formally accepted."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Assessment completed covering most of the solution. Key findings logged and most are either remediated or formally accepted."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Formal technical debt assessment completed at architecture governance level. All identified items either remediated or formally accepted with a remediation timeline."
+            }
+          ]
+        },
+        {
+          "id": "P3.F11",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P3",
+          "area_name": "Business Alignment, Value & Financial Control",
+          "question": "What regulatory obligations, legal requirements, and contractual commitments tied to this programme are formally documented, reflected in the delivery plan, and owned by a named individual?",
+          "hidden_risk": "Regulatory deadlines are not in the plan. The programme will breach something it did not know it was bound by.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal compliance register exists. Regulatory and contractual obligations have not been formally identified or documented."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Obligations are broadly known but not formally documented or reflected in the delivery plan."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A register exists covering most obligations but some are informally managed and not all have named owners."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Compliance register maintained covering all known obligations. Most are in the delivery plan. Named owners confirmed for the majority."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Comprehensive compliance register. All obligations in the delivery plan. Named owner for each. Reviewed with legal. No known gaps."
+            }
+          ]
+        },
+        {
+          "id": "P4.F1",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P4",
+          "area_name": "Change Management, Training & Adoption",
+          "question": "Has a structured change impact assessment been completed — identifying every group affected, the scale of impact on their daily working practices, and the specific interventions planned for each group?",
+          "hidden_risk": "Training has been designed without a formal impact assessment. Groups with the highest exposure have been underserved.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No change impact assessment has been completed. Training has been designed without knowing who is most affected."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A high-level assessment has been done but it does not identify specific groups or the scale of impact on daily working practices."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Assessment completed at a broad level. Some groups and impacts identified but interventions are not group-specific."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Full assessment completed for most groups. Impact quantified and interventions defined for the majority."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Comprehensive assessment completed. Every affected group identified, impact on daily working practices quantified, specific interventions defined and tracked for each."
+            }
+          ]
+        },
+        {
+          "id": "P4.F3",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P4",
+          "area_name": "Change Management, Training & Adoption",
+          "question": "Does a formal stakeholder engagement plan exist — covering all material groups, with named relationship owners and a communication cadence that has been followed — and when was it last updated?",
+          "hidden_risk": "Stakeholder engagement is informal and reactive. Key groups feel ignored and will resist at go-live.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal stakeholder engagement plan exists. Engagement is entirely ad hoc and reactive."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A plan exists but does not cover all material groups and has not been consistently followed."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Plan exists covering most groups. Named owners for most. Communication cadence defined but not consistently followed."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Plan current, covering all groups, with named owners. Broadly followed. Updated within the last 60 days."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Comprehensive plan covering all material groups with named relationship owners. Communication cadence defined and followed. Reviewed monthly. Evidence of two-way engagement."
+            }
+          ]
+        },
+        {
+          "id": "P4.F5",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P4",
+          "area_name": "Change Management, Training & Adoption",
+          "question": "What is the current training completion rate against plan — and what is the process for managing non-completion before go-live?",
+          "hidden_risk": "Low completion is not being escalated. Users will arrive at go-live undertrained.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Training completion is not tracked. No process exists for managing non-completion."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Completion is tracked but the rate is below target and non-completion is not being formally managed or escalated."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Completion tracked and reported. Rate is below target in some areas. An escalation process exists but is not consistently applied."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Completion tracked weekly. Rate is at or near target. Non-completion is escalated and actively managed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Completion tracked weekly at role level. Rate is at or above target across all groups. Non-completion is formally escalated with a documented resolution process and evidence of closure."
+            }
+          ]
+        },
+        {
+          "id": "P4.F8",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P4",
+          "area_name": "Change Management, Training & Adoption",
+          "question": "Which specific individuals, teams, or business units have been identified as resistance points — and what is the documented management plan for each?",
+          "hidden_risk": "Resistance is not surfaced in formal programme artefacts. The most resistant individuals will cause the most damage closest to go-live.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Resistance has not been formally identified. No individuals or groups are recorded in any stakeholder or risk document."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Resistance is known informally but has not been formally documented and no management plan exists."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Key resistance points have been identified and recorded in the stakeholder register but documented management plans are incomplete."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Named resistance points in the stakeholder register with documented management plans for most. Reviewed in the last 30 days."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "All named resistance points in the stakeholder register with a documented management plan for each. Reviewed monthly with evidence of active management."
+            }
+          ]
+        },
+        {
+          "id": "P5.F1",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P5",
+          "area_name": "Data Readiness, Migration & GDPR",
+          "question": "Is there a formally approved data migration strategy covering all data domains — including scope, approach, quality thresholds, reconciliation methodology, and named business data owners for each domain?",
+          "hidden_risk": "Data migration is planned at high level but the detailed strategy has not been approved. No named data owners means nobody is accountable.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No approved data migration strategy exists. Data domains have not been formally scoped and no business data owners are named."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A high-level migration approach exists but it does not cover all domains and has not been formally approved."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Strategy documented covering most domains but some lack quality thresholds or named business data owners and formal approval is incomplete."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Formally approved strategy covering all main domains. Named business data owner for most. Quality thresholds defined."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Fully approved strategy covering all data domains. Named business data owner for each confirmed in writing. Quality thresholds, reconciliation methodology, and approach all defined and approved."
+            }
+          ]
+        },
+        {
+          "id": "P5.F2",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P5",
+          "area_name": "Data Readiness, Migration & GDPR",
+          "question": "What percentage of critical data records passed the most recent data quality profile — and has this result been formally reviewed and accepted by the named business data owner for each domain?",
+          "hidden_risk": "Data cleansing has been delegated broadly to business teams with no tracking. Poor quality data discovered at go-live cannot be resolved in time.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal data quality profiling has been completed. Pass rates are unknown."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Profiling has been completed for some domains but results have not been reviewed by business data owners."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Profiling completed across most domains. Results available but formal review and acceptance by business data owners is incomplete."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Profiling completed across all domains. Results reviewed by most business data owners. Remediation plans in place for most failing areas."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Full profiling completed across all domains. Results formally reviewed and accepted by named business data owner for each. Remediation plan live with owners and confirmed completion dates."
+            }
+          ]
+        },
+        {
+          "id": "P5.F4",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P5",
+          "area_name": "Data Readiness, Migration & GDPR",
+          "question": "How many end-to-end mock migrations have been completed — what were the pass rates and reconciliation results for each — and have results been formally signed off by the business data owner?",
+          "hidden_risk": "No mock migration has been completed. The first real migration will be the go-live migration.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No mock migration has been completed or is currently planned."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A mock migration has been planned and scheduled but not yet executed."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "One mock migration has been completed but reconciliation results have not been formally reviewed or signed off."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "One mock migration completed with reconciliation results reviewed by business data owners. Findings have been actioned."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Two or more mock migrations completed. Reconciliation results for each formally signed off by business data owners. All findings actioned and evidenced."
+            }
+          ]
+        },
+        {
+          "id": "P5.F7",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P5",
+          "area_name": "Data Readiness, Migration & GDPR",
+          "question": "Is there a formally agreed data freeze plan — specifying when source system data will be locked, who has authority to approve exceptions, and how the business has been communicated?",
+          "hidden_risk": "No data freeze plan. Changes to source data during cutover will create irreconcilable discrepancies.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No data freeze plan exists. Source system lock-down has not been planned or discussed with the business."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A data freeze has been discussed but dates are not confirmed and no formal exceptions process has been agreed."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A freeze plan exists but has not been formally agreed with the business and the exceptions process is not defined."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Freeze plan agreed. Business communicated. Exceptions process defined. Formal approval not yet completed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Freeze plan formally agreed. Business confirmed. Exceptions process defined with named approval authority. Business has formally acknowledged the freeze schedule."
+            }
+          ]
+        },
+        {
+          "id": "P6.F1",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P6",
+          "area_name": "Solution, Process Fit & UAT",
+          "question": "Are business processes documented in both current-state and future-state — and do the future-state process designs accurately reflect what the solution will actually do?",
+          "hidden_risk": "Processes have been designed but not documented. The solution has evolved since design and nobody has updated the documentation.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No AS-IS or TO-BE process documentation exists. Processes are understood informally by the project team."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Documentation exists for some processes but coverage is incomplete and some areas have no documentation."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "AS-IS and TO-BE documentation exists for most processes but has not been reviewed for accuracy since design was completed."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Documentation covers all in-scope processes and has been reviewed within the last 90 days. Minor gaps remain."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Comprehensive AS-IS and TO-BE documentation for all in-scope processes. Current version reviewed within the last 90 days and confirmed as accurately reflecting the deployed solution."
+            }
+          ]
+        },
+        {
+          "id": "P6.F3",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P6",
+          "area_name": "Solution, Process Fit & UAT",
+          "question": "How many configuration change requests and development requests have been raised since design sign-off — and what is the cumulative cost and timeline impact of all approved changes?",
+          "hidden_risk": "Over-customisation is adding cost, extending timeline, and creating upgrade risk.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No change log exists. Volume of configuration and development changes since design sign-off is unknown."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A log exists but cumulative cost and timeline impact of approved changes has not been calculated or reported."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Log maintained and reviewed. Cumulative cost is tracked but has not been formally reported to SteerCo or leadership."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Change log current. Cumulative cost and timeline impact tracked and reported to SteerCo. Volume is within approved threshold."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Change log fully current. Cumulative cost, timeline impact, and upgrade risk of all approved changes reported to SteerCo. Volume within approved threshold with formal escalation for any change approaching the threshold."
+            }
+          ]
+        },
+        {
+          "id": "P6.F5",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P6",
+          "area_name": "Solution, Process Fit & UAT",
+          "question": "Have business process designs been formally signed off by the operational managers who will run those processes daily — with documented evidence of their acceptance?",
+          "hidden_risk": "Sign-offs came from project team members or proxies. Operational managers do not recognise the processes they are being handed.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Sign-off has come from project team members or proxies only. Operational managers have not been involved."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Some operational managers have been involved in sign-off but the majority of processes were signed off by project representatives."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Mixed sign-off. Approximately half of processes have been accepted by operational managers and half by project proxies."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Most processes signed off by operational managers. A small number still have proxy sign-off which is being addressed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "All in-scope processes formally signed off by named operational managers with documented evidence of their acceptance."
+            }
+          ]
+        },
+        {
+          "id": "P6.F9",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P6",
+          "area_name": "Solution, Process Fit & UAT",
+          "question": "When a defect is identified during UAT, what is the documented process — from initial capture to resolution and re-test sign-off — and is every defect formally logged regardless of how quickly it appears to be resolved?",
+          "hidden_risk": "Defects are resolved informally in the room by developers. No audit trail exists. Post go-live defects appear as new issues.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal defect logging process exists. Defects are resolved informally in the testing room with no record kept."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A defect register exists but is inconsistently used. Many defects are resolved verbally without being logged."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Defect register used for most issues. Some informal resolution still occurs. Re-test evidence and business sign-off are not consistently captured."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "All significant defects are formally logged and triaged. Re-test evidence captured for most. Business sign-off present for the majority."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Every defect formally logged regardless of severity or resolution speed. All defects triaged, resolved, independently re-tested, and signed off by the business process owner before UAT closure."
+            }
+          ]
+        },
+        {
+          "id": "P7.F1",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P7",
+          "area_name": "Cutover, Go-Live, Decommissioning & Archiving",
+          "question": "Has data migration been tested end-to-end in a non-production rehearsal environment — and have the results been formally reconciled and accepted by the business data owner for each domain?",
+          "hidden_risk": "Go-live will be the first real data migration. Errors discovered at cutover cannot be resolved in time.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No end-to-end data migration test has been conducted in a rehearsal environment."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A test has been planned and is scheduled but has not been executed."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Testing conducted but reconciliation results have not been formally reviewed or accepted by business data owners."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "End-to-end test completed. Reconciliation results reviewed by business data owners. Most findings actioned."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Full end-to-end test in rehearsal environment completed. Reconciliation results formally signed off by business data owner for every domain. All findings actioned and evidenced."
+            }
+          ]
+        },
+        {
+          "id": "P7.F3",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P7",
+          "area_name": "Cutover, Go-Live, Decommissioning & Archiving",
+          "question": "Is there a formally agreed data freeze plan specifying when source systems will be locked, who approves exceptions, and how the business has been communicated and confirmed?",
+          "hidden_risk": "No data freeze plan. Changes to source data during cutover will create irreconcilable discrepancies.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No data freeze plan exists."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A freeze has been discussed informally but dates are not confirmed and no exceptions process has been agreed."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A plan exists but has not been formally agreed with the business and the exceptions process is undefined."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Plan agreed. Business communicated. Exceptions process defined but formal business confirmation is still outstanding."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Plan formally agreed and confirmed by the business. Exceptions process defined with named approval authority. Business has formally acknowledged the freeze schedule."
+            }
+          ]
+        },
+        {
+          "id": "P7.F5",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P7",
+          "area_name": "Cutover, Go-Live, Decommissioning & Archiving",
+          "question": "For every role in the cutover runbook, is there a named individual — not a team — with confirmed availability for the cutover window and documented responsibilities?",
+          "hidden_risk": "Cutover RACI assigns roles to teams rather than individuals. During the event nobody knows who specifically owns each step.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Cutover runbook assigns roles to teams. No named individuals are confirmed for the cutover window."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Some roles have named individuals but significant gaps remain and availability has not been confirmed."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Most roles have named individuals. Availability has been discussed but not formally confirmed for all."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Named individuals for all roles with availability confirmed for most. A small number of gaps remain being addressed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Named individual for every role in the cutover runbook. Availability formally confirmed for the full cutover window. No team-level assignments remain."
+            }
+          ]
+        },
+        {
+          "id": "P7.F6",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P7",
+          "area_name": "Cutover, Go-Live, Decommissioning & Archiving",
+          "question": "Have all cutover dependencies — on third-party systems, data feeds, external parties, and infrastructure — been formally confirmed in writing with each party?",
+          "hidden_risk": "Dependencies on third parties have not been formally confirmed. A single unconfirmed dependency will halt the cutover event.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Cutover dependencies have not been formally identified. External parties are unaware of their role in the cutover."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Dependencies are known but confirmation from third parties and external partners has not been obtained."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Most dependencies are identified. Some confirmations received but gaps remain with key external parties."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "All dependencies identified and most confirmed in writing. Remaining confirmations are being actively pursued."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "All cutover dependencies confirmed in writing with every party. Evidence of confirmation is available. Escalation process agreed with each party if their commitment cannot be met."
+            }
+          ]
+        },
+        {
+          "id": "P7.F8",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P7",
+          "area_name": "Cutover, Go-Live, Decommissioning & Archiving",
+          "question": "Has at least one full end-to-end cutover rehearsal been completed — and have all findings been formally documented, actioned, and reflected in an updated runbook?",
+          "hidden_risk": "No rehearsal has been conducted. The team will discover its gaps during the real event.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No cutover rehearsal has been conducted or planned."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A rehearsal is planned and scheduled but has not yet taken place."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A partial rehearsal was conducted but it did not cover the full end-to-end sequence and findings were not formally documented."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "A full rehearsal was completed. Findings are documented. Most have been actioned and the runbook has been partially updated."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Full end-to-end rehearsal completed. All findings formally documented and actioned. Runbook updated and re-circulated. Team was debriefed on findings."
+            }
+          ]
+        },
+        {
+          "id": "P7.F12",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P7",
+          "area_name": "Cutover, Go-Live, Decommissioning & Archiving",
+          "question": "Is there a formally approved decommissioning plan for every legacy system being retired — covering data preservation, retirement sequencing, licence termination, and the conditions that must be met before permanent retirement?",
+          "hidden_risk": "Legacy systems are switched off on go-live day without a plan. Unresolved data and access requirements surface immediately post go-live.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No decommissioning plan exists. Legacy systems are expected to be switched off on go-live day without a formal plan."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Decommissioning has been discussed but nothing is formally documented or approved."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A high-level plan exists but retirement criteria, data preservation, and licence termination have not been formally defined."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "A plan exists with most elements defined. Data preservation is being addressed. Named owner confirmed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Fully approved decommissioning plan. Named owner. All retirement criteria defined. Data preservation confirmed with legal and compliance sign-off. Licence termination timeline confirmed."
+            }
+          ]
+        },
+        {
+          "id": "P7.F14",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P7",
+          "area_name": "Cutover, Go-Live, Decommissioning & Archiving",
+          "question": "Have all manual processes required during and immediately after cutover been documented, assigned to named individuals, and rehearsed — including offline transaction processing and manual reconciliation fallbacks?",
+          "hidden_risk": "Manual processes during cutover are assumed but not documented. When systems are unavailable teams improvise.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Manual processes during cutover have not been identified or documented."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Some manual processes have been identified but they are not formally documented or assigned to named individuals."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Manual processes are documented for most cutover activities but have not been rehearsed."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "All manual processes documented and assigned to named individuals. Most have been rehearsed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "All manual processes documented, assigned to named individuals, and rehearsed. Evidence of rehearsal is available."
+            }
+          ]
+        },
+        {
+          "id": "P7.F16",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P7",
+          "area_name": "Cutover, Go-Live, Decommissioning & Archiving",
+          "question": "What integration and non-functional tests have been executed at production-equivalent load — covering all system-to-system interfaces, API performance, data feed validation, and peak volume scenarios?",
+          "hidden_risk": "Integration testing passed informally. Nobody tested what happens at month-end volume or when a legacy feed sends a malformed record.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal integration or non-functional testing has been planned or executed."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Integration testing has taken place but not at production-equivalent load and not covering all interfaces."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Testing has been conducted covering most integration points but peak volume scenarios have not been tested."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "All integration points tested. Peak volume scenarios executed for most. Results reviewed but formal acceptance by both technical and business owners is incomplete."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "All integration points and peak volume scenarios tested at production-equivalent load. Results formally reviewed and accepted by both technical and business owners. Evidence available."
+            }
+          ]
+        },
+        {
+          "id": "P8.F2",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P8",
+          "area_name": "Delivery Capability, Security & RACI",
+          "question": "How many key programme roles changed in the last 90 days — covering Programme Director, PMO Lead, Technical Lead, and Workstream Leads — and was each change formally managed with a documented handover?",
+          "hidden_risk": "Churn in key roles is the clearest leading indicator of programme distress. Each change carries institutional knowledge loss.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Two or more key roles changed in the last 90 days with no formal handover process. Significant knowledge loss has occurred."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "One or more key role changes occurred and were handled informally. Some knowledge loss is evident in delivery quality."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Changes occurred and were partially managed but handover documentation was incomplete and some knowledge was lost."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Any changes in the last 90 days were managed with a documented handover. Minimal knowledge loss."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Full team stability in the last 90 days, or any single change was formally managed with a comprehensive documented handover and no knowledge loss evidenced."
+            }
+          ]
+        },
+        {
+          "id": "P8.F8",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P8",
+          "area_name": "Delivery Capability, Security & RACI",
+          "question": "What does the RACI specify for the three most critical programme decisions currently outstanding — and when was the programme RACI last formally reviewed and confirmed by workstream leads?",
+          "hidden_risk": "RACI exists from mobilisation and has never been updated. Accountability for current-stage decisions is unclear.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No RACI exists or it predates the current programme structure. Accountability for key decisions is unclear."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "RACI exists but has not been reviewed in over six months and does not reflect current roles or responsibilities."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "RACI exists and is broadly current but has not been formally reviewed and confirmed by workstream leads in the last 90 days."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "RACI reviewed and confirmed within the last 90 days by most workstream leads. Referenced in current governance decisions."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "RACI current, reviewed within 90 days, confirmed by all workstream leads, accessible to the full programme team, and consistently referenced in governance and escalation decisions."
+            }
+          ]
+        },
+        {
+          "id": "P9.F1",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P9",
+          "area_name": "Operational, Automation & Archiving Readiness",
+          "question": "Have IT operations and BAU support teams been formally involved in solution design decisions — and have they accepted and confirmed readiness to support the proposed operating model from Day 1?",
+          "hidden_risk": "IT operations are being handed a solution they had no part in designing. Day 1 support will be improvised.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "IT operations have had no involvement in solution design. They are not aware of the proposed operating model."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Operations have been informed of the solution but have not been involved in design decisions."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Operations have been consulted but have not formally accepted the support model and known gaps have not been addressed."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Operations have been formally involved in most design decisions and have broadly accepted the support model with minor known gaps."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Operations fully involved in solution design from the outset. Support model formally accepted and resourced. Operational readiness confirmed with evidence."
+            }
+          ]
+        },
+        {
+          "id": "P9.F5",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P9",
+          "area_name": "Operational, Automation & Archiving Readiness",
+          "question": "Has an AI readiness assessment been completed — covering skills, data quality, governance, and regulatory compliance — for any AI or intelligent automation capabilities planned in the post go-live roadmap?",
+          "hidden_risk": "AI is on the roadmap but the organisation lacks the skills, data quality, and governance framework to deploy it responsibly.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "AI is on the roadmap but no readiness assessment of any kind has been completed."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "AI readiness has been discussed but no formal assessment has been undertaken across any of the required dimensions."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A partial assessment has been completed covering technology availability but not skills, governance, or regulatory compliance."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Assessment completed across most dimensions. Gaps identified and a plan is being developed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Full readiness assessment completed covering skills, data quality, governance, and regulatory compliance. Gaps formally addressed. Phased implementation plan funded and owned."
+            }
+          ]
+        },
+        {
+          "id": "P10.F1",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P10",
+          "area_name": "Digital & Transformation Maturity",
+          "question": "When was the organisation's digital strategy last formally reviewed and updated — and does it actively inform decisions being made in this programme today?",
+          "hidden_risk": "The digital strategy exists to satisfy governance not to guide decisions. It was written years ago.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No digital strategy exists, or the most recent version is more than three years old and has not been reviewed."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A digital strategy exists but was last reviewed more than 18 months ago and is not referenced in programme decisions."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Strategy exists and has been reviewed within 18 months but is not consistently referenced in or influencing programme decisions."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Strategy reviewed within 18 months and is referenced in some programme decisions. Evidence of influence is partial."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Strategy reviewed within the last 18 months, actively referenced in programme decisions, and evidence of its influence on design and technology choices is available."
+            }
+          ]
+        },
+        {
+          "id": "P10.F4",
+          "framework": "PIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "pillar",
+          "area_code": "P10",
+          "area_name": "Digital & Transformation Maturity",
+          "question": "Are 90-day post go-live adoption targets formally defined as measurable success criteria — with a named business owner, a tracking mechanism, and board-level reporting — confirming that success is measured beyond the go-live date?",
+          "hidden_risk": "The programme defines success as system availability on Day 1. Actual value depends on adoption that no one is tracking.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Success is defined as the go-live date only. No adoption targets exist and no business owner has been named."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Adoption has been discussed but no formal targets, business owner, or tracking mechanism has been confirmed."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Adoption targets are being developed but have not been formally confirmed, owned, or connected to a tracking mechanism."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Adoption targets defined and a named business owner confirmed. Tracking mechanism is being established."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "90-day adoption targets formally confirmed, named business owner in place, tracking mechanism live, and board-level reporting of adoption is scheduled."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SIR Snapshot",
+      "count": 13,
+      "questions": [
+        {
+          "id": "D1.S1",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D1",
+          "area_name": null,
+          "question": "Who is the named service owner accountable for service outcomes — and when did they last make a documented decision about service priorities or improvement investment?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "There is no named service owner. Accountability is diffused across multiple people or teams."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A name exists on a chart but the person is not actively accountable for service outcomes."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A named owner exists and attends reviews, but cannot demonstrate recent decisions or interventions."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Named owner, actively engaged, with evidence of decisions made in the last quarter."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Named owner, fully accountable, evidence of regular decisions on priorities and investment in the last quarter."
+            }
+          ]
+        },
+        {
+          "id": "D2.S1",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D2",
+          "area_name": null,
+          "question": "Is P1 and P2 incident volume trending upward, flat, or downward over the last quarter — and has the most recent P1 post-incident review been completed with all actions tracked to closure?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Volume is rising and there is no post-incident review process. Nothing is being learnt."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Volume is flat or rising. Post-incident reviews are written but actions are not tracked to closure."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Volume is broadly flat. Reviews are written but action completion is inconsistent."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Volume is stable or declining. Most PIR actions are tracked and closed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Volume is declining. Every P1 PIR is completed. All actions are closed or in tracked remediation with evidence."
+            }
+          ]
+        },
+        {
+          "id": "D3.S2",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D3",
+          "area_name": null,
+          "question": "When a standard service request arrives — is there a documented process that every agent follows regardless of who receives it?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No documented processes exist. Fulfilment depends entirely on individual knowledge and experience."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Processes exist for some request types but most are handled by individual judgement."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Processes are documented but inconsistently followed. Quality varies by agent."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Documented processes for all standard requests. Followed consistently by most agents."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "All standard requests follow documented processes. Quality is monitored. Evidence of consistent application."
+            }
+          ]
+        },
+        {
+          "id": "D4.S1",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D4",
+          "area_name": null,
+          "question": "How many problems were formally opened and closed in the last 30 days — and what is the oldest open item in the Known Error Database?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No active problem management. The KEDB is not maintained or does not exist."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Some problem records exist but are not actively managed. The KEDB has aged items with no justification."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Problem management is active but inconsistent. Some items remain open beyond 90 days without a documented reason."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Active problem management with named owners. No items over 90 days without a documented approved deferral reason."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Rigorous problem management. Regular reviews. All items have named owners and resolution dates. Measurable reduction in repeat incidents."
+            }
+          ]
+        },
+        {
+          "id": "D5.S1",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D5",
+          "area_name": null,
+          "question": "What was the change failure rate over the last quarter — and does the incident data confirm that failed changes are not a regular source of service incidents?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Failure rate above 15% or changes are regularly causing incidents. No root cause analysis conducted."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Elevated failure rate. Changes are occasionally causing incidents. Limited root cause work."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Failure rate is tracked but improvement is not consistent. Some change-related incidents remain."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Failure rate is below 10% and declining. Change-related incidents are rare."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Failure rate below 5% and declining. Root cause analysis on every failure. Incident correlation confirmed."
+            }
+          ]
+        },
+        {
+          "id": "D5.S2",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D5",
+          "area_name": null,
+          "question": "What percentage of changes in the last quarter were emergency changes — and does this reflect genuine operational urgency or a pattern of bypassing the standard process?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Emergency changes above 20% of volume. The standard process is being routinely bypassed."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Elevated at 10–20%. Emergency change is used regularly to avoid the standard CAB process."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Borderline at 5–10%. Some emergency changes are not fully justified as genuine emergencies."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Below 5%. Each emergency change is formally justified. Standard process is the norm."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Below 5% and declining. Every emergency change is formally reviewed post-implementation."
+            }
+          ]
+        },
+        {
+          "id": "D6.S1",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D6",
+          "area_name": null,
+          "question": "Have any SLA targets been revised downward in the last 12 months — and do the current targets represent genuine service expectations or levels set to avoid breach reporting?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Targets have been revised downward to avoid breach. Compliance is maintained by lowering the bar."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Targets have been adjusted more than once. The direction of change is always downward."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Targets have not changed but the business regularly challenges whether they reflect actual expectations."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Targets are challenging and unchanged. Occasional misses are addressed through improvement not target reduction."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Targets are challenging, unchanged, consistently met, and validated by business satisfaction data."
+            }
+          ]
+        },
+        {
+          "id": "D7.S1",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D7",
+          "area_name": null,
+          "question": "When the last significant new or changed service was handed over to BAU — was there a formal acceptance process with completed documentation and confirmed operational readiness?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal transition process. Services are handed over when the project team decides they are ready."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A process exists informally but it was not formally followed for the last transition."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A process was followed but documentation was incomplete and readiness was not formally confirmed."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Formal acceptance process followed. Documentation mostly completed. Operational readiness confirmed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Full formal acceptance process. All documentation completed. Operational readiness independently confirmed with evidence."
+            }
+          ]
+        },
+        {
+          "id": "D8.S1",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D8",
+          "area_name": null,
+          "question": "What is the current first-contact resolution rate at the service desk — is it tracked and meeting its defined target?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "FCR is not tracked. The service desk primarily logs tickets and escalates."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "FCR is tracked but below 50%. The service desk has limited resolution capability."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "FCR is tracked but below target. Improvement actions exist but progress is slow."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "FCR is at or approaching its target. Improvement is active and measurable."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "FCR is at or above target. Monitored monthly. Driving coaching and knowledge base improvements."
+            }
+          ]
+        },
+        {
+          "id": "D9.S1",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D9",
+          "area_name": null,
+          "question": "Are vendor SLAs formally tracked — and is there current documented evidence to support a commercial challenge if a vendor is not meeting its contractual commitments?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal vendor SLA tracking. Vendor performance is managed by conversation not data."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Some tracking exists but the data is not structured enough to support a commercial challenge."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Tracking is in place but has not been used in a commercial conversation."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Monthly vendor reviews with contractual performance data. Has been used to raise formal concerns."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Formal monthly reviews with documented evidence. Used to challenge and improve vendor performance."
+            }
+          ]
+        },
+        {
+          "id": "D10.S1",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D10",
+          "area_name": null,
+          "question": "When was the last full DR test conducted — and did the organisation meet its defined RTO and RPO targets, with all findings formally actioned?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No DR test has been conducted in the last 12 months, or no test has ever been conducted."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A test was conducted but RTO and RPO targets were not met."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A test was conducted and targets were broadly met, but not all findings have been actioned."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Annual test completed. Targets met. Most findings actioned."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Annual test completed. Targets met. All findings formally actioned with evidence before the next test."
+            }
+          ]
+        },
+        {
+          "id": "D11.S1",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D11",
+          "area_name": null,
+          "question": "What percentage of the top five highest-volume ticket types are handled through automation or self-service — and when was the knowledge base last formally reviewed for accuracy?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No automation for high-volume types. The knowledge base was built at implementation and has not been maintained."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Minimal automation. The knowledge base exists but is significantly out of date."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Partial automation for some ticket types. Knowledge base is partially current."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Top 3 or more volume types automated. Knowledge base reviewed within the last 12 months."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Top 5 volume types automated with measurable FCR improvement. Knowledge base reviewed within 6 months."
+            }
+          ]
+        },
+        {
+          "id": "D12.S1",
+          "framework": "SIR",
+          "assessment_type": "Snapshot",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D12",
+          "area_name": null,
+          "question": "Is there a named individual accountable for continuous service improvement — and what improvement did they initiate and deliver in the last quarter?",
+          "hidden_risk": null,
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No named CSI owner. No recent improvement has been initiated or delivered."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A name is associated with CSI but no improvement has been delivered in the last quarter."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A named owner exists and has initiated improvements but delivery has been inconsistent."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Named owner, actively initiating improvements, with evidence of at least one delivered in the last quarter."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Named owner, accountable, with evidence of two or more improvements initiated and delivered in the last quarter."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SIR Full Assessment",
+      "count": 30,
+      "questions": [
+        {
+          "id": "D1.F1",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D1",
+          "area_name": "Service Governance & Ownership",
+          "question": "Who is the named service owner — and can they demonstrate accountability through documented decisions about service priorities, investment, and improvement in the last quarter?",
+          "hidden_risk": "Service ownership is a title on an org chart. Nobody is actually accountable for service outcomes.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "There is no named service owner. Accountability for service outcomes is entirely diffused."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A name exists on an org chart but the person cannot demonstrate any documented decisions or interventions in the last quarter."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A named owner exists and attends reviews but evidence of specific decisions on priorities or investment in the last quarter is limited."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Named owner with evidence of at least one documented decision on service priorities or investment in the last quarter."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Named owner, fully accountable, with clear evidence of regular documented decisions on service priorities, investment, and improvement across the last quarter."
+            }
+          ]
+        },
+        {
+          "id": "D1.F2",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D1",
+          "area_name": "Service Governance & Ownership",
+          "question": "When was the service catalogue last formally reviewed — and does it accurately reflect what the service delivers today, including all recently added and retired service items?",
+          "hidden_risk": "The catalogue was built during implementation and has never been updated.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "The service catalogue has not been reviewed since it was first created. Its accuracy relative to current services is unknown."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Reviewed more than 12 months ago. Multiple known inaccuracies and unrecorded changes exist."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Reviewed within the last 12 months but known gaps and inaccuracies remain unresolved."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Reviewed within the last six months. Mostly accurate with minor gaps being addressed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Reviewed within the last six months. Fully current and accurate. Used operationally by the service desk on a daily basis."
+            }
+          ]
+        },
+        {
+          "id": "D1.F5",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D1",
+          "area_name": "Service Governance & Ownership",
+          "question": "When was the last formal access review conducted — covering all user accounts, privileged access, service accounts, and third-party access — and what was the outcome?",
+          "hidden_risk": "Stale accounts and over-privileged users are present. Access creep has accumulated. The organisation is exposed to security risk.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal access review has ever been conducted. The current access position is unknown."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A review was conducted more than 12 months ago. No regular review process is in place."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A review was conducted but it did not cover all account types or third-party access and not all findings were actioned."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "A review conducted within the last six months covering most account types. Findings largely actioned."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Quarterly formal access review covering all account types including privileged access, service accounts, and third-party access. Results documented and all findings actioned with evidence."
+            }
+          ]
+        },
+        {
+          "id": "D1.F9",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D1",
+          "area_name": "Service Governance & Ownership",
+          "question": "What does the RACI specify for the three most critical service decisions currently outstanding — and when was the service management RACI last formally reviewed and confirmed by all relevant teams?",
+          "hidden_risk": "RACI gaps at domain boundaries mean decisions about escalation, vendor management, and major incidents are made informally.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No service management RACI exists or it predates the current team structure."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A RACI exists but has not been reviewed in over 12 months and does not reflect current roles or service scope."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "RACI exists and is broadly current but has not been formally reviewed and confirmed by all relevant teams in the last 12 months."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "RACI reviewed and confirmed within the last 12 months by most teams. Referenced in most escalation and governance decisions."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "RACI current, reviewed within 12 months, confirmed by all relevant teams, accessible to all operational staff, and consistently referenced in escalation, major incident, and governance management."
+            }
+          ]
+        },
+        {
+          "id": "D2.F1",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D2",
+          "area_name": "Incident & Major Incident Management",
+          "question": "What is the P1/P2 incident trend over the last three quarters — and is there documented evidence that problem management activity is causing this trend to improve?",
+          "hidden_risk": "Incident volume is rising but the trend is not being tracked or connected to problem management.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Incident trend has not been tracked. No data is available to assess whether volume is rising, falling, or flat."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Trend is tracked and volume is rising or flat. No connection to problem management activity has been established."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Trend is tracked and volume is broadly flat. Some problem management activity is taking place but a causal connection to trend improvement is not demonstrated."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Trend is stable or showing early improvement. Problem management activity is increasing and a partial connection to improvement is evidenced."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Volume is declining across all three quarters. Documented evidence exists that specific problem resolution activities have directly contributed to incident volume reduction."
+            }
+          ]
+        },
+        {
+          "id": "D2.F2",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D2",
+          "area_name": "Incident & Major Incident Management",
+          "question": "Has every P1 in the last quarter had a completed post-incident review — with root cause identified, actions tracked, and evidence that actions have been closed?",
+          "hidden_risk": "PIRs are written to satisfy process requirements but actions are not tracked to closure.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No post-incident review process exists. P1 incidents close without a formal review."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "PIRs are written for some P1s but the process is not consistently applied and actions are not tracked."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "PIRs written for every P1 but action tracking is inconsistent. Some actions remain open from reviews conducted more than 60 days ago without a documented reason."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "PIRs completed for every P1. Actions tracked. Most are closed or in active remediation."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "PIR completed for every P1 in the last quarter. Root cause formally identified for each. All actions tracked to closure with evidence. No overdue actions."
+            }
+          ]
+        },
+        {
+          "id": "D2.F6",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D2",
+          "area_name": "Incident & Major Incident Management",
+          "question": "Have security incidents and vulnerabilities been integrated into the standard incident and problem management process — or are they managed in a parallel track that bypasses the ITSM tooling?",
+          "hidden_risk": "A cyber event is handled outside the ITSM process. Security and service management are siloed. Response time doubles.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Security incidents and vulnerabilities are managed entirely outside the ITSM process with no integration."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Some security events flow through ITSM but major incidents and vulnerabilities are handled in a separate parallel track."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Partial integration. Most security incidents flow through standard processes but some categories still bypass the ITSM tooling."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Security incidents are integrated into the standard incident process. Change management includes security changes. Problem management captures vulnerabilities."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Full integration. All security incidents flow through the standard process. CAB includes security changes. Problem management tracks all vulnerabilities. Evidence of integrated management is available."
+            }
+          ]
+        },
+        {
+          "id": "D3.F2",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D3",
+          "area_name": "Service Request Management",
+          "question": "What is the current fulfilment time performance against defined targets for the top five highest-volume request types — and is this reported monthly to service management?",
+          "hidden_risk": "Fulfilment times are not tracked by request type. Chronic underperformers are hidden in aggregate reporting.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Fulfilment performance is not tracked by request type. Only aggregate ticket volume is reported."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Fulfilment is tracked overall but not broken down by request type. Individual type performance is unknown."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Performance is tracked by some request types but not the top five and is not consistently reported to service management."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Top five request types tracked and reported monthly. Targets are defined. Performance is broadly at target."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Top five request types tracked, reported monthly to service management, targets consistently met, and management decisions are made based on type-level performance data."
+            }
+          ]
+        },
+        {
+          "id": "D4.F1",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D4",
+          "area_name": "Problem Management",
+          "question": "How many problems were formally opened and closed in the last 30 days — and what is the oldest open item in the KEDB with its documented reason for remaining unresolved?",
+          "hidden_risk": "Problem management is nominal. Records are created to satisfy process requirements. The same incidents recur.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No active problem management. The KEDB does not exist or contains only historical records that are not actively managed."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Some problem records exist but opening and closing rates are very low. The KEDB has items aged over 90 days with no documented reason for deferral."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Problem management is active but inconsistent. The KEDB has some aged items. Deferral reasons exist for some but not all."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Active problem management with named owners. No KEDB items over 90 days without a documented approved deferral reason. Regular monthly review conducted."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Rigorous problem management process. Opening and closing rates reflect genuine activity. Every KEDB item has a named owner and resolution date. No items over 90 days without board-approved deferral. Measurable reduction in repeat incidents evidenced."
+            }
+          ]
+        },
+        {
+          "id": "D4.F4",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D4",
+          "area_name": "Problem Management",
+          "question": "Is the Known Error Database actively used by the service desk to inform workarounds — and is it accessible and current enough to reduce resolution time for known issues?",
+          "hidden_risk": "The KEDB exists but agents do not use it. Known errors are re-diagnosed from scratch each time.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "The KEDB is not used by the service desk. Agents are unaware of it or do not trust its accuracy."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "The KEDB exists and agents are aware of it but it is rarely consulted and known errors are frequently re-diagnosed."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "The KEDB is used for some high-profile known errors but coverage is insufficient and currency is unreliable."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "The KEDB is actively used for most known errors. Currency is maintained. Some evidence of reduced resolution time."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "The KEDB is actively used by all service desk agents. Currency is maintained through a defined review process. Measurable reduction in resolution time for known errors is evidenced."
+            }
+          ]
+        },
+        {
+          "id": "D5.F1",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D5",
+          "area_name": "Change & Release Management",
+          "question": "What is the change failure rate over the last quarter — and is there documented root cause analysis for every failed change with evidence that findings have been actioned?",
+          "hidden_risk": "Failed changes are causing incidents that are managed as BAU.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Change failure rate is above 15% or not tracked. No root cause analysis is conducted on failed changes."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Failure rate is elevated and tracked but root cause analysis is inconsistent and findings are not actioned."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Failure rate is tracked. Some root cause analysis conducted but not for every failure and findings are not consistently actioned."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Failure rate below 10% and declining. Root cause analysis conducted for all failures. Most findings actioned."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Failure rate below 5% and on a declining trend. Documented root cause analysis for every failed change. All findings actioned with evidence. Change-incident correlation tracked."
+            }
+          ]
+        },
+        {
+          "id": "D5.F2",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D5",
+          "area_name": "Change & Release Management",
+          "question": "What percentage of changes last quarter were emergency changes — and does this reflect genuine operational urgency or a pattern of bypassing the standard change process?",
+          "hidden_risk": "Emergency change is being used as a workaround for a weak standard process.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Emergency changes represent more than 20% of total change volume. The standard CAB process is being routinely bypassed."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Emergency changes at 10–20% of volume. Emergency change is used regularly to avoid standard process lead times."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Emergency changes at 5–10% of volume. Some are not fully justified as genuine emergencies requiring immediate action."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Emergency changes below 5%. Each is formally justified. Standard process is the norm."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Emergency changes consistently below 5% and declining. Every emergency change is formally justified, reviewed post-implementation, and the rate is reported monthly to the service governance forum."
+            }
+          ]
+        },
+        {
+          "id": "D5.F6",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D5",
+          "area_name": "Change & Release Management",
+          "question": "When the last significant release was deployed, what was the post-release incident rate in the 48 hours following — and was this within the defined threshold?",
+          "hidden_risk": "Releases regularly cause a spike in incidents in the first 48 hours. The release process is not controlling quality effectively.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Post-release incident rate is not tracked. No threshold is defined for what constitutes an acceptable spike."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "The last significant release caused a notable incident spike in the first 48 hours and no threshold was in place to assess it against."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A threshold is defined but the last release exceeded it. Root cause was not formally investigated."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "A threshold is defined. The last release was within the threshold or slightly exceeded it with a documented root cause."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Post-release incident threshold defined and consistently met over the last three releases. Evidence available for each release."
+            }
+          ]
+        },
+        {
+          "id": "D6.F1",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D6",
+          "area_name": "Service Performance, SLA & Reporting",
+          "question": "Have any SLA targets been revised downward in the last 12 months — and if so, was this driven by genuine business requirement or by the need to avoid breach reporting?",
+          "hidden_risk": "SLA targets reduced to the level the service can achieve.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "SLA targets have been revised downward and the primary driver was avoiding breach reporting, not a change in business requirements."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Targets have been revised. The rationale was documented but the direction of change consistently favours what the service can achieve rather than what the business needs."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Targets have not been revised but the business regularly challenges whether current targets reflect their actual expectations."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Targets have not been revised in the last 12 months. Any historical revisions were driven by documented business requirement changes."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Targets have not been revised in the last 12 months. Targets are challenging, met consistently, and formally validated with the business annually as representing genuine service expectations."
+            }
+          ]
+        },
+        {
+          "id": "D6.F4",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D6",
+          "area_name": "Service Performance, SLA & Reporting",
+          "question": "Is service availability formally tracked and reported against defined targets — including all planned maintenance, partial outages, and degraded performance periods?",
+          "hidden_risk": "Availability measurement excludes inconvenient events. The reported figure does not reflect true service availability.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Service availability is not formally tracked. No availability target exists or is reported against."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Availability is tracked but planned maintenance and degraded performance periods are excluded from the calculation."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Availability is tracked and includes planned maintenance but degraded performance and partial outages are not consistently included."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Availability tracked comprehensively including all relevant event types. Reported monthly. Minor measurement inconsistencies remain."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Full availability tracking. All event types included. Reported monthly against defined targets. Measurement methodology reviewed and confirmed with the business annually."
+            }
+          ]
+        },
+        {
+          "id": "D6.F6",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D6",
+          "area_name": "Service Performance, SLA & Reporting",
+          "question": "When were SLA targets last formally reviewed with the business to confirm they remain aligned with current operational requirements and business expectations?",
+          "hidden_risk": "SLA targets were set at service introduction and have never been reviewed. Business requirements have changed.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "SLA targets have never been formally reviewed with the business since they were first defined."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Targets were reviewed once but not within the last 24 months."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Targets were reviewed within the last 24 months but the review did not include all relevant business stakeholders."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Targets reviewed within the last 12 months with the main business stakeholders. Confirmed as broadly appropriate."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Annual formal review with all relevant business stakeholders. Targets confirmed as current and relevant. Evidence of the review is available."
+            }
+          ]
+        },
+        {
+          "id": "D7.F2",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D7",
+          "area_name": "Service Transition & BAU Readiness",
+          "question": "When the last significant new or changed service was handed over to BAU, what acceptance criteria were used — and is there documented evidence that all criteria were met before handover?",
+          "hidden_risk": "Services are handed over when the project team decides they are ready, not when formally accepted.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal acceptance criteria were used. The last handover occurred when the project team decided it was ready."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Some informal criteria were applied but they were not formally documented and evidence of meeting them is not available."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Acceptance criteria were defined but not all were met at handover. Some gaps were accepted informally without formal documentation."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Formal acceptance criteria used. Most were met at handover. A small number of accepted exceptions were formally logged."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Formal acceptance criteria used for every element of the transition. All criteria met and evidenced before handover was formally accepted. Documented sign-off from operational teams is available."
+            }
+          ]
+        },
+        {
+          "id": "D7.F6",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D7",
+          "area_name": "Service Transition & BAU Readiness",
+          "question": "What is the formal process for transferring knowledge from a delivery project to the operational team — and can operations demonstrate that they understand and can support the solution without project team involvement?",
+          "hidden_risk": "Knowledge transfer is informal. Operations depend on the project team for support weeks after handover.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal knowledge transfer process exists. Operational teams learn the solution after handover through experience."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Knowledge transfer takes place informally during project delivery but is not structured or assessed."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A knowledge transfer process exists but its completion has not been formally assessed and some operational capability gaps remain."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Knowledge transfer completed with most areas covered. Operations are broadly capable of supporting the solution independently."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Formal knowledge transfer process completed and assessed. Operations have demonstrated the capability to support the solution without project team involvement. Evidence of independent operation is available."
+            }
+          ]
+        },
+        {
+          "id": "D8.F1",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D8",
+          "area_name": "Service Operations & Support Model",
+          "question": "What is the current first-contact resolution rate — is it tracked by ticket type, meeting its defined target, and being actively used to drive knowledge base and training improvements?",
+          "hidden_risk": "FCR is unknown or tracked as a single aggregate figure. Chronic low-performing categories are hidden.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "FCR is not tracked. The service desk has no visibility of its resolution capability."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "FCR is tracked as an overall aggregate but not by ticket type. Performance below 50%."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "FCR tracked overall but not by ticket type. At or approaching target overall but improvement activities are not being driven by the data."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "FCR tracked by main ticket types and at or near target. Some improvement activity driven by the data."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "FCR tracked by ticket type, at or above target, reported monthly, and actively driving coaching interventions and knowledge base improvements with measurable outcomes."
+            }
+          ]
+        },
+        {
+          "id": "D8.F5",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D8",
+          "area_name": "Service Operations & Support Model",
+          "question": "When was the service operations model last formally reviewed — covering team structure, shift patterns, on-call coverage, and tooling — and has it been confirmed as fit for current service scope and demand?",
+          "hidden_risk": "The operations model was designed at service launch and has never been reviewed. The service scope has expanded.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "The operations model has never been formally reviewed since it was first established."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A review was conducted more than 12 months ago. The model has not been updated to reflect changes in scope or demand."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A review was conducted within the last 12 months but it was informal and gaps identified were not formally addressed."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Formal review conducted within the last 12 months. Model confirmed as broadly fit for purpose. Known gaps are being addressed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Formal review conducted within the last 12 months covering all elements of the operations model. Confirmed as fit for current scope and demand. Changes resulting from the review have been implemented."
+            }
+          ]
+        },
+        {
+          "id": "D9.F1",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D9",
+          "area_name": "Supplier & Vendor Management",
+          "question": "Are vendor SLAs formally tracked with documented evidence — and has this data been used in the last quarter to challenge vendor performance commercially?",
+          "hidden_risk": "The organisation believes vendors are underperforming but has no data to support a commercial challenge.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Vendor SLAs are not formally tracked. Vendor performance is managed through conversations not data."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "SLA tracking exists for some vendors but the data is not structured enough to support a formal commercial challenge."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "SLA performance is tracked for all major vendors but the data has not been used in a formal commercial conversation in the last quarter."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Monthly vendor performance reviews with documented data. Data has been used to raise formal concerns with at least one vendor in the last quarter."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Monthly formal reviews with contractual performance data for all significant vendors. Data used commercially in the last quarter. Documented evidence of vendor performance improvement resulting from commercial challenge is available."
+            }
+          ]
+        },
+        {
+          "id": "D9.F5",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D9",
+          "area_name": "Supplier & Vendor Management",
+          "question": "What is the exit strategy for each critical vendor — and has the organisation assessed its ability to transition to an alternative provider if the current relationship fails?",
+          "hidden_risk": "There is no exit strategy for the critical vendor. The organisation is entirely dependent and the vendor knows it.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No exit strategy exists for any critical vendor. The organisation has not assessed its dependency or the cost of transition."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Dependency on critical vendors is recognised informally but no formal exit strategy or transition assessment has been documented."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Exit strategies exist for some critical vendors but not all. Transition complexity has been assessed for most."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Formal exit strategy documented for all critical vendors. Transition complexity assessed. Plan is being maintained."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Formal exit strategy for every critical vendor. Transition plan documented and reviewed annually. Ability to execute a transition has been tested where practicable."
+            }
+          ]
+        },
+        {
+          "id": "D9.F7",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D9",
+          "area_name": "Supplier & Vendor Management",
+          "question": "Have all vendor and supplier data processing agreements been reviewed in the last 24 months to confirm they meet UK GDPR and applicable data protection requirements?",
+          "hidden_risk": "Supplier data processing agreements predate UK GDPR. The organisation has unrecognised downstream compliance exposure.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Data processing agreements have not been reviewed since they were first signed. Compliance with current UK GDPR requirements has not been confirmed."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Some DPAs have been reviewed but the review has not covered all vendors who process personal data."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "DPAs reviewed for most vendors within the last 24 months. Some gaps remain and are being addressed."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "All DPAs reviewed within the last 24 months. UK GDPR compliance confirmed for all. A review process is in place."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "All DPAs reviewed within the last 24 months and confirmed as compliant with UK GDPR. A defined review process ensures ongoing compliance. Legal sign-off obtained."
+            }
+          ]
+        },
+        {
+          "id": "D10.F1",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D10",
+          "area_name": "Operational Resilience & Continuity",
+          "question": "When was the last full DR test — and did the organisation meet its defined RTO and RPO targets, with all findings formally actioned before the next test?",
+          "hidden_risk": "DR exists on paper but has never been proven under realistic conditions.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No DR test has been conducted in the last 12 months, or no test has ever been conducted."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A DR test was conducted but RTO and RPO targets were not met."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A test was conducted and targets were broadly met but not all findings have been formally actioned."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Annual test completed. RTO and RPO targets met. Most findings actioned. A small number of outstanding items are being managed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Annual test completed. RTO and RPO targets met in full. All findings formally actioned with evidence of closure before the next test cycle."
+            }
+          ]
+        },
+        {
+          "id": "D10.F5",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D10",
+          "area_name": "Operational Resilience & Continuity",
+          "question": "What is the escalation and communication process during a major service disruption — and when was it last tested with all stakeholders including the business and executive leadership?",
+          "hidden_risk": "Communication during incidents is improvised. The business and executive leadership are not informed appropriately.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No formal escalation and communication process exists for major service disruptions. Communication is improvised."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A process exists but has never been tested with stakeholders. The business and executive leadership have not been included in any simulation."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A process exists and has been tested internally but has not included the business and executive leadership."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Process exists and has been tested with most stakeholders including the business. Executive leadership were involved in at least one exercise."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Formal process tested annually with all stakeholders including the business and executive leadership. Last test completed within the last 12 months with documented findings and improvements."
+            }
+          ]
+        },
+        {
+          "id": "D11.F1",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D11",
+          "area_name": "Automation, Tooling & Knowledge",
+          "question": "What percentage of the top five highest-volume ticket types are handled through automation or self-service — and what has been the measurable impact on FCR and agent capacity?",
+          "hidden_risk": "Agents handle the same routine requests manually every day. Automation is on the roadmap but not in operations.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No automation or self-service capability exists for any of the top five highest-volume ticket types."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Automation exists for one of the top five types. Impact on FCR and agent capacity has not been measured."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Two or three of the top five types have some automation but impact measurement is incomplete."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Three or more of the top five types automated with measurable improvement in FCR. Agent capacity impact is being tracked."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "All five highest-volume types automated or available via self-service. Measurable improvement in FCR and agent capacity is documented and reported monthly."
+            }
+          ]
+        },
+        {
+          "id": "D11.F2",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D11",
+          "area_name": "Automation, Tooling & Knowledge",
+          "question": "When was the knowledge base last formally reviewed for accuracy and currency — and what percentage of high-volume ticket types have a current, validated knowledge article?",
+          "hidden_risk": "The knowledge base was built during implementation and has not been maintained. Agents resolve tickets from memory.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "The knowledge base has not been reviewed since it was created. The percentage of high-volume types with current articles is unknown."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A review was conducted more than 12 months ago. Known inaccuracies have not been corrected and coverage is below 60% of high-volume types."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Reviewed within the last 12 months. Coverage estimated at 60–80% of high-volume types. Some known inaccuracies remain."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Reviewed within the last six months. Coverage above 80% of high-volume types. A maintenance process is in place."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Reviewed within the last six months. Coverage above 90% of high-volume types. Every article has a named owner, a review date, and an active maintenance process."
+            }
+          ]
+        },
+        {
+          "id": "D11.F8",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D11",
+          "area_name": "Automation, Tooling & Knowledge",
+          "question": "What is the current self-service adoption rate — and is there a confirmed plan to improve adoption with a clear owner, timeline, and targeted reduction in agent-handled volume?",
+          "hidden_risk": "Self-service exists but adoption is low. Users prefer calling the service desk. The organisation is paying for agent-handled resolution of requests that could be self-served.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "Self-service adoption is not tracked. No plan to improve adoption exists."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "Adoption is tracked but below 20%. No confirmed improvement plan with an owner and timeline exists."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "Adoption tracked and between 20–40%. An improvement plan exists informally but has no named owner or committed timeline."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Adoption tracked and between 40–60%. A formal improvement plan exists with a named owner and timeline."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Adoption tracked and above 60% or on a confirmed improvement trajectory. Formal plan with named owner, timeline, and a specific target for reduction in agent-handled volume. Progress reported monthly."
+            }
+          ]
+        },
+        {
+          "id": "D12.F1",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D12",
+          "area_name": "Service Intelligence & Continuous Value",
+          "question": "Is there a named individual accountable for continuous service improvement — and can they provide evidence of at least two improvement initiatives they initiated and delivered in the last six months?",
+          "hidden_risk": "CSI is in the process catalogue but no one is actually doing it.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No named CSI owner exists. No improvement initiatives have been initiated or delivered in the last six months."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A name is associated with CSI but no improvement initiatives have been delivered in the last six months."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A named owner exists and has initiated improvements but delivery is inconsistent. Evidence of completion is limited."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Named owner with evidence of at least one improvement initiative initiated and delivered in the last six months."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Named owner, accountable, with clear evidence of two or more improvement initiatives initiated and fully delivered in the last six months."
+            }
+          ]
+        },
+        {
+          "id": "D12.F4",
+          "framework": "SIR",
+          "assessment_type": "Full Assessment",
+          "type": "TYPE_SELECT",
+          "area_type": "domain",
+          "area_code": "D12",
+          "area_name": "Service Intelligence & Continuous Value",
+          "question": "Is there a confirmed digital evolution roadmap for this service — covering automation, self-service, and AI adoption over the next 18 months — with budget and ownership confirmed?",
+          "hidden_risk": "Digital evolution is aspirational. Nothing is funded or owned. The roadmap is the same document it was 18 months ago.",
+          "anchor_responses": [
+            {
+              "card": 1,
+              "score": 1,
+              "response": "No digital evolution roadmap exists. Digital improvement is discussed but not formally planned."
+            },
+            {
+              "card": 2,
+              "score": 2,
+              "response": "A roadmap exists but has no confirmed budget, no named owner, and has not been updated in over 12 months."
+            },
+            {
+              "card": 3,
+              "score": 3,
+              "response": "A roadmap exists and has been updated recently but budget is not confirmed and ownership is unclear."
+            },
+            {
+              "card": 4,
+              "score": 4,
+              "response": "Roadmap exists, has been updated within 12 months, has a named owner, and budget is being confirmed."
+            },
+            {
+              "card": 5,
+              "score": 5,
+              "response": "Confirmed digital evolution roadmap covering automation, self-service, and AI adoption. Budget confirmed. Named owner. Governance process in place. Evidence of delivery against the plan is available."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

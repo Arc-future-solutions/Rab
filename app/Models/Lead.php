@@ -14,6 +14,7 @@ class Lead extends Model
     protected $casts = [
         'index_scores_json' => 'array',
         'answers_json' => 'array',
+        'confidence_json' => 'array',
         'converted_to_client' => 'boolean',
     ];
 

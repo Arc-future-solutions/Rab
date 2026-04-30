@@ -40,4 +40,8 @@ return [
         'webhook_secret' => env('CALENDLY_WEBHOOK_SECRET', ''),
     ],
 
+    'n8n' => [
+        'webhook_url' => env('N8N_WEBHOOK_URL'),
+    ],
+
 ];

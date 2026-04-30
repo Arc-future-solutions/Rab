@@ -24,11 +24,14 @@
     <div x-show="tab === 'internal'" class="bg-white shadow rounded-lg" x-data="assessmentTable()">
         <div class="px-6 py-4 border-b flex justify-between items-center bg-gray-50 rounded-t-lg">
             <form class="flex gap-4 items-center w-full" method="GET" action="{{ route('admin.assessments.index') }}">
-                {{-- Same filters as before... --}}
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search Client or Assessment..." class="rounded-md border-gray-300 shadow-sm px-4 py-2 border focus:ring-blue-500 focus:border-blue-500 min-w-[250px]">
+                
                 <select name="type" class="rounded-md border-gray-300 shadow-sm px-4 py-2 border focus:ring-blue-500 focus:border-blue-500" onchange="this.form.submit()">
                     <option value="">All Types</option>
                     <option value="PHI" {{ request('type') == 'PHI' ? 'selected' : '' }}>PHI</option>
                     <option value="ITSM" {{ request('type') == 'ITSM' ? 'selected' : '' }}>ITSM</option>
+                    <option value="PIR" {{ request('type') == 'PIR' ? 'selected' : '' }}>PIR</option>
+                    <option value="SIR" {{ request('type') == 'SIR' ? 'selected' : '' }}>SIR</option>
                 </select>
                 
                 <select name="rag_status" class="rounded-md border-gray-300 shadow-sm px-4 py-2 border focus:ring-blue-500 focus:border-blue-500" onchange="this.form.submit()">
@@ -59,7 +62,9 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-[10px]">Type</th>
                     <th @click="sortBy('overall_score')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-[10px]">Score</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-[10px]">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-[10px]">Note</th>
                     <th @click="sortBy('created_at')" class="cursor-pointer px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider text-[10px]">Date</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider text-[10px]">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -78,7 +83,18 @@
                             }" class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full" x-text="(assessment.overall_score * 1).toFixed(1)"></span>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-500 capitalize" x-text="assessment.status.replace('_', ' ')"></td>
+                        <td class="px-6 py-4 text-[10px] text-gray-400 font-bold italic truncate max-w-[150px]" x-text="assessment.note || '—'"></td>
                         <td class="px-6 py-4 text-sm text-gray-500" x-text="new Date(assessment.created_at).toLocaleDateString()"></td>
+                        <td class="px-6 py-4 text-right">
+                            <template x-if="assessment.status !== 'approved'">
+                                <a :href="assessment.type === 'PHI' ? `/admin/assessments/phi/${assessment.id}/score` : `/admin/assessments/itsm/${assessment.id}/score`" 
+                                   @click.stop
+                                   class="bg-blue-600 text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition shadow-sm inline-flex items-center gap-2">
+                                    Continue
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                </a>
+                            </template>
+                        </td>
                     </tr>
                 </template>
             </tbody>
@@ -104,6 +120,7 @@
                         <th class="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Framework</th>
                         <th class="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Health Score</th>
                         <th class="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Priority</th>
+                        <th class="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Note</th>
                         <th class="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Date Received</th>
                     </tr>
                 </thead>
@@ -129,6 +146,24 @@
                                 @else
                                     <span class="text-slate-300 text-[10px] font-black uppercase tracking-widest">Normal</span>
                                 @endif
+                            </td>
+                            <td class="px-8 py-5">
+                                @php
+                                    $questionNotes = collect($lead->answers_json ?? [])
+                                        ->filter(fn($v, $k) => str_starts_with($k, 'note_') && !empty($v))
+                                        ->values();
+                                @endphp
+                                <div class="text-[10px] text-slate-400 font-bold italic truncate max-w-[150px]" title="{{ $questionNotes->implode("\n") }}">
+                                    @if($questionNotes->isNotEmpty())
+                                        <span class="text-blue-600 font-black">●</span> 
+                                        {{ Str::limit($questionNotes->first(), 25) }}
+                                        @if($questionNotes->count() > 1)
+                                            <span class="text-slate-300 ml-1">+{{ $questionNotes->count() - 1 }} more</span>
+                                        @endif
+                                    @else
+                                        <span class="text-slate-200">—</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-8 py-5 text-right text-[10px] text-slate-400 font-black uppercase">
                                 {{ $lead->created_at->format('d M — H:i') }}

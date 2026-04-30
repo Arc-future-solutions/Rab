@@ -12,9 +12,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->alias([
+            'admin-only' => \App\Http\Middleware\AdminOnly::class,
+            'user-only' => \App\Http\Middleware\UserOnly::class,
+            'redirect-if-authenticated' => \Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
+        ]);
+
         $middleware->validateCsrfTokens(except: [
             '/arrange-teams-meeting',
             '/webhooks/calendly',
+            '/webhooks/n8n/receive',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

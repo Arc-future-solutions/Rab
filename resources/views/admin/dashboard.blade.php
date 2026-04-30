@@ -44,20 +44,27 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($recentAssessments as $assessment)
-                        <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='{{ route('admin.assessments.show', $assessment) }}'">
-                            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $assessment->client->company_name }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $assessment->type }}</td>
+                    @foreach($recentAssessments as $item)
+                        <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='{{ $item['url'] }}'">
+                            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">
+                                <div class="flex flex-col">
+                                    <span class="font-bold text-slate-800">{{ $item['subject'] }}</span>
+                                    @if($item['is_snapshot'])
+                                        <span class="text-[9px] text-blue-600 font-bold uppercase tracking-widest">Web Snapshot</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item['type'] }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    @if($assessment->rag_status === 'Green') bg-green-100 text-green-800 
-                                    @elseif($assessment->rag_status === 'Amber') bg-amber-100 text-amber-800 
+                                    @if($item['rag'] === 'Green') bg-green-100 text-green-800 
+                                    @elseif($item['rag'] === 'Amber') bg-amber-100 text-amber-800 
                                     @else bg-red-100 text-red-800 @endif">
-                                    {{ number_format($assessment->overall_score, 1) }}
+                                    {{ number_format($item['score'], 1) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{{ str_replace('_', ' ', $assessment->status) }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $assessment->created_at->format('M d, Y') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{{ $item['status'] }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $item['date']->format('M d, Y') }}</td>
                         </tr>
                     @endforeach
                 </tbody>

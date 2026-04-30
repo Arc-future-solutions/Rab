@@ -1,58 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pricing — RAB CONSULTING</title>
-<meta name="description" content="RAB Assessment Platform front-end package"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/styles.css"/>
-</head><body>
-<header class="topbar"><div class="container nav">
-  <a class="brand" href="/"><img class="brand-logo" src="/assets/images/logo-rab.png" alt="RAB Consulting logo">
-  <span class="brand-text"><strong>RAB CONSULTING</strong><span>ASSESSMENT PLATFORM</span></span></a>
-  <nav class="nav-links"><a data-nav href="/about">About</a><a data-nav href="/services">Services</a><a data-nav href="/programme-health-check">Programme Health Check</a><a data-nav href="/service-health-check">Service Health Check</a><a data-nav href="/pricing">Pricing</a><a data-nav href="/rapid-consulting">Rapid Consulting</a><a data-nav href="/contact">Contact</a></nav>
-  <div style="display:flex;gap:12px;align-items:center;">
-    <button class="btn ghost menu-toggle" data-menu-toggle>Menu</button>
-    <a class="nav-cta" href="/admin-dashboard">Open portal preview</a>
-  </div>
-</div></header>
+@extends('layouts.public')
 
-<section class="page-hero"><div class="container hero-grid">
-<div><div class="kicker"><span class="kicker-dot"></span> Commercial presentation page</div><h1>Pricing presentation for snapshots, executive reviews and full health assessments.</h1><p>This page is structured as a premium commercial front-end. Pricing values are placeholders and can be adjusted later.</p></div>
-<div class="showcase"><video autoplay muted loop playsinline><source src="/assets/videos/consulting-flow.mp4" type="video/mp4"></video><div class="caption"><strong>Monetisation-ready front end</strong><p class="subtle">Designed to support lead capture and paid assessment upsell journeys.</p></div></div>
-</div></section>
-<section class="section"><div class="container grid-3">
-<div class="card"><h3>Programme Health Check</h3><p>Free or low-friction lead assessment for qualification.</p><p><strong>Indicative:</strong> Free</p><a class="btn secondary" href="/programme-health-check">Open</a></div>
-<div class="card"><h3>Service Health Check</h3><p>Commercial-safe service maturity snapshot for operational leads.</p><p><strong>Indicative:</strong> Free</p><a class="btn secondary" href="/service-health-check">Open</a></div>
-<div class="card"><h3>Executive Review / Full Assessment</h3><p>Consultant-led engagement with evidence, AI draft, reviewer approval and PDF report.</p><p><strong>Indicative:</strong> Custom proposal</p><a class="btn primary" href="/quote-request">Request a quote</a></div>
-</div></section>
+@section('title', 'Pricing — RAB CONSULTING')
 
-<footer class="footer"><div class="container">
-  <div class="footer-grid">
+@section('content')
+<section class="page-hero">
+  <div class="container hero-grid">
     <div>
-      <div class="brand" style="margin-bottom:16px;"><img class="brand-logo" src="/assets/images/logo-rab.png" alt="RAB Consulting logo">
-      <span class="brand-text"><strong>RAB CONSULTING</strong><span>ASSESSMENT PLATFORM</span></span></div>
-      <p>Unified front-end for Programme Health Check, Service Health Check, full consultant-led assessments, reporting workflows and internal review operations.</p>
+      <div class="kicker"><span class="kicker-dot"></span> Commercial presentation page</div>
+      <h1>Pricing presentation for snapshots, executive reviews and full health assessments.</h1>
+      <p>This page is structured as a premium commercial front-end. Pricing values are placeholders and can be adjusted later.</p>
     </div>
-    <div><h4>Public Pages</h4><div class="footer-links">
-      <a href="/programme-health-check">Programme Health Check</a>
-      <a href="/service-health-check">Service Health Check</a>
-      <a href="/pricing">Pricing</a>
-      <a href="/rapid-consulting">Rapid Consulting</a>
-    </div></div>
-    <div><h4>Portal</h4><div class="footer-links">
-      <a href="/admin-dashboard">Dashboard</a>
-      <a href="/admin-leads">Leads</a>
-      <a href="/admin-assessments">Assessments</a>
-      <a href="/admin-reports">Reports</a>
-    </div></div>
-    <div><h4>Legal</h4><div class="footer-links">
-      <a href="/privacy-policy">Privacy Policy</a>
-      <a href="/terms">Terms</a>
-    </div></div>
+    <div class="showcase">
+      <video autoplay muted loop playsinline><source src="/assets/videos/consulting-flow.mp4" type="video/mp4"></video>
+      <div class="caption">
+        <strong>Monetisation-ready front end</strong>
+        <p class="subtle">Designed to support lead capture and paid assessment upsell journeys.</p>
+      </div>
+    </div>
   </div>
-  <div class="footer-bottom"><span>© 2026 RAB Consulting Services</span><span>Front-end build aligned to PHI and ITSM-HI platform structure.</span></div>
-</div></footer>
-<script src="/assets/js/main.js"></script>
-</body></html>
+</section>
+
+<section class="section">
+  <div class="container grid-3">
+    <div class="card"><h3>Programme Health Check</h3><p>Free or low-friction lead assessment for qualification.</p><p><strong>Indicative:</strong> Free</p><a class="btn secondary" href="/programme-health-check">Open</a></div>
+    <div class="card"><h3>Service Health Check</h3><p>Commercial-safe service maturity snapshot for operational leads.</p><p><strong>Indicative:</strong> Free</p><a class="btn secondary" href="/service-health-check">Open</a></div>
+    <div class="card"><h3>Executive Review / Full Assessment</h3><p>Consultant-led engagement with evidence, AI draft, reviewer approval and PDF report.</p><p><strong>Indicative:</strong> Custom proposal</p><a class="btn primary" href="/quote-request">Request a quote</a></div>
+  </div>
+</section>
+@endsection
+

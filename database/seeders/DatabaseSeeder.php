@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(JsonAssessmentBankSeeder::class);
+
         $faker = \Faker\Factory::create();
 
         // Create a default admin user
@@ -23,6 +25,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Admin User',
                 'password' => Hash::make('password'),
+                'role' => 'admin',
             ]
         );
 
@@ -40,7 +43,7 @@ class DatabaseSeeder extends Seeder
 
         // Add 10 assessments
         $assessments = [];
-        $types = ['PHI', 'ITSM'];
+        $types = ['PHI', 'ITSM', 'PIR', 'SIR'];
         for ($i = 0; $i < 10; $i++) {
             $type = $faker->randomElement($types);
             $score = $faker->randomFloat(2, 1.5, 4.8);
@@ -68,7 +71,7 @@ class DatabaseSeeder extends Seeder
             $assessments[] = $assessment;
 
             // Generate Pillar Scores
-            $pillars = $type === 'PHI' 
+            $pillars = in_array($type, ['PHI', 'PIR']) 
                 ? ['Leadership & Culture', 'Process Management', 'Technology & Tools', 'Metrics & Reporting', 'Governance']
                 : ['Service Desk', 'Incident Management', 'Problem Management', 'Change Management', 'Asset Management'];
 

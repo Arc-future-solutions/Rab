@@ -1,62 +1,154 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Services — RAB CONSULTING</title>
-<meta name="description" content="RAB Assessment Platform front-end package"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/styles.css"/>
-</head><body>
-<header class="topbar"><div class="container nav">
-  <a class="brand" href="/"><img class="brand-logo" src="/assets/images/logo-rab.png" alt="RAB Consulting logo">
-  <span class="brand-text"><strong>RAB CONSULTING</strong><span>ASSESSMENT PLATFORM</span></span></a>
-  <nav class="nav-links"><a data-nav href="/about">About</a><a data-nav href="/services">Services</a><a data-nav href="/pricing">Pricing</a><a data-nav href="/rapid-consulting">Rapid Consulting</a><a data-nav href="/contact">Contact</a></nav>
-  <div style="display:flex;gap:12px;align-items:center;">
-    <button class="btn ghost menu-toggle" data-menu-toggle>Menu</button>
-    <a class="nav-cta" href="/admin">Open portal preview</a>
-  </div>
-</div></header>
+@extends('layouts.public')
 
-<section class="page-hero"><div class="container">
-<div class="breadcrumbs subtle">RAB Consulting platform modules</div>
-<h1>Assessment modules and internal operational services.</h1>
-<p>Each module below is represented in the front-end package, including public entry points and secured internal work areas.</p>
-</div></section>
-<section class="section"><div class="container grid-3">
-<div class="card"><div class="badge">Public</div><h3>Programme Health Check</h3><p>18-question snapshot for programme, transformation and ERP delivery risk.</p><a class="btn secondary" href="/programme-health-check">Preview page</a></div>
-<div class="card"><div class="badge">Public</div><h3>Service Health Check</h3><p>22-question snapshot for service governance, incidents, change, resilience and automation maturity.</p><a class="btn secondary" href="/service-health-check">Preview page</a></div>
-<div class="card"><div class="badge">Private</div><h3>Full PHI</h3><p>Consultant workspace with pillar scoring, evidence, comments, indices, AI draft and final report controls.</p><a class="btn secondary" href="/assessment-phi-detail">Assessment view</a></div>
-<div class="card"><div class="badge">Private</div><h3>Full ITSM-HI</h3><p>Service maturity review with structured questions, support model views, BAU readiness and vendor controls.</p><a class="btn secondary" href="/assessment-itsm-detail">Assessment view</a></div>
-<div class="card"><div class="badge">Shared</div><h3>Lead Triage Dashboard</h3><p>Filter, score, review and convert leads into clients, programmes or services.</p><a class="btn secondary" href="/admin-leads">Leads view</a></div>
-<div class="card"><div class="badge">Shared</div><h3>AI Prompt Management</h3><p>Prompt version registry and activation panels for snapshot triage and full report generation.</p><a class="btn secondary" href="/admin-ai-prompts">Prompt view</a></div>
-</div></section>
+@section('title', 'Our Services — Programme & Service Intelligence (PIR / SIR) & Delivery Support')
 
-<footer class="footer"><div class="container">
-  <div class="footer-grid">
-    <div>
-      <div class="brand" style="margin-bottom:16px;"><img class="brand-logo" src="/assets/images/logo-rab.png" alt="RAB Consulting logo">
-      <span class="brand-text"><strong>RAB CONSULTING</strong><span>ASSESSMENT PLATFORM</span></span></div>
-      <p>Unified front-end for Programme Health Check, Service Health Check, full consultant-led assessments, reporting workflows and internal review operations.</p>
+@section('content')
+<!-- Page Header -->
+<!-- Page Header -->
+<section class="section" style="padding-top: 120px; padding-bottom: 80px; background: linear-gradient(to right, #ffffff, var(--bg-soft)); border-bottom: 1px solid var(--slate-200);">
+    <div class="container">
+        <h4 class="mb-4 text-primary font-bold tracking-widest">Our Services</h4>
+        <h1 class="mb-6 text-slate-900">Senior-led expertise for complex delivery</h1>
+        <p class="hero-text text-slate-700" style="max-width: 800px; font-size: 1.25rem; line-height: 1.6;">
+            RAB Consulting provides a comprehensive range of advisory and delivery support services designed to help organisations navigate the complexities of large-scale programmes and IT service environments.
+        </p>
     </div>
-    <div><h4>Public Pages</h4><div class="footer-links">
-      <a href="/programme-health-check">Programme Health Check</a>
-      <a href="/service-health-check">Service Health Check</a>
-      <a href="/pricing">Pricing</a>
-      <a href="/rapid-consulting">Rapid Consulting</a>
-    </div></div>
-    <div><h4>Portal</h4><div class="footer-links">
-      <a href="/admin-dashboard">Dashboard</a>
-      <a href="/admin-leads">Leads</a>
-      <a href="/admin-assessments">Assessments</a>
-      <a href="/admin-reports">Reports</a>
-    </div></div>
-    <div><h4>Legal</h4><div class="footer-links">
-      <a href="/privacy-policy">Privacy Policy</a>
-      <a href="/terms">Terms</a>
-    </div></div>
-  </div>
-  <div class="footer-bottom"><span>© 2026 RAB Consulting Services</span><span>Front-end build aligned to PHI and ITSM-HI platform structure.</span></div>
-</div></footer>
-<script src="/assets/js/main.js"></script>
-</body></html>
+</section>
+
+<!-- Leadership & Delivery -->
+<section class="section" id="leadership" style="background: white;">
+    <div class="container">
+        <div class="section-header mb-12">
+            <h4 class="mb-2 text-primary font-bold">01. Leadership & Delivery</h4>
+            <h2 class="text-slate-900">Senior direction and practical control</h2>
+        </div>
+        
+        <div class="grid-cards">
+            <div class="card-service" style="border-width: 2px;">
+                <h3 class="text-primary">Programme Management</h3>
+                <p class="text-slate-700">Expert direction for multi-stream transformation programmes, ensuring alignment with business objectives and robust risk management.</p>
+            </div>
+            <div class="card-service" style="border-width: 2px;">
+                <h3 class="text-primary">Project Management</h3>
+                <p class="text-slate-700">Focused delivery support for critical workstreams, ERP implementations, and high-stakes change initiatives.</p>
+            </div>
+            <div class="card-service" style="border-width: 2px;">
+                <h3 class="text-primary">Programme & Service Intelligence (PIR / SIR)</h3>
+                <p class="text-slate-700">Structured executive insight into programme health, delivery risk and operational readiness — enabling clear decisions and targeted intervention.</p>
+            </div>
+            <div class="card-service" id="recovery" style="border-width: 2px;">
+                <h3 class="text-primary">Recovery & Remediation</h3>
+                <p class="text-slate-700">Stabilising failing projects, identifying root causes, and executing remediation plans to get delivery back on track.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Review Products -->
+<section class="section" id="reviews" style="background: var(--slate-200); color: var(--slate-700);">
+    <div class="container">
+        <div class="section-header mb-16">
+            <h4 class="mb-2" style="color: var(--primary); font-weight: 800; filter: brightness(1.5);">02. Review Products</h4>
+            <h2 style="color: var(--slate-900);">Programme & Service Intelligence Reviews</h2>
+        </div>
+        
+        <div class="review-product-grid">
+            <!-- PIR -->
+            <div class="card-premium-review card-pir" style="background: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.3); backdrop-filter: blur(10px);">
+                <h3 style="color: var(--slate-900); font-size: 2rem;">PIR</h3>
+                <h4 style="text-transform: none; color: var(--slate-900); letter-spacing: normal; opacity: 0.9;">Programme Intelligence Review</h4>
+                <ul class="footer-links" style="margin-top: 24px; color: var(--slate-300);">
+                    <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: var(--primary); filter: brightness(1.5); font-weight: bold;">•</span>
+                        <span>Independent review of programme health</span>
+                    </li>
+                    <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: var(--primary); filter: brightness(1.5); font-weight: bold;">•</span>
+                        <span>ERP and transformation assessment</span>
+                    </li>
+                    <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: var(--primary); filter: brightness(1.5); font-weight: bold;">•</span>
+                        <span>Objective risk and delivery analysis</span>
+                    </li>
+                    <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: var(--primary); filter: brightness(1.5); font-weight: bold;">•</span>
+                        <span>Structured priority recommendations</span>
+                    </li>
+                </ul>
+                <div class="mt-8">
+                    <a href="/pir" class="btn-primary" style="background: white; color: var(--primary); border: none;">Learn more about PIR</a>
+                </div>
+            </div>
+            
+            <!-- SIR -->
+            <div class="card-premium-review card-sir" style="background: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.5); backdrop-filter: blur(10px);">
+                <h3 style="color: var(--slate-900); font-size: 2rem;">SIR</h3>
+                <h4 style="text-transform: none; color: var(--slate-900); letter-spacing: normal; opacity: 0.9;">Service Intelligence Review</h4>
+                <ul class="footer-links" style="margin-top: 24px; color: var(--slate-300);">
+                    <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: #6B7280; filter: brightness(2.0); font-weight: bold;">•</span>
+                        <span>IT service and operational stability review</span>
+                    </li>
+                    <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: #6B7280; filter: brightness(2.0); font-weight: bold;">•</span>
+                        <span>ITSM and service governance assessment</span>
+                    </li>
+                    <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: #6B7280; filter: brightness(2.0); font-weight: bold;">•</span>
+                        <span>Incident and change process maturity</span>
+                    </li>
+                    <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                        <span style="color: #6B7280; filter: brightness(2.0); font-weight: bold;">•</span>
+                        <span>Roadmap for service improvement</span>
+                    </li>
+                </ul>
+                <div class="mt-8">
+                    <a href="/sir" class="btn-primary" style="background: white; color: var(--primary); border: none;">Learn more about SIR</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Capability Support -->
+<section class="section" id="augmentation" style="background: white;">
+    <div class="container">
+        <div class="section-header mb-12">
+            <h4 class="mb-2 text-primary font-bold">03. Capability Support</h4>
+            <h2 class="text-slate-900">Flexible reinforcing for your teams</h2>
+        </div>
+        
+        <div class="grid-cards">
+            <div class="card-service" style="border-width: 2px;">
+                <h3 class="text-primary">Team Augmentation</h3>
+                <p class="text-slate-700">High-calibre senior resource to reinforce your internal teams during peak delivery phases or specialist gaps.</p>
+            </div>
+            <div id="consulting" class="card-service" style="border-width: 2px;">
+                <h3 class="text-primary">Business Consulting</h3>
+                <p class="text-slate-700">Practical advisory to improve operational clarity, decision quality, and commercial outcomes across the business.</p>
+            </div>
+            <div id="digital" class="card-service" style="border-width: 2px;">
+                <h3 class="text-primary">AI & Automation</h3>
+                <p class="text-slate-700">Pragmatic digital enablement through AI and process automation focused on tangible business efficiency.</p>
+            </div>
+            <div class="card-service" style="border-width: 2px;">
+                <h3 class="text-primary">Development</h3>
+                <p class="text-slate-700">Targeted development capability to support custom digital requirements and integration projects.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact CTA -->
+<section class="section" style="background: var(--bg-soft);">
+    <div class="container">
+        <div class="bg-primary shadow-2xl" style="padding: 80px; border-radius: var(--radius-lg); text-align: center; color: white;">
+            <h2 class="mb-4" style="color: white; font-size: 2.5rem;">Discuss how we can support your business</h2>
+            <p class="mb-10" style="max-width: 600px; margin-left: auto; margin-right: auto; font-size: 1.25rem; opacity: 0.9; color: white;">
+                Whether you need a one-off independent review or long-term leadership support, our senior consultants are ready to help.
+            </p>
+            <a href="/contact" class="btn-primary" style="background: white; color: var(--primary); padding: 20px 48px; font-size: 1.1rem;">Book a Consulting Discussion</a>
+        </div>
+    </div>
+</section>
+@endsection

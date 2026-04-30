@@ -24,7 +24,8 @@ class AssessmentScoringController extends Controller
     {
         $data = $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'type' => 'required|in:PHI,ITSM',
+            'type' => 'required|in:PIR,SIR',
+            'report_tier' => 'required|in:Tier 1 Rapid,Tier 2 Full',
             'name' => 'required|string',
             'target_entity' => 'nullable|string',
             'snapshot_submission_id' => 'nullable|exists:leads,id',
@@ -33,6 +34,7 @@ class AssessmentScoringController extends Controller
         $assessment = Assessment::create([
             'client_id' => $data['client_id'],
             'type' => $data['type'],
+            'report_tier' => $data['report_tier'],
             'name' => $data['name'],
             'target_entity' => $data['target_entity'],
             'snapshot_submission_id' => $data['snapshot_submission_id'] ?? null,
@@ -43,7 +45,7 @@ class AssessmentScoringController extends Controller
             'critical_flag' => false,
         ]);
 
-        if ($data['type'] === 'PHI') {
+        if ($data['type'] === 'PIR') {
             return redirect()->route('admin.assessments.score.phi', $assessment->id);
         } else {
             return redirect()->route('admin.assessments.score.itsm', $assessment->id);
@@ -54,14 +56,48 @@ class AssessmentScoringController extends Controller
     {
         $assessment->load(['questionResponses', 'pillarScores']);
         
-        return view('admin.assessments.score-phi', compact('assessment'));
+        $framework = \App\Models\AssessmentFramework::where('code', $assessment->type)->with('pillars.questions')->first();
+        $questions = [];
+        if ($framework) {
+            foreach ($framework->pillars as $pillar) {
+                $pillarName = $pillar->code . ' — ' . $pillar->name;
+                $qs = [];
+                foreach ($pillar->questions as $q) {
+                    if ($q->level === 'full') {
+                        $qs[$q->question_code] = $q->question_text;
+                    }
+                }
+                if (!empty($qs)) {
+                    $questions[$pillarName] = $qs;
+                }
+            }
+        }
+        
+        return view('admin.assessments.score-phi', compact('assessment', 'questions'));
     }
 
     public function scoreItsm(Assessment $assessment)
     {
         $assessment->load(['questionResponses', 'pillarScores']);
         
-        return view('admin.assessments.score-itsm', compact('assessment'));
+        $framework = \App\Models\AssessmentFramework::where('code', $assessment->type)->with('pillars.questions')->first();
+        $questions = [];
+        if ($framework) {
+            foreach ($framework->pillars as $pillar) {
+                $pillarName = $pillar->code . ' — ' . $pillar->name;
+                $qs = [];
+                foreach ($pillar->questions as $q) {
+                    if ($q->level === 'full') {
+                        $qs[$q->question_code] = $q->question_text;
+                    }
+                }
+                if (!empty($qs)) {
+                    $questions[$pillarName] = $qs;
+                }
+            }
+        }
+        
+        return view('admin.assessments.score-itsm', compact('assessment', 'questions'));
     }
 
     public function autoSave(Request $request, Assessment $assessment)
@@ -112,16 +148,81 @@ class AssessmentScoringController extends Controller
 
     public function generateReport(Assessment $assessment)
     {
-        // Fake generation for now
+        $assessment->load(['questionResponses', 'pillarScores', 'client']);
+        
+        $framework = \App\Models\AssessmentFramework::where('code', $assessment->type)->with('pillars.questions')->first();
+        $questionMap = [];
+        if ($framework) {
+            foreach ($framework->pillars as $pillar) {
+                foreach ($pillar->questions as $q) {
+                    $questionMap[$q->question_code] = $q->question_text;
+                }
+            }
+        }
+
+        $results = [
+            'overall_score' => $assessment->overall_score,
+            'rag_status' => $assessment->rag_status,
+            'pillar_scores' => $pillarScores,
+            'index_scores' => [
+                'BRI' => $assessment->bri,
+                'VRI' => $assessment->vri,
+                'DMI' => $assessment->dmi,
+                'CHI' => $assessment->chi,
+                'SSI' => $assessment->ssi,
+                'SMI' => $assessment->smi,
+                'SIMI' => $assessment->simi,
+                'BAURI' => $assessment->bau_readiness,
+            ],
+            'type' => $assessment->type,
+            'user' => [
+                'name' => $assessment->client->company_name ?? 'Client',
+                'company' => $assessment->client->company_name ?? 'Client',
+            ],
+            'detailed_responses' => $assessment->questionResponses->map(function($resp) use ($questionMap) {
+                $qCode = explode(':', $resp->question)[0];
+                return [
+                    'pillar_name' => $resp->pillar_name,
+                    'question_code' => $qCode,
+                    'question_text' => $questionMap[$qCode] ?? $resp->question,
+                    'score' => $resp->score,
+                    'evidence_note' => $resp->evidence_note,
+                    'confidence' => $resp->confidence,
+                ];
+            })->toArray(),
+        ];
+
+        $answers = $assessment->questionResponses->pluck('score', 'question')->toArray();
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()->post('https://n8n.srv1139767.hstgr.cloud/webhook-test/91523c95-9254-40e5-847d-047ae99956bd',[
+                'type' => strtoupper($assessment->type) . '_FULL',
+                'is_full' => true,
+                'results' => $results,
+                'answers' => $answers,
+                'assessment_id' => $assessment->id,
+                'submitted_at' => now()->toDateTimeString(),
+            ]);
+
+            $data = $response->json();
+            $aiRecommendation = $data['output'] ?? ($data['recommendation'] ?? 'AI recommendation could not be generated at this time.');
+            $topRisks = $data['top_5_risks'] ?? null;
+            
+            if ($topRisks && is_array($topRisks)) {
+                $topRisks = json_encode($topRisks);
+            }
+        } catch (\Exception $e) {
+            $aiRecommendation = 'Error connecting to AI service: ' . $e->getMessage();
+            $topRisks = null;
+        }
+
         $assessment->update([
-            'ai_draft_json' => [
-                'executive_summary' => 'Automatically generated summary for ' . $assessment->name,
-                'key_findings' => ['Need attention on ' . $assessment->rag_status . ' areas'],
-                'recommendations' => ['Fix the red pillars immediately']
-            ]
+            'ai_recommendation' => $aiRecommendation,
+            'top_5_risks' => $topRisks,
+            'status' => 'completed'
         ]);
 
-        return redirect()->route('admin.assessments.show', $assessment)->with('success', 'AI Report Draft generated successfully.');
+        return redirect()->route('admin.assessments.show', $assessment)->with('success', 'AI Report generated successfully.');
     }
 
     private function recalculateScores(Assessment $assessment)
@@ -131,16 +232,31 @@ class AssessmentScoringController extends Controller
             return;
         }
 
-        // Calculate Pillar Averages
-        $pillars = $responses->groupBy('pillar_name');
-        
-        $totalScoreSum = 0;
-        $totalQuestions = 0;
-        
-        $pillarAverages = [];
+        // Get framework definitions from DB
+        $framework = \App\Models\AssessmentFramework::where('code', $assessment->type)->first();
+        if (!$framework) return;
 
-        foreach ($pillars as $pillarName => $qs) {
-            $avg = $qs->avg('score');
+        $dbPillars = \App\Models\AssessmentPillar::where('framework_id', $framework->id)->get()->keyBy('code');
+
+        // Calculate Pillar Averages
+        // Responses currently store pillar_name which might be the code or 'Code - Name'
+        // We'll try to find the pillar by checking if the start of the string matches the code
+        $groupedResponses = $responses->groupBy(function($r) use ($dbPillars) {
+            foreach ($dbPillars as $code => $p) {
+                if (str_starts_with($r->pillar_name, $code)) return $code;
+            }
+            return $r->pillar_name;
+        });
+        
+        $weightedScoreSum = 0;
+        $totalWeight = 0;
+        $isCriticalFailure = false;
+
+        foreach ($groupedResponses as $pCode => $qs) {
+            $pillar = $dbPillars[$pCode] ?? null;
+            
+            // Formula 1: raw_score = ROUND( sum/count, 2 )
+            $avg = round($qs->avg('score'), 2);
             
             $rag = 'Red';
             if ($avg >= 3.8) {
@@ -152,22 +268,35 @@ class AssessmentScoringController extends Controller
             AssessmentPillarScore::updateOrCreate(
                 [
                     'assessment_id' => $assessment->id,
-                    'name' => $pillarName
+                    'name' => $pillar ? ($pillar->code . ' — ' . $pillar->name) : $pCode
                 ],
                 [
                     'score' => $avg,
                     'rag_status' => $rag,
-                    'critical_flag' => $avg < 2.5
+                    'critical_flag' => ($pillar && $pillar->is_critical && $avg < 3.0)
                 ]
             );
 
-            $pillarAverages[$pillarName] = $avg;
-            
-            $totalScoreSum += $qs->sum('score');
-            $totalQuestions += $qs->count();
+            if ($pillar) {
+                // Formula 2: weighted_pillar_score = ROUND( raw_score * weight, 2 )
+                $weightedPillarScore = round($avg * $pillar->weight, 2);
+                
+                $weightedScoreSum += $weightedPillarScore;
+                $totalWeight += $pillar->weight;
+                
+                if ($pillar->is_critical && $avg < 3.0) {
+                    $isCriticalFailure = true;
+                }
+            } else {
+                // If pillar not found in DB bank, treat as weight 1.0 for safety
+                $weightedScoreSum += $avg;
+                $totalWeight += 1.0;
+            }
         }
 
-        $overallScore = $totalScoreSum / $totalQuestions;
+        // Formula 3: overall_score = ROUND( SUM(weighted_scores) / SUM(weights), 2 )
+        $overallScore = $totalWeight > 0 ? round($weightedScoreSum / $totalWeight, 2) : 0;
+        
         $overallRag = 'Red';
         if ($overallScore >= 3.8) {
             $overallRag = 'Green';
@@ -175,59 +304,95 @@ class AssessmentScoringController extends Controller
             $overallRag = 'Amber';
         }
 
-        // Specific Indices logic
         $updates = [
             'overall_score' => $overallScore,
             'rag_status' => $overallRag,
+            'critical_flag' => $isCriticalFailure || ($overallScore < 3.0),
         ];
 
-        if ($assessment->type === 'PHI') {
-            // VRI = average of P3 questions
-            $p3_qs = $responses->filter(fn($r) => str_starts_with($r->question, 'P3_'));
-            if ($p3_qs->isNotEmpty()) {
-                $updates['vri'] = $p3_qs->avg('score');
-            }
 
-            // BRI = average(all P4 + all P6 + specific P7 questions)
-            $bri_qs = $responses->filter(function($r) {
-                return str_starts_with($r->question, 'P4_') || 
-                       str_starts_with($r->question, 'P6_') || 
-                       in_array(explode(':', $r->question)[0], ['P7_Q5', 'P7_Q6', 'P7_Q7', 'P7_Q12', 'P7_Q13', 'P7_Q14', 'P7_Q15']);
+        // Specific Indices for PIR
+        if ($assessment->type === 'PIR') {
+            $pillarScores = AssessmentPillarScore::where('assessment_id', $assessment->id)->get()->keyBy(function($p) {
+                return explode(' — ', $p->name)[0]; // Get the code like P1, P2...
             });
-            if ($bri_qs->isNotEmpty()) {
-                $updates['bri'] = $bri_qs->avg('score');
+
+            // VRI is primarily Pillar 3 (Value)
+            if (isset($pillarScores['P3'])) {
+                $updates['vri'] = $pillarScores['P3']->score;
             }
 
-            // Critical Flag: P1 < 2.5 OR P2 < 2.5 OR P5 < 2.5 OR P7 < 2.5 OR overall < 2.8
-            $p1_avg = $pillarAverages['P1 — Governance & Decision-Making'] ?? 5;
-            $p2_avg = $pillarAverages['P2 — Planning & Delivery Control'] ?? 5;
-            $p5_avg = $pillarAverages['P5 — Data Readiness & Migration'] ?? 5;
-            $p7_avg = $pillarAverages['P7 — Cutover & Go-Live Readiness'] ?? 5;
+            // BRI: (P3*1.3 + P4*1.2 + P5*1.2 + P7*1.2) / 4.9
+            $p3 = $pillarScores['P3']->score ?? 0;
+            $p4 = $pillarScores['P4']->score ?? 0;
+            $p5 = $pillarScores['P5']->score ?? 0;
+            $p7 = $pillarScores['P7']->score ?? 0;
 
-            $updates['critical_flag'] = ($p1_avg < 2.5 || $p2_avg < 2.5 || $p5_avg < 2.5 || $p7_avg < 2.5 || $overallScore < 2.8);
+            if ($p3 || $p4 || $p5 || $p7) {
+                $updates['bri'] = round(($p3 * 1.3 + $p4 * 1.2 + $p5 * 1.2 + $p7 * 1.2) / 4.9, 2);
+            }
+
+            // DMI: (P9*1.0 + P10*1.1) / 2.1
+            $p9 = $pillarScores['P9']->score ?? 0;
+            $p10 = $pillarScores['P10']->score ?? 0;
+            if ($p9 || $p10) {
+                $updates['dmi'] = round(($p9 * 1.0 + $p10 * 1.1) / 2.1, 2);
+            }
+
+            // CHI: specific compliance questions
+            $complianceQuestions = ['P1.F8', 'P3.F11', 'P5.F8', 'P5.F9', 'P8.F8', 'P8.F9'];
+            $chi_qs = $responses->filter(function($r) use ($complianceQuestions) {
+                foreach ($complianceQuestions as $code) {
+                    if (str_starts_with($r->question, $code . ':')) return true;
+                }
+                return false;
+            });
+            if ($chi_qs->isNotEmpty()) {
+                $updates['chi'] = round($chi_qs->avg('score'), 2);
+            }
         }
 
-        if ($assessment->type === 'ITSM') {
-            // SSI = P2 + P4 + P5
-            $ssi_qs = $responses->filter(fn($r) => str_starts_with($r->question, 'P2_') || str_starts_with($r->question, 'P4_') || str_starts_with($r->question, 'P5_'));
-            if ($ssi_qs->isNotEmpty()) $updates['ssi'] = $ssi_qs->avg('score');
+        // Specific Indices for SIR
+        if ($assessment->type === 'SIR') {
+            $pillarScores = AssessmentPillarScore::where('assessment_id', $assessment->id)->get()->keyBy(function($p) {
+                return explode(' — ', $p->name)[0]; // Get the code like D1, D2...
+            });
 
-            // SMI = P1 + P6 + P11
-            $smi_qs = $responses->filter(fn($r) => str_starts_with($r->question, 'P1_') || str_starts_with($r->question, 'P6_') || str_starts_with($r->question, 'P11_'));
-            if ($smi_qs->isNotEmpty()) $updates['smi'] = $smi_qs->avg('score');
+            // SSI (Service Stability): (D1 + D2) / 2
+            $d1 = $pillarScores['D1']->score ?? 0;
+            $d2 = $pillarScores['D2']->score ?? 0;
+            if ($d1 || $d2) {
+                $updates['ssi'] = round(($d1 + $d2) / 2, 2);
+            }
 
-            // BAU = P7 + P8
-            $bau_qs = $responses->filter(fn($r) => str_starts_with($r->question, 'P7_') || str_starts_with($r->question, 'P8_'));
-            if ($bau_qs->isNotEmpty()) $updates['bau_readiness'] = $bau_qs->avg('score');
+            // SMI (Service Maturity): (D4*1.2 + D6*1.2 + D11*0.9) / 3.3
+            $d4 = $pillarScores['D4']->score ?? 0;
+            $d6 = $pillarScores['D6']->score ?? 0;
+            $d11 = $pillarScores['D11']->score ?? 0;
+            if ($d4 || $d6 || $d11) {
+                $updates['smi'] = round(($d4 * 1.2 + $d6 * 1.2 + $d11 * 0.9) / 3.3, 2);
+            }
 
-            $p2_avg = $pillarAverages['P2 — Incident & Major Incident Management'] ?? 5;
-            $p5_avg = $pillarAverages['P5 — Change & Release Management'] ?? 5;
-            $p7_avg = $pillarAverages['P7 — Service Transition & BAU Readiness'] ?? 5;
-            $p10_avg = $pillarAverages['P10 — Operational Resilience & Continuity'] ?? 5;
-            
-            $updates['critical_flag'] = ($p2_avg < 2.5 || $p5_avg < 2.5 || $p7_avg < 2.5 || $p10_avg < 2.5 || $overallScore < 2.8);
+            // SIMI (Service Improvement): (D4*1.2 + D11*0.9 + D12*1.1) / 3.2
+            $d12 = $pillarScores['D12']->score ?? 0;
+            if ($d4 || $d11 || $d12) {
+                $updates['simi'] = round(($d4 * 1.2 + $d11 * 0.9 + $d12 * 1.1) / 3.2, 2);
+            }
+
+            // BAURI (BAU Readiness): (D7 + D8) / 2
+            $d7 = $pillarScores['D7']->score ?? 0;
+            $d8 = $pillarScores['D8']->score ?? 0;
+            if ($d7 || $d8) {
+                $updates['bau_readiness'] = round(($d7 + $d8) / 2, 2);
+            }
+
+            // CHI: average of D10 (Security & Compliance)
+            if (isset($pillarScores['D10'])) {
+                $updates['chi'] = $pillarScores['D10']->score;
+            }
         }
 
         $assessment->update($updates);
     }
+
 }

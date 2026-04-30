@@ -1,50 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Terms — RAB CONSULTING</title>
-<meta name="description" content="RAB Assessment Platform front-end package"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/styles.css"/>
-</head><body>
-<header class="topbar"><div class="container nav">
-  <a class="brand" href="/"><img class="brand-logo" src="/assets/images/logo-rab.png" alt="RAB Consulting logo">
-  <span class="brand-text"><strong>RAB CONSULTING</strong><span>ASSESSMENT PLATFORM</span></span></a>
-  <nav class="nav-links"><a data-nav href="/about">About</a><a data-nav href="/services">Services</a><a data-nav href="/programme-health-check">Programme Health Check</a><a data-nav href="/service-health-check">Service Health Check</a><a data-nav href="/pricing">Pricing</a><a data-nav href="/rapid-consulting">Rapid Consulting</a><a data-nav href="/contact">Contact</a></nav>
-  <div style="display:flex;gap:12px;align-items:center;">
-    <button class="btn ghost menu-toggle" data-menu-toggle>Menu</button>
-    <a class="nav-cta" href="/admin-dashboard">Open portal preview</a>
-  </div>
-</div></header>
+@extends('layouts.public')
 
-<section class="page-hero"><div class="container"><h1>Terms</h1><p>Front-end placeholder page for commercial terms, platform use, review limitations and client engagement conditions. Replace with final legal text before go-live.</p></div></section>
+@section('title', 'Terms & Conditions — RAB Consulting')
 
-<footer class="footer"><div class="container">
-  <div class="footer-grid">
-    <div>
-      <div class="brand" style="margin-bottom:16px;"><img class="brand-logo" src="/assets/images/logo-rab.png" alt="RAB Consulting logo">
-      <span class="brand-text"><strong>RAB CONSULTING</strong><span>ASSESSMENT PLATFORM</span></span></div>
-      <p>Unified front-end for Programme Health Check, Service Health Check, full consultant-led assessments, reporting workflows and internal review operations.</p>
+@section('content')
+<section class="section">
+    <div class="container" style="max-width: 800px;">
+        <h1 class="mb-8">Terms & Conditions</h1>
+        <div class="prose">
+            <p class="mb-6">By using this website and our diagnostic tools, you agree to comply with and be bound by the following terms and conditions of use.</p>
+            
+            <h3 class="mt-8 mb-4">1. Use of Site</h3>
+            <p class="mb-6">The content of the pages of this website is for your general information and use only. It is subject to change without notice.</p>
+            
+            <h3 class="mt-8 mb-4">2. Diagnostic Tool (PIR/SIR)</h3>
+            <p class="mb-6">The 15-minute diagnostic provides initial insight based on user-provided data. This is not a substitute for a full consultant-led review. RAB Consulting Services Ltd is not liable for any actions taken based solely on diagnostic results without further consulting engagement.</p>
+
+            <h3 class="mt-8 mb-4">3. Intellectual Property</h3>
+            <p class="mb-6">This website contains material which is owned by or licensed to us. This material includes, but is not limited to, the design, layout, look, appearance, graphics and proprietary PIR/SIR frameworks.</p>
+
+            <h3 class="mt-8 mb-4">4. Governing Law</h3>
+            <p class="mb-6">Your use of this website and any dispute arising out of such use of the website is subject to the laws of England, Northern Ireland, Scotland and Wales.</p>
+        </div>
     </div>
-    <div><h4>Public Pages</h4><div class="footer-links">
-      <a href="/programme-health-check">Programme Health Check</a>
-      <a href="/service-health-check">Service Health Check</a>
-      <a href="/pricing">Pricing</a>
-      <a href="/rapid-consulting">Rapid Consulting</a>
-    </div></div>
-    <div><h4>Portal</h4><div class="footer-links">
-      <a href="/admin-dashboard">Dashboard</a>
-      <a href="/admin-leads">Leads</a>
-      <a href="/admin-assessments">Assessments</a>
-      <a href="/admin-reports">Reports</a>
-    </div></div>
-    <div><h4>Legal</h4><div class="footer-links">
-      <a href="/privacy-policy">Privacy Policy</a>
-      <a href="/terms">Terms</a>
-    </div></div>
-  </div>
-  <div class="footer-bottom"><span>© 2026 RAB Consulting Services</span><span>Front-end build aligned to PHI and ITSM-HI platform structure.</span></div>
-</div></footer>
-<script src="/assets/js/main.js"></script>
-</body></html>
+</section>
+@endsection

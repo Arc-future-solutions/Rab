@@ -1,99 +1,7 @@
 @php
-$phi_questions = [
-    'P1 — Governance & Decision-Making' => [
-        'P1_Q1' => 'Decision rights are clearly defined and understood.',
-        'P1_Q2' => 'There is a functioning SteerCo with real authority.',
-        'P1_Q3' => 'Escalations are timely and effective.',
-        'P1_Q4' => 'Risks are openly discussed rather than filtered.',
-        'P1_Q5' => 'Programme reporting is accurate and unmanipulated.',
-        'P1_Q6' => 'Roles and responsibilities are clearly defined.',
-        'P1_Q7' => 'Sponsorship is active and visible.'
-    ],
-    'P2 — Planning & Delivery Control' => [
-        'P2_Q1' => 'There is a credible integrated plan.',
-        'P2_Q2' => 'The critical path is clearly identified and tracked.',
-        'P2_Q3' => 'Dependencies are actively managed.',
-        'P2_Q4' => 'RAID management is effective and up to date.',
-        'P2_Q5' => 'Milestones are meaningful rather than artificial.',
-        'P2_Q6' => 'Delays are acknowledged early rather than hidden.',
-        'P2_Q7' => 'Re-planning is structured rather than reactive.'
-    ],
-    'P3 — Business Alignment & Value' => [
-        'P3_Q1' => 'Business KPIs are clearly defined.',
-        'P3_Q2' => 'A measurable baseline exists.',
-        'P3_Q3' => 'Benefits are measurable.',
-        'P3_Q4' => 'KPIs are owned by the business rather than IT alone.',
-        'P3_Q5' => 'Sponsors are accountable for outcomes.',
-        'P3_Q6' => 'KPIs are tracked during delivery.',
-        'P3_Q7' => 'Dashboards exist for value tracking.',
-        'P3_Q8' => 'Budget tracking is accurate.',
-        'P3_Q9' => 'Overruns are identified early.',
-        'P3_Q10' => 'Change costs are controlled.'
-    ],
-    'P4 — Change, Training & Adoption' => [
-        'P4_Q1' => 'There is a structured training plan.',
-        'P4_Q2' => 'Training is role-based.',
-        'P4_Q3' => 'Training is completed or actively controlled.',
-        'P4_Q4' => 'Attendance is tracked.',
-        'P4_Q5' => 'Business SMEs are actively involved.',
-        'P4_Q6' => 'Users contribute to design decisions.',
-        'P4_Q7' => 'Business ownership is clear.',
-        'P4_Q8' => 'Resistance points are identified.',
-        'P4_Q9' => 'Change champions are in place.',
-        'P4_Q10' => 'Adoption is measured.'
-    ],
-    'P5 — Data Readiness & Migration' => [
-        'P5_Q1' => 'There is a defined data migration strategy.',
-        'P5_Q2' => 'Data owners are clearly identified.',
-        'P5_Q3' => 'Data quality is understood and measured.',
-        'P5_Q4' => 'Data cleansing is actively managed.',
-        'P5_Q5' => 'Mock migrations have been completed.',
-        'P5_Q6' => 'Reconciliation is defined and tested.',
-        'P5_Q7' => 'The business is validating migrated data.'
-    ],
-    'P6 — Solution & Process Fit' => [
-        'P6_Q1' => 'Processes are clearly defined.',
-        'P6_Q2' => 'AS-IS and TO-BE are understood.',
-        'P6_Q3' => 'The solution aligns with business needs.',
-        'P6_Q4' => 'Over-customisation is controlled.',
-        'P6_Q5' => 'Key design decisions are validated by business.',
-        'P6_Q6' => 'Gaps are understood and documented.',
-        'P6_Q7' => 'Workarounds are understood and acceptable where necessary.'
-    ],
-    'P7 — Cutover & Go-Live Readiness' => [
-        'P7_Q1' => 'Data migration is tested end to end.',
-        'P7_Q2' => 'Data reconciliation is validated.',
-        'P7_Q3' => 'A data freeze plan exists.',
-        'P7_Q4' => 'Data sign-offs are defined.',
-        'P7_Q5' => 'Day 1 business processes are defined.',
-        'P7_Q6' => 'Roles and responsibilities are clear.',
-        'P7_Q7' => 'Manual processes are identified.',
-        'P7_Q8' => 'Dependencies are mapped.',
-        'P7_Q9' => 'A detailed cutover runbook exists.',
-        'P7_Q10' => 'Timeline is defined at practical level.',
-        'P7_Q11' => 'Rehearsals have been completed.',
-        'P7_Q12' => 'The support model is defined.',
-        'P7_Q13' => 'Escalation paths are clear.',
-        'P7_Q14' => 'Hypercare is planned.',
-        'P7_Q15' => 'SLAs and support expectations are defined.'
-    ],
-    'P8 — Delivery Capability & Resourcing' => [
-        'P8_Q1' => 'The team structure is fit for purpose.',
-        'P8_Q2' => 'Key roles are filled.',
-        'P8_Q3' => 'Capability gaps are known and addressed.',
-        'P8_Q4' => 'SI or vendor is managed effectively.',
-        'P8_Q5' => 'PMO is functioning properly.',
-        'P8_Q6' => 'Workload is realistic.',
-        'P8_Q7' => 'Team stability is maintained.'
-    ],
-    'P9 — Operational & Automation Readiness' => [
-        'P9_Q1' => 'Reporting is automated where appropriate.',
-        'P9_Q2' => 'Data is structured for analytics.',
-        'P9_Q3' => 'Automation opportunities are identified.',
-        'P9_Q4' => 'Automation or AI is considered in the roadmap where relevant.',
-        'P9_Q5' => 'Processes are standardised enough for automation.'
-    ]
-];
+$phi_questions = $questions ?? [];
+$total_q = 0;
+foreach($phi_questions as $p => $qs) $total_q += count($qs);
 
 // Combine existing answers into an easy lookup map
 $savedResponses = $assessment->questionResponses->keyBy(function($item) {
@@ -107,8 +15,26 @@ $savedPillars = $assessment->pillarScores->keyBy('name');
 @section('header')
 <div class="flex justify-between items-center w-full" x-data="{
     answered: {{ $assessment->questionResponses->count() }},
-    total: 75
+    total: {{ $total_q }},
+    submitting: false
 }">
+    {{-- Full-Page Loading Overlay --}}
+    <div x-show="submitting" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         class="fixed inset-0 z-[9999] bg-slate-900/90 backdrop-blur-xl flex flex-col items-center justify-center text-center p-6" 
+         x-cloak>
+        <div class="relative w-24 h-24 mb-8">
+            <div class="absolute inset-0 border-4 border-blue-500/20 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div class="absolute inset-4 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center shadow-lg">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+        </div>
+        <h2 class="text-3xl font-black text-white tracking-tight mb-3">AI Agent Analysis in Progress</h2>
+        <p class="text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px]">Benchmarking responses against industry frameworks...</p>
+    </div>
     <div class="flex items-center gap-4">
         <span>{{ $assessment->client->company_name }} &rsaquo; {{ $assessment->name }}</span>
     </div>
@@ -126,19 +52,25 @@ $savedPillars = $assessment->pillarScores->keyBy('name');
                 {{ number_format($assessment->overall_score, 1) }}
             </span>
         </div>
-        <template x-if="answered / total >= 0.8">
-            <form action="{{ route('admin.assessments.generateReport', $assessment->id) }}" method="POST" class="inline m-0">
-                @csrf
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold shadow hover:bg-blue-700 animate-pulse">Generate AI Draft</button>
-            </form>
-        </template>
-        <button onclick="window.location='{{ route('admin.assessments.show', $assessment->id) }}'" class="bg-gray-800 text-white px-4 py-2 rounded text-sm hover:bg-gray-700">Done / Exit</button>
+        <form id="exitForm" action="{{ route('admin.assessments.generateReport', $assessment->id) }}" method="POST" class="inline m-0" @submit="submitting = true">
+            @csrf
+            <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded text-sm font-bold shadow hover:bg-gray-700">Done / Exit & Generate Report</button>
+        </form>
     </div>
 </div>
 @endsection
 
 @section('content')
 <div x-data="scorerComponent()">
+    <!-- Consultant Disclaimer Banner -->
+    <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 shadow-sm rounded-r-lg">
+        <div class="flex items-center gap-3">
+            <svg class="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+            <p class="text-[11px] font-black text-amber-900 uppercase tracking-tight">
+                Consultant Note: All scores represent self-reported data verified by evidentiary submission. Findings are operational and advisory only.
+            </p>
+        </div>
+    </div>
 
     <!-- Context Card -->
     <div class="bg-white rounded-lg shadow mb-6 overflow-hidden">
@@ -292,6 +224,49 @@ $savedPillars = $assessment->pillarScores->keyBy('name');
                 <input type="text" @change="saveContext" x-model="context.recommended_next_step" class="mt-1 block w-full rounded border-gray-300 p-2 border">
             </div>
         </div>
+    </div>
+
+    <!-- AI Agent Recommendations -->
+    <div class="mt-8 mb-12">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+            <div>
+                <h3 class="text-xl font-black text-slate-800 tracking-tight">AI Agent Recommendations</h3>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Real-time Strategy & Insights</p>
+            </div>
+        </div>
+
+        @if($assessment->ai_draft_json)
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+                    <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Executive Summary</h4>
+                    <p class="text-slate-700 font-medium leading-relaxed">
+                        {{ $assessment->ai_draft_json['executive_summary'] }}
+                    </p>
+                </div>
+                <div class="bg-slate-900 rounded-3xl p-8 text-white shadow-2xl">
+                    <h4 class="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-4">Strategic Recommendations</h4>
+                    <ul class="space-y-3">
+                        @foreach($assessment->ai_draft_json['recommendations'] ?? [] as $rec)
+                            <li class="flex items-start gap-3">
+                                <svg class="w-4 h-4 text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                <span class="text-sm font-bold text-slate-300">{{ $rec }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @else
+            <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center">
+                <div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <h4 class="text-sm font-bold text-slate-400">No agent analysis available yet.</h4>
+                <p class="text-xs text-slate-400 mt-1">Complete more sections to unlock AI-powered consulting insights.</p>
+            </div>
+        @endif
     </div>
 </div>
 

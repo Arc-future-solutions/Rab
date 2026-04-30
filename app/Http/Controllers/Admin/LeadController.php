@@ -7,8 +7,12 @@ use App\Models\Lead;
 use App\Models\Client;
 use Illuminate\Http\Request;
 
+use App\Traits\HasAssessmentQuestions;
+
 class LeadController extends Controller
 {
+    use HasAssessmentQuestions;
+
     public function index(Request $request)
     {
         $query = Lead::query();
@@ -32,10 +36,18 @@ class LeadController extends Controller
         if ($request->filled('converted')) {
             $query->where('converted_to_client', $request->converted === 'yes');
         }
+        
+        if ($request->filled('source')) {
+            $query->where('source', $request->source);
+        }
 
         $leads = $query->orderBy('created_at', 'desc')->get();
+        $questions = [
+            'PHI' => $this->phiQuestions,
+            'ITSM' => $this->itsmQuestions
+        ];
 
-        return view('admin.leads.index', compact('leads'));
+        return view('admin.leads.index', compact('leads', 'questions'));
     }
 
     public function convert(Lead $lead)

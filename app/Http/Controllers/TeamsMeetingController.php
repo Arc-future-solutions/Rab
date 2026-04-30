@@ -30,7 +30,7 @@ class TeamsMeetingController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['status' => 'success', 'join_url' => $mockJoinUrl, 'message' => 'Teams meeting request received!']);
             }
-            return back()->with('success', 'Teams meeting request received! A consultant will join you at the provided time. (Mock Mode Active) Join URL: ' . $mockJoinUrl);
+            return redirect()->route('thank-you')->with('success', 'Teams meeting request received! A consultant will join you at the provided time.');
         }
 
         // 1. Get Access Token
@@ -107,7 +107,7 @@ class TeamsMeetingController extends Controller
             if ($request->wantsJson()) {
                 return response()->json(['status' => 'success', 'join_url' => $mockJoinUrl, 'message' => 'Teams meeting request received!']);
             }
-            return back()->with('success', 'Teams meeting request received! A consultant will join you at the provided time. (Mock Mode Active) Join URL: ' . $mockJoinUrl);
+            return redirect()->route('thank-you')->with('success', 'Teams meeting request received! A consultant will join you at the provided time.');
         }
 
         // 1. Get Access Token

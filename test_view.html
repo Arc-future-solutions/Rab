@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assessment — Rapid Consulting</title>
+    <meta name="description" content="RAB Consulting helps organisations understand the true state of critical delivery and service environments through independent review and senior-led leadership." />
+    
+    <!-- Typography: Inter & Manrope -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+    
+    <!-- Modern Styling: Tailwind CSS for premium components -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E3A8A',     /* color-primary */
+                        action: '#2563EB',      /* color-action */
+                        ink: '#0F172A',         /* color-ink */
+                        slate: '#475569',       /* color-slate */
+                        cloud: '#F8FAFC',       /* color-cloud */
+                        line: '#E2E8F0',        /* color-line */
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        inter: ['Inter', 'sans-serif'],
+                        manrope: ['Manrope', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Keeping Alpine for interactions like dropdowns/modals -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    </head>
+
+<body class="bg-white text-slate-900 font-inter antialiased">
+    <div class="nav-backdrop" data-menu-toggle></div>
+       
+    <main>
+        <section class="min-h-screen flex items-center justify-center bg-white p-4" x-data="assessmentHandler()">
+    
+    <div x-show="submitting" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         class="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-xl flex flex-col items-center justify-center text-center p-6" 
+         x-cloak>
+        <div class="relative w-32 h-32 mb-10">
+            <div class="absolute inset-0 border-4 border-blue-500/20 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div class="absolute inset-6 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl shadow-lg flex items-center justify-center">
+                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+        </div>
+        <h2 class="text-4xl font-black text-white tracking-tighter mb-4">Rab getting your insights ready...</h2>
+    </div>
+
+    <div class="w-full max-w-[56rem] mx-auto">
+        
+        <div class="mb-12 text-center">
+            <h1 class="text-xl md:text-2xl font-black text-slate-900 uppercase tracking-tighter mb-4" x-text="currentPillar">
+                Intelligence Review
+            </h1>
+            <div class="h-1.5 w-16 bg-blue-600 mx-auto rounded-full"></div>
+        </div>
+        <div class="mb-12">
+            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div class="bg-blue-600 h-full transition-all duration-500" :style="`width: ${progress}%`"></div>
+            </div>
+            <div class="flex justify-between mt-2 text-[10px] font-black text-blue-800 uppercase tracking-widest">
+                <span>Diagnostic Progress</span>
+                <span><span x-text="answeredCount">0</span> / <span x-text="totalQuestions">0</span></span>
+            </div>
+        </div>
+
+        
+        <form action="http://localhost/rapid-consulting/assessment/submit" method="POST" @submit="validateSubmission($event)">
+            <input type="hidden" name="_token" value="" autocomplete="off">            
+                            <div class="question-page" x-show="currentIndex === 0" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P1.S1'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 5
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                Third-party frame
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            If an independent reviewer compared the last three status reports against the current RAID log and milestone tracker today, what picture would they see — and would it match what has been communicated to the board?
+                        </h2>
+                        
+                        <input type="hidden" name="P1.S1" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P1.S1" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 1" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P1.S2'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 3
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                Factual recall
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            When was the last time a programme risk or issue was formally escalated to and decided by the Executive Sponsor — and what was the resolution timeline and outcome?
+                        </h2>
+                        
+                        <input type="hidden" name="P1.S2" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P1.S2" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 2" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P2.S1'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 2
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                How confident
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            How confident are you, based on today&#039;s evidence, that the programme will reach go-live on the current date without a further re-baseline — and what is the single biggest threat to that confidence?
+                        </h2>
+                        
+                        <input type="hidden" name="P2.S1" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P2.S1" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 3" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P2.S2'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 3
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                Factual recall
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            What are the formal exit criteria for the current delivery stage — where are they documented, who owns sign-off authority, and how are exceptions tracked when criteria are not fully met?
+                        </h2>
+                        
+                        <input type="hidden" name="P2.S2" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P2.S2" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 4" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P3.S1'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 3
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                Factual recall
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            Were the business KPIs and measurable success criteria for this programme defined before the solution was selected — and who is the named business leader accountable for delivering each one post go-live?
+                        </h2>
+                        
+                        <input type="hidden" name="P3.S1" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P3.S1" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 5" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P3.S2'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 5
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                Third-party frame
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            If the CFO reviewed the programme&#039;s budget tracker and change order register today alongside the original business case, what would they find — and has the cumulative financial impact of all change requests been formally approved and communicated?
+                        </h2>
+                        
+                        <input type="hidden" name="P3.S2" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P3.S2" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 6" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P4.S1'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 1
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                To what extent
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            To what extent has the full human and behavioural change required by this programme been formally assessed — covering every affected group, the nature and scale of impact on their working practices, and the specific interventions planned for each?
+                        </h2>
+                        
+                        <input type="hidden" name="P4.S1" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P4.S1" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 7" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P4.S2'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 4
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                What if
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            What would happen to adoption confidence if the two most engaged business champions left the programme today — and has the programme built institutional change capability rather than personal dependency?
+                        </h2>
+                        
+                        <input type="hidden" name="P4.S2" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P4.S2" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 8" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P5.S1'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 3
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                Factual recall
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            What percentage of critical data records passed the most recent data quality profile, who reviewed the results, and what is the current status of the remediation plan?
+                        </h2>
+                        
+                        <input type="hidden" name="P5.S1" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P5.S1" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 9" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P5.S2'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 2
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                How confident
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            How confident are you that every category of personal data being migrated has a confirmed lawful basis for processing in the new system — and has the Data Protection Officer reviewed and accepted the migration scope?
+                        </h2>
+                        
+                        <input type="hidden" name="P5.S2" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P5.S2" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 10" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P6.S1'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 1
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                To what extent
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            To what extent have the business process owners — the people who will operate these processes daily — formally accepted the designed processes, as opposed to project team representatives signing off on their behalf?
+                        </h2>
+                        
+                        <input type="hidden" name="P6.S1" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P6.S1" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 11" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P6.S2'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 5
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                Third-party frame
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            If an independent quality reviewer examined the UAT evidence pack today, what would they find — specifically regarding defect logging completeness, severity triage, re-test evidence, and formal business sign-off?
+                        </h2>
+                        
+                        <input type="hidden" name="P6.S2" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P6.S2" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 12" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P7.S1'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 4
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                What if
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            What would happen if go-live began tonight and a critical data reconciliation failure was discovered at hour six — is there a tested rollback plan with agreed trigger criteria and a named individual authorised to invoke it?
+                        </h2>
+                        
+                        <input type="hidden" name="P7.S1" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P7.S1" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 13" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P7.S2'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 1
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                To what extent
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            To what extent is there a formally approved decommissioning plan for every legacy system being retired — covering data preservation, retirement sequencing, licence termination, and the criteria that must be met before any legacy system is permanently switched off?
+                        </h2>
+                        
+                        <input type="hidden" name="P7.S2" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P7.S2" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 14" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P8.S1'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 3
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                Factual recall
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            How many key programme roles have changed in the last 90 days — including Programme Director, PMO Lead, Technical Lead, and Workstream Leads — and has each change been formally managed with a documented handover?
+                        </h2>
+                        
+                        <input type="hidden" name="P8.S1" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P8.S1" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 15" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P8.S2'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 2
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                How confident
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            How confident are you that the security architecture of the solution being built has been reviewed and validated by the organisation&#039;s security or CISO function — and is a pre-go-live security assessment planned with sufficient time to act on findings?
+                        </h2>
+                        
+                        <input type="hidden" name="P8.S2" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P8.S2" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 16" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P9.S1'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 5
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                Third-party frame
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            If the operations team were asked today whether they feel ready to support this solution from Day 1 — with adequate documentation, training, escalation paths, and tooling — what would they say, and when were they last formally consulted?
+                        </h2>
+                        
+                        <input type="hidden" name="P9.S1" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P9.S1" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 17" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P9.S2'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 1
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                To what extent
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            To what extent has a formally approved data archiving and retention strategy been defined — covering retention periods by data type, archiving triggers, regulatory hold requirements, and a scheduled archiving process to keep the system performant over its operational lifetime?
+                        </h2>
+                        
+                        <input type="hidden" name="P9.S2" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P9.S2" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 18" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P10.S1'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 3
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                Factual recall
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            Are 90-day post go-live adoption targets formally defined as measurable success criteria — with a named business owner, a tracking mechanism, and board-level visibility — and is the programme measured against these, not just the go-live date?
+                        </h2>
+                        
+                        <input type="hidden" name="P10.S1" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P10.S1" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+                            <div class="question-page" x-show="currentIndex === 19" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+                    <div class="text-center" x-data="{ score: '' }" x-init="$watch('score', (val) => { scores['P10.S2'] = val; updateCount(); })">
+                        <div class="mb-6 flex flex-col items-center justify-center">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-black uppercase tracking-widest rounded-full border border-blue-100 shadow-sm mb-2">
+                                Type 1
+                            </span>
+                            <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                To what extent
+                            </span>
+                        </div>
+                        <h2 class="text-2xl md:text-[1.75rem] font-black text-gray-900 mb-12 leading-tight tracking-tight">
+                            To what extent has the organisation&#039;s data and digital infrastructure been formally assessed as capable of supporting the transformation outcomes planned — and have any gaps been formally accepted with a remediation plan?
+                        </h2>
+                        
+                        <input type="hidden" name="P10.S2" x-model="score">
+                        
+                        <div class="flex justify-center gap-2 md:gap-4 mb-6">
+                            <template x-for="i in [1, 2, 3, 4, 5]">
+                                <button type="button" 
+                                        @click="score = i" 
+                                        :class="getButtonClass(i, score)"
+                                        class="w-14 h-14 md:w-20 md:h-20 rounded-2xl border-2 font-bold text-xl md:text-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center">
+                                    <span x-text="i"></span>
+                                </button>
+                            </template>
+                        </div>
+
+                                                    <div class="flex justify-between max-w-md mx-auto text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-10">
+                                <span>Strongly Disagree</span>
+                                <span>Strongly Agree</span>
+                            </div>
+                        
+                        
+                        <div class="mt-8 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                            <textarea name="note_P10.S2" 
+                                      class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
+                                      
+                                      style="border-color: #0027e952"
+                                      placeholder="Add an optional note, evidence or 'P.S.' for this response..."
+                                      rows="3"></textarea>
+                            <p class="mt-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Optional Context / Evidence</p>
+                        </div>
+                    </div>
+                </div>
+            
+            <div class="mt-16 flex justify-between items-center max-w-md mx-auto">
+                <button type="button" 
+                        @click="prev()" 
+                        x-show="currentIndex > 0"
+                        class="text-gray-400 font-bold hover:text-gray-900 transition flex items-center gap-2 text-sm uppercase tracking-widest">
+                    &larr; Back
+                </button>
+                <div x-show="currentIndex === 0" class="flex-1"></div>
+
+                <div x-show="currentIndex === totalQuestions - 1" class="mt-12 pt-12 border-t border-slate-100 max-w-lg mx-auto">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Final Summary / P.S.</h4>
+                    <textarea name="summary_note" 
+                              class="w-full p-5 rounded-3xl border-2 border-slate-100 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm bg-slate-50/50"
+                              placeholder="Any final thoughts, specific constraints, or a general P.S. for the consultant reviewing your snapshot..."
+                              rows="3"></textarea>
+                </div>
+
+                <div x-show="currentIndex === totalQuestions - 1" class="flex justify-center mt-12">
+                    <button type="submit" 
+                            :disabled="!isCurrentAnswered()"
+                            :class="isCurrentAnswered() ? 'bg-blue-600 text-white shadow-2xl shadow-blue-500/30 scale-105' : 'bg-gray-100 text-gray-400 pointer-events-none'"
+                            class="px-12 py-5 rounded-3xl font-black uppercase tracking-tighter transition-all duration-500 hover:bg-blue-700 active:scale-95">
+                        Generate Intelligence Report &rarr;
+                    </button>
+                </div>
+
+                <div x-show="currentIndex < totalQuestions - 1" class="flex justify-end">
+                    <button type="button" 
+                            @click="next()" 
+                            :disabled="!isCurrentAnswered()"
+                            :class="isCurrentAnswered() ? 'bg-blue-900 text-white shadow-xl shadow-slate-200' : 'bg-gray-50 text-gray-300 pointer-events-none'"
+                            class="px-10 py-4 rounded-2xl font-black uppercase tracking-tighter transition-all duration-300 hover:bg-black active:scale-95">
+                        Next Question &rarr;
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+    </div>
+</section>
+
+    </main>
+
+    
+    <script src="/assets/js/main.js"></script>
+    <script>
+function assessmentHandler() {
+    return {
+        totalQuestions: 20,
+        answeredCount: 0,
+        currentIndex: 0,
+        progress: 0,
+        submitting: false,
+        scores: {},
+        pillarNames: [
+                            "Governance & Decision-Making",
+                            "Governance & Decision-Making",
+                            "Planning, Stage Gates & Delivery Control",
+                            "Planning, Stage Gates & Delivery Control",
+                            "Business Alignment, Value & Financial Control",
+                            "Business Alignment, Value & Financial Control",
+                            "Change Management, Training & Adoption",
+                            "Change Management, Training & Adoption",
+                            "Data Readiness, Migration & GDPR",
+                            "Data Readiness, Migration & GDPR",
+                            "Solution, Process Fit & UAT",
+                            "Solution, Process Fit & UAT",
+                            "Cutover, Go-Live, Decommissioning & Archiving",
+                            "Cutover, Go-Live, Decommissioning & Archiving",
+                            "Delivery Capability, Security & RACI",
+                            "Delivery Capability, Security & RACI",
+                            "Operational, Automation Readiness & Data Archiving",
+                            "Operational, Automation Readiness & Data Archiving",
+                            "Digital & Transformation Maturity",
+                            "Digital & Transformation Maturity",
+                    ],
+        get currentPillar() {
+            return this.pillarNames[this.currentIndex];
+        },
+        
+        init() {
+            // Initialize scores object with qCodes
+                            this.scores['P1.S1'] = '';
+                            this.scores['P1.S2'] = '';
+                            this.scores['P2.S1'] = '';
+                            this.scores['P2.S2'] = '';
+                            this.scores['P3.S1'] = '';
+                            this.scores['P3.S2'] = '';
+                            this.scores['P4.S1'] = '';
+                            this.scores['P4.S2'] = '';
+                            this.scores['P5.S1'] = '';
+                            this.scores['P5.S2'] = '';
+                            this.scores['P6.S1'] = '';
+                            this.scores['P6.S2'] = '';
+                            this.scores['P7.S1'] = '';
+                            this.scores['P7.S2'] = '';
+                            this.scores['P8.S1'] = '';
+                            this.scores['P8.S2'] = '';
+                            this.scores['P9.S1'] = '';
+                            this.scores['P9.S2'] = '';
+                            this.scores['P10.S1'] = '';
+                            this.scores['P10.S2'] = '';
+                    },
+
+        next() {
+            if (this.currentIndex < this.totalQuestions - 1 && this.isCurrentAnswered()) {
+                this.currentIndex++;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        },
+
+        prev() {
+            if (this.currentIndex > 0) {
+                this.currentIndex--;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        },
+
+        isCurrentAnswered() {
+            const qCodes = [
+                                    'P1.S1',
+                                    'P1.S2',
+                                    'P2.S1',
+                                    'P2.S2',
+                                    'P3.S1',
+                                    'P3.S2',
+                                    'P4.S1',
+                                    'P4.S2',
+                                    'P5.S1',
+                                    'P5.S2',
+                                    'P6.S1',
+                                    'P6.S2',
+                                    'P7.S1',
+                                    'P7.S2',
+                                    'P8.S1',
+                                    'P8.S2',
+                                    'P9.S1',
+                                    'P9.S2',
+                                    'P10.S1',
+                                    'P10.S2',
+                            ];
+            return this.scores[qCodes[this.currentIndex]] !== '';
+        },
+        
+        updateCount() {
+            let count = 0;
+            for (let key in this.scores) {
+                if (this.scores[key] !== '') count++;
+            }
+            this.answeredCount = count;
+            // Progress based on current index for better UX in paged mode
+            this.progress = Math.round(((this.currentIndex + (this.isCurrentAnswered() ? 1 : 0)) / this.totalQuestions) * 100);
+        },
+
+        getButtonClass(i, score) {
+            let base = 'transition-all duration-300 ';
+            if (score === i) {
+                switch(i) {
+                    case 1: return base + 'bg-red-600 border-red-700 text-white shadow-lg shadow-red-200 scale-105';
+                    case 2: return base + 'bg-orange-500 border-orange-600 text-white shadow-lg shadow-orange-100 scale-105';
+                    case 3: return base + 'bg-amber-400 border-amber-500 text-white shadow-lg shadow-amber-100 scale-105';
+                    case 4: return base + 'bg-lime-500 border-lime-600 text-white shadow-lg shadow-lime-100 scale-105';
+                    case 5: return base + 'bg-green-600 border-green-700 text-white shadow-lg shadow-green-200 scale-105';
+                }
+            }
+            return base + 'bg-white border-gray-100 text-gray-400 hover:border-gray-300 hover:text-gray-600';
+        },
+
+        getNoteStyle(score) {
+            if (!score) return 'background: #f8fafc;';
+            switch(score) {
+                case 1: return 'background: #fef2f2; border-color: #fee2e2;';
+                case 2: return 'background: #fff7ed; border-color: #ffedd5;';
+                case 3: return 'background: #fffbeb; border-color: #fef3c7;';
+                case 4: return 'background: #f7fee7; border-color: #ecfccb;';
+                case 5: return 'background: #f0fdf4; border-color: #dcfce7;';
+                default: return 'background: #f8fafc;';
+            }
+        },
+
+        validateSubmission(e) {
+            if (this.answeredCount < this.totalQuestions) {
+                e.preventDefault();
+                alert('Please answer all questions before submitting.');
+            } else {
+                this.submitting = true;
+            }
+        }
+    }
+}
+</script>
+</body>
+
+</html>

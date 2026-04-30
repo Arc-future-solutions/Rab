@@ -1,12 +1,25 @@
 
-const menuToggle = document.querySelector('[data-menu-toggle]');
-const navLinks = document.querySelector('.nav-links');
-if(menuToggle && navLinks){menuToggle.addEventListener('click',()=>navLinks.classList.toggle('open'));}
+// Menu Toggle Logic
+const menuToggles = document.querySelectorAll('[data-menu-toggle]');
+const navMain = document.querySelector('.nav-main');
+const navBackdrop = document.querySelector('.nav-backdrop');
 
-const current = window.location.pathname.split('/').pop() || 'index.html';
-document.querySelectorAll('a[data-nav]').forEach(link=>{
-  const href = link.getAttribute('href');
-  if(href===current) link.classList.add('active');
+if (menuToggles.length && navMain) {
+    menuToggles.forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            navMain.classList.toggle('open');
+            if (navBackdrop) navBackdrop.classList.toggle('open');
+        });
+    });
+}
+
+// Active Link Highlight
+const currentPath = window.location.pathname;
+document.querySelectorAll('.nav-main a').forEach(link => {
+    const href = link.getAttribute('href');
+    if (href === currentPath || (href !== '/' && currentPath.startsWith(href))) {
+        link.classList.add('active');
+    }
 });
 
 document.querySelectorAll('[data-service]').forEach(link=>{

@@ -45,4 +45,26 @@ class ClientController extends Controller
         
         return view('admin.clients.show', compact('client', 'phiAssessments', 'itsmAssessments'));
     }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'company_name' => 'required|string|max:255',
+            'primary_contact' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'required|string|max:50',
+            'industry' => 'nullable|string|max:100',
+        ]);
+
+        $client = Client::create($validated);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'client' => $client
+            ]);
+        }
+
+        return redirect()->route('admin.clients.index')->with('success', 'Client created successfully.');
+    }
 }
