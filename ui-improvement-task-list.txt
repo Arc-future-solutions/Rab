@@ -1,0 +1,54 @@
+RAB Consulting — UI Improvement Task List
+🏗️ FOUNDATION & DESIGN SYSTEM
+TASK-001 — Upgrade Typography Scale
+Replace Inter as the heading font. Introduce a distinguished display typeface (e.g., DM Serif Display or Fraunces) for h1/h2 headings to create authority and separation from body text. Keep Manrope for h3–h5. Update all Blade/Tailwind heading classes consistently across all views.
+TASK-002 — Establish a CSS Custom Properties Layer
+Create a resources/css/variables.css file defining all brand colors, spacing tokens, shadow levels, and border-radius values as CSS custom properties (--color-primary, --shadow-authority, etc.). Import this into the Vite pipeline so all components consume tokens, not hardcoded values.
+TASK-003 — Build a Reusable Component Library
+Create Blade components for: x-button (primary/secondary/ghost variants), x-badge, x-card, x-section-header, and x-alert. All existing inline UI patterns across pages should be refactored to use these components to enforce visual consistency.
+
+🏠 PUBLIC PAGES
+TASK-004 — Redesign the Hero Section (/)
+Replace the current hero with a full-viewport layout featuring: a large typographic headline with a subtle animated word highlight effect (CSS keyframes), a short subheadline in slate, two CTAs (primary + ghost), and a dark navy background with a faint geometric grid pattern overlay using an SVG background. No stock imagery.
+TASK-005 — Redesign the Capabilities / Services Grid
+Replace any plain list layout on / and /services with a CSS Grid card layout. Each service card should have: a top-left icon (SVG), bold service name in Manrope, a 2-line description, a subtle left-border accent in #2563EB, and a hover state that lifts the card with a shadow transition (transition: transform 200ms, box-shadow 200ms).
+TASK-006 — Add Visual Differentiation for PIR vs SIR
+On /pir and /sir, introduce a visual badge system: PIR uses the deep blue (#1E3A8A) palette with a "Programme" badge; SIR uses a teal/emerald accent with a "Service" badge. Each page's hero section background should be distinctly colored to immediately signal which product the user is viewing.
+TASK-007 — Redesign the "Your Path to Clarity" Journey Section
+Convert the journey section on / into a horizontal step-indicator timeline on desktop (vertical on mobile). Each step should have: a numbered circle, a title, and a short description. Add a connecting line between steps using a CSS pseudo-element. Steps should animate in sequentially on scroll using Alpine.js x-intersect.
+TASK-008 — Improve the Contact Page (/contact)
+Redesign the contact form with: floating label inputs (CSS-only), a focus ring using #2563EB, inline validation states (error/success border colors), and a two-column layout on desktop (form left, contact info + CTA right). Add a subtle map or office location graphic on the right column.
+TASK-009 — Redesign the Rapid Consulting Flow (/rapid-consulting)
+Convert the multi-step diagnostic into a proper stepper UI: visible step progress bar at the top, animated slide transitions between steps using Alpine.js, clear "Back / Next" navigation, and a results page with a styled score card showing a visual ring/gauge using inline SVG.
+
+🔐 AUTH PAGES
+TASK-010 — Redesign Login & Auth Pages
+Create a split-screen login layout: left panel is dark navy (#0F172A) with the RAB logo, a brand tagline, and a subtle dot-grid background pattern; right panel is white with the form. Add smooth focus transitions on inputs and a styled "Forgot password?" link. Ensure mobile collapses to single-column.
+
+👤 USER PORTAL
+TASK-011 — Redesign User Dashboard (/user/dashboard)
+Introduce a top summary bar with 3–4 stat cards (e.g., Active Assessments, Last Report Date, Next Booking). Below, add a two-column layout: recent results on the left, upcoming actions/CTAs on the right. Use subtle card shadows and #F8FAFC background with white cards to create depth.
+TASK-012 — Improve Results Page (/user/results)
+Display results in a structured card with: a colored score band (green/amber/red based on score range), an expandable section per category using Alpine.js x-collapse, and a prominent "Download Report" CTA button. Use Chart.js to add a radar or bar chart visualizing scores across dimensions.
+
+🛠️ ADMIN PORTAL
+TASK-013 — Redesign Admin Sidebar Navigation
+Replace any basic nav with a collapsible sidebar: icon + label items, active state highlighted with a left-border accent and light blue background, grouped sections with dividers (Assessments, Clients, Leads, Settings). Add a collapse-to-icon-only mode toggled via Alpine.js.
+TASK-014 — Standardize Admin Data Tables
+Create a reusable Blade table component with: sticky header row, alternating row shading, sortable column headers (Alpine.js sort state), row hover highlight, pagination controls, and a search/filter input above the table. Apply to Assessments, Clients, Leads, and Frameworks index views.
+TASK-015 — Improve Admin Dashboard (/admin/dashboard)
+Add a KPI strip at the top (total clients, open leads, assessments this month, reports generated). Below, add a Chart.js line graph for assessment volume over time and a doughnut chart for lead status breakdown. Wrap charts in consistent white cards with titles and a subtle border.
+
+📱 RESPONSIVE & ACCESSIBILITY
+TASK-016 — Mobile Navigation Overhaul
+Replace any existing mobile menu with a full-screen slide-over drawer triggered by a hamburger icon. The drawer should contain all nav links, a CTA button, and close on outside tap. Use Alpine.js for state, CSS transform: translateX for animation.
+TASK-017 — Accessibility Audit & Fixes
+Across all pages: add aria-label to all icon-only buttons, ensure all form inputs have associated <label> elements, verify color contrast ratios meet WCAG AA (especially slate #475569 on white), add :focus-visible outlines to all interactive elements, and add alt text to all images.
+
+✨ POLISH & MICRO-INTERACTIONS
+TASK-018 — Add Page Load Animations
+On public pages, add staggered fade-up entrance animations to hero headlines, subheadings, and CTAs using CSS @keyframes with animation-delay increments (0ms, 100ms, 200ms). Keep animations under 400ms. Respect prefers-reduced-motion.
+TASK-019 — Improve Button & CTA States
+Audit every button and CTA across the site. Ensure all have: a defined hover state (darkened background or scale), an active/pressed state, a loading spinner state (for form submissions), and consistent padding/sizing. Buttons should never look flat or unclickable.
+TASK-020 — Add a Cookie Consent Banner
+Implement a bottom-fixed cookie consent bar with: a short message, "Accept" and "Manage Preferences" buttons, and Alpine.js state that dismisses it on acceptance and stores the preference in localStorage. Style it in dark navy with white text to match the brand.
