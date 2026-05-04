@@ -368,9 +368,9 @@
                 <div class="footer-legal">
                     <span class="copyright">© {{ date('Y') }} RAB Consulting Services Ltd</span>
                     <nav class="legal-nav">
-                        <a href="/privacy-policy">Privacy Policy</a>
+                        <a href="/privacy">Privacy Policy</a>
                         <a href="/terms">Terms & Conditions</a>
-                        <a href="/cookie-policy">Cookie Policy</a>
+                        <a href="/cookies">Cookie Policy</a>
                     </nav>
                 </div>
                 <div class="footer-tagline">

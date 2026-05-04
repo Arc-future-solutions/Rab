@@ -88,7 +88,7 @@
                 </button>
                 
                 <p class="mt-6 text-center text-xs text-slate-400">
-                    By continuing, you agree to our <a href="/privacy-policy" class="underline">Privacy Policy</a> and <a href="/terms" class="underline">Terms</a>.
+                    By continuing, you agree to our <a href="/privacy" class="underline">Privacy Policy</a> and <a href="/terms" class="underline">Terms</a>.
                 </p>
             </form>
         </div>

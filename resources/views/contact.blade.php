@@ -189,7 +189,7 @@
                         </div>
 
                         <p class="text-center text-xs text-slate-400">
-                            By submitting this form, you agree to our <a href="/privacy-policy" class="underline hover:text-primary transition-colors">Privacy Policy</a> and <a href="/terms" class="underline hover:text-primary transition-colors">Terms of Service</a>.
+                            By submitting this form, you agree to our <a href="/privacy" class="underline hover:text-primary transition-colors">Privacy Policy</a> and <a href="/terms" class="underline hover:text-primary transition-colors">Terms of Service</a>.
                         </p>
                     </form>
                 </div>

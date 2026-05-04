@@ -24,6 +24,12 @@
         return view('index');
     });
 
+    Route::view('/terms', 'terms')->name('terms');
+    Route::view('/privacy', 'privacy-policy')->name('privacy');
+    Route::view('/privacy-policy', 'privacy-policy');
+    Route::view('/cookies', 'cookie-policy')->name('cookies');
+    Route::view('/cookie-policy', 'cookie-policy');
+
     Route::get('/thank-you', function () {
         return view('thank-you');
     })->name('thank-you');
@@ -116,4 +122,3 @@
         }
         abort(404);
     })->where('page', '.*');
-
