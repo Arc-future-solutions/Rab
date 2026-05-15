@@ -127,7 +127,7 @@
                     @php
                         $indices = $lead->index_scores_json ?? [];
                     @endphp
-                    @foreach(['BRI', 'VRI', 'DMI', 'CHI', 'SSI', 'SMI', 'SIMI', 'BAURI'] as $idx)
+                    @foreach(['BRI', 'VRI', 'DMI', 'RII', 'CHI', 'SSI', 'SMI', 'SIMI', 'BAURI'] as $idx)
                         @if(isset($indices[$idx]))
                             <div class="bg-slate-50/50 border border-slate-100 rounded-2xl p-4">
                                 <span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ $idx }}</span>

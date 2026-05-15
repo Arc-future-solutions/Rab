@@ -9,7 +9,7 @@
             <h4 class="mb-4 text-center">Step 01 of 04</h4>
             <h1 class="text-center">Initial Diagnostic Details</h1>
             <p class="mt-4 text-slate-600 text-lg" style="max-width: 700px; margin-left: auto; margin-right: auto;">
-                Our 15-minute diagnostic helps identify high-level risks and determines if a full consultant-led review is required for your programme or service.
+                Our diagnostic takes under 30 minutes and helps identify high-level risks and determine whether a full consultant-led review is required for your programme or service.
             </p>
         </div>
 
@@ -50,12 +50,12 @@
 
                 <h2 class="mb-4">Ready to gain initial insight?</h2>
                 <p class="mb-8 text-slate-600" style="max-width: 500px; margin-left: auto; margin-right: auto;">
-                    This diagnostic takes approximately 15 minutes to complete and provides an initial overview of risks and delivery health.
+                    This diagnostic takes under 30 minutes to complete and provides an initial overview of risks and delivery health.
                 </p>
 
-                <a href="{{ request()->has('type') ? route('rapid-consulting.assessment', ['type' => request('type')]) : route('rapid-consulting.select-type') }}"
+                <a href="{{ request()->has('type') ? route('rapid-consulting.context', ['type' => request('type')]) : route('rapid-consulting.select-type') }}"
                     class="btn-primary" style="padding: 16px 48px; font-size: 1.1rem; display: inline-block;">
-                    Start 15-Minute Diagnostic
+                    Start Diagnostic
                 </a>
 
                 @if($hasPhi || $hasItsm)

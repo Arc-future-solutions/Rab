@@ -5,6 +5,25 @@
 @section('title', 'Assessment — Rapid Consulting')
 
 @section('content')
+@php 
+    $flatQuestions = [];
+
+    foreach($questions as $pillarCode => $pillar) {
+        foreach($pillar['questions'] as $qCode => $qData) {
+            $flatQuestions[] = [
+                'pillarCode' => $pillarCode,
+                'pillarName' => $pillar['name'],
+                'qCode' => $qCode,
+                'text' => $qData['text'],
+                'type' => $qData['type'],
+                'label' => $qData['label'],
+                'anchors' => $qData['anchors'] ?? [],
+                'type3_cards' => $qData['type3_cards'] ?? [],
+            ];
+        }
+    }
+@endphp
+
 <section class="min-h-screen flex items-center justify-center bg-white p-4" x-data="assessmentHandler()">
     {{-- Full-Page Loading Overlay --}}
     <div x-show="submitting" 
@@ -41,25 +60,12 @@
             </div>
         </div>
 
-        @php 
-            $flatQuestions = [];
-            // dd($questions);
-            foreach($questions as $pillarCode => $pillar) {
-                foreach($pillar['questions'] as $qCode => $qData) {
-                    $flatQuestions[] = [
-                        'pillarCode' => $pillarCode,
-                        'pillarName' => $pillar['name'],
-                        'qCode' => $qCode,
-                        'text' => $qData['text'],
-                        'type' => $qData['type'],
-                        'label' => $qData['label'],
-                        'anchors' => $qData['anchors'] ?? [],
-                        'type3_cards' => $qData['type3_cards'] ?? [],
-                    ];
-                }
-            }
-        @endphp
-
+        @if(empty($flatQuestions))
+            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center">
+                <h2 class="text-lg font-black text-amber-900 mb-2">No diagnostic questions are available.</h2>
+                <p class="text-sm font-semibold text-amber-800">Please select PIR or SIR again, or ask an administrator to publish the diagnostic question bank.</p>
+            </div>
+        @else
         <form action="{{ route('rapid-consulting.submit') }}" method="POST" @submit="validateSubmission($event)">
             @csrf
             
@@ -78,7 +84,7 @@
                             {{ $q['text'] }}
                         </h2>
                         
-                        <input type="hidden" name="{{ $q['qCode'] }}" x-model="score">
+                        <input type="hidden" name="{{ str_replace('.', '_', $q['qCode']) }}" x-model="score">
                         
                         @if(!empty($q['type3_cards']))
                             <div class="grid grid-cols-1 gap-3 max-w-3xl mx-auto mb-8 text-left mt-6">
@@ -89,7 +95,7 @@
                                             class="w-full p-4 rounded-xl border-2 transition-all duration-200 flex items-start gap-4 text-left group">
                                         <div :class="score == {{ $card['score'] }} ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600'"
                                              class="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-black text-sm mt-0.5 transition-colors">
-                                            {{ $card['score'] }}
+                                            <svg x-show="score == {{ $card['score'] }}" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                         </div>
                                         <div class="text-[13px] md:text-sm font-medium text-slate-700 leading-snug pt-1">
                                             {{ $card['response'] }}
@@ -142,7 +148,7 @@
 
                         {{-- Optional Notes/Evidence field --}}
                         <div class="mt-4 max-w-lg mx-auto" x-show="score !== ''" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
-                            <textarea name="note_{{ $q['qCode'] }}" 
+                            <textarea name="note_{{ str_replace('.', '_', $q['qCode']) }}" 
                                       class="w-full p-5 rounded-3xl border-2 border-transparent focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500/30 text-sm font-semibold text-slate-700 transition-all duration-300 placeholder:text-slate-400 shadow-sm"
                                       
                                       style="border-color: #0027e952"
@@ -184,8 +190,7 @@
                 </div>
             </div>
         </form>
-    </div>
-</section>
+        @endif
     </div>
 </section>
 

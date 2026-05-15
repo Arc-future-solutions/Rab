@@ -6,27 +6,41 @@ use App\Models\Lead;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\File;
 use Carbon\Carbon;
 use App\Traits\HasAssessmentQuestions;
+use App\Services\AssessmentIndexCalculator;
 
 class RapidConsultingController extends Controller
 {
     use HasAssessmentQuestions;
     private function getFrameworkDefinitions(string $type)
     {
+        $type = strtolower($type);
         $framework = \App\Models\AssessmentFramework::where('code', strtoupper($type))->first();
-        if (!$framework) return [];
+        if (!$framework) {
+            return $this->getFallbackFrameworkDefinitions($type);
+        }
 
         return \App\Models\AssessmentPillar::where('framework_id', $framework->id)
             ->get()
-            ->keyBy('code')
+            ->mapWithKeys(fn ($pillar) => [
+                $pillar->code => [
+                    'name' => $pillar->name,
+                    'weight' => (float) $pillar->weight,
+                    'critical' => (bool) $pillar->is_critical,
+                ],
+            ])
             ->toArray();
     }
 
     private function getFrameworkQuestions(string $type)
     {
+        $type = strtolower($type);
         $framework = \App\Models\AssessmentFramework::where('code', strtoupper($type))->first();
-        if (!$framework) return [];
+        if (!$framework) {
+            return $this->getFallbackFrameworkQuestions($type);
+        }
 
         $pillars = \App\Models\AssessmentPillar::where('framework_id', $framework->id)
             ->with(['questions' => function($q) {
@@ -50,9 +64,11 @@ class RapidConsultingController extends Controller
         }
 
         $data = [];
+        $hasQuestions = false;
         foreach ($pillars as $pillar) {
             $qs = [];
             foreach ($pillar->questions as $q) {
+                $hasQuestions = true;
                 $anchors = $q->score_anchors;
                 if (is_string($anchors)) {
                     $anchors = json_decode($anchors, true) ?? [];
@@ -78,6 +94,120 @@ class RapidConsultingController extends Controller
                 'questions' => $qs
             ];
         }
+        return $hasQuestions ? $data : $this->getFallbackFrameworkQuestions($type);
+    }
+
+    private function getFallbackFrameworkDefinitions(string $type): array
+    {
+        return match ($type) {
+            'pir' => $this->phiPillars,
+            'sir' => $this->itsmDomains,
+            default => [],
+        };
+    }
+
+    private function getFallbackFrameworkQuestions(string $type): array
+    {
+        $type = strtolower($type);
+        $jsonKey = strtoupper($type) . '_DIAGNOSTIC';
+        $jsonPath = base_path('questions.json');
+
+        if (File::exists($jsonPath)) {
+            $decoded = json_decode(File::get($jsonPath), true);
+            $questions = $decoded[$jsonKey] ?? [];
+
+            if (!empty($questions)) {
+                return $this->formatJsonQuestions($questions);
+            }
+        }
+
+        return $this->formatLegacyQuestions(
+            $type === 'sir' ? $this->itsmDomains : $this->phiPillars,
+            $type === 'sir' ? $this->itsmSnapshotQuestions : $this->phiSnapshotQuestions
+        );
+    }
+
+    private function formatJsonQuestions(array $questions): array
+    {
+        $data = [];
+
+        foreach ($questions as $question) {
+            $pillarCode = $question['pillar_code'] ?? null;
+            if (!$pillarCode) {
+                continue;
+            }
+
+            $anchors = $question['score_anchors'] ?? [];
+            if (is_string($anchors)) {
+                $anchors = json_decode($anchors, true) ?? [];
+            }
+
+            $cards = null;
+            if (($question['question_type'] ?? null) == 3) {
+                $cards = $this->scoreCardsFromOptions($question['select_options'] ?? null, $anchors);
+            }
+
+            $data[$pillarCode] ??= [
+                'name' => $question['pillar_name'] ?? $pillarCode,
+                'questions' => [],
+            ];
+
+            $data[$pillarCode]['questions'][$question['id']] = [
+                'text' => $question['question_text'] ?? '',
+                'type' => $question['question_type'] ?? null,
+                'label' => $question['question_type_label'] ?? 'Question',
+                'anchors' => $anchors,
+                'type3_cards' => $cards,
+            ];
+        }
+
+        return $data;
+    }
+
+    private function scoreCardsFromOptions($options, array $anchors): ?array
+    {
+        if (is_string($options)) {
+            $options = json_decode($options, true) ?? [];
+        }
+
+        if (empty($options) && !empty($anchors)) {
+            return collect($anchors)
+                ->map(fn ($response, $score) => ['score' => (int) $score, 'response' => $response])
+                ->values()
+                ->toArray();
+        }
+
+        if (empty($options)) {
+            return null;
+        }
+
+        return collect($options)
+            ->values()
+            ->map(fn ($response, $index) => ['score' => $index + 1, 'response' => $response])
+            ->toArray();
+    }
+
+    private function formatLegacyQuestions(array $definitions, array $questions): array
+    {
+        $data = [];
+
+        foreach ($questions as $pillarCode => $pillarQuestions) {
+            $data[$pillarCode] = [
+                'name' => $definitions[$pillarCode]['name'] ?? $pillarCode,
+                'questions' => [],
+            ];
+
+            foreach ($pillarQuestions as $questionCode => $questionText) {
+                $data[$pillarCode]['questions'][$questionCode] = [
+                    'text' => $questionText,
+                    'type' => null,
+                    'label' => 'Question',
+                    'anchors' => [],
+                    'type3_cards' => null,
+                ];
+            }
+        }
+
         return $data;
     }
 
@@ -160,10 +290,11 @@ class RapidConsultingController extends Controller
 
     public function start(Request $request)
     {
-        // If type is pre-selected, go straight to assessment (session-based)
+        // If type is pre-selected, go to the required context step before questions.
         if ($request->has('type') && in_array(strtolower($request->type), ['pir', 'sir'])) {
-            Session::put('rc_type', $request->type);
-            return redirect()->route('rapid-consulting.assessment');
+            Session::put('rc_type', strtolower($request->type));
+            Session::forget(['rc_answers', 'rc_results', 'rc_delivery_stage', 'rc_service_context', 'rc_regulatory_context']);
+            return redirect()->route('rapid-consulting.context');
         }
 
         return redirect()->route('rapid-consulting.select-type');
@@ -191,16 +322,71 @@ class RapidConsultingController extends Controller
         ]);
 
         Session::put('rc_type', $request->type);
-        Session::forget(['rc_answers', 'rc_results']);
+        Session::forget(['rc_answers', 'rc_results', 'rc_delivery_stage', 'rc_service_context', 'rc_regulatory_context']);
 
-        return redirect()->route('rapid-consulting.assessment');
+        return redirect()->route('rapid-consulting.context');
     }
 
-    public function assessment()
+    public function context(Request $request)
+    {
+        if ($request->has('type') && in_array(strtolower($request->type), ['pir', 'sir'])) {
+            Session::put('rc_type', strtolower($request->type));
+            Session::forget(['rc_answers', 'rc_results', 'rc_delivery_stage', 'rc_service_context', 'rc_regulatory_context']);
+        }
+
+        $type = Session::get('rc_type');
+        if (!$type) {
+            return redirect()->route('rapid-consulting.select-type');
+        }
+
+        return view('rapid-consulting.context', compact('type'));
+    }
+
+    public function storeContext(Request $request)
     {
         $type = Session::get('rc_type');
         if (!$type) {
             return redirect()->route('rapid-consulting.select-type');
+        }
+
+        if ($type === 'pir') {
+            $validated = $request->validate([
+                'delivery_stage' => 'required|in:Mobilisation,Design,Build,Test,Cutover,PostGoLive',
+                'regulatory_context' => 'nullable|in:fca_uk,dora_eu,nhs_cqc,public_sector,gdpr_only',
+            ]);
+
+            Session::put('rc_delivery_stage', $validated['delivery_stage']);
+        } else {
+            $validated = $request->validate([
+                'service_context' => 'required|in:NSI,Established,UnderPressure,Transformation,LegacyPreRetirement',
+                'regulatory_context' => 'nullable|in:fca_uk,dora_eu,nhs_cqc,public_sector,gdpr_only',
+            ]);
+
+            Session::put('rc_service_context', $validated['service_context']);
+        }
+
+        Session::put('rc_regulatory_context', $validated['regulatory_context'] ?? null);
+
+        return redirect()->route('rapid-consulting.assessment');
+    }
+
+    public function assessment(Request $request)
+    {
+        if ($request->has('type') && in_array(strtolower($request->type), ['pir', 'sir'])) {
+            Session::put('rc_type', strtolower($request->type));
+            Session::forget(['rc_answers', 'rc_results', 'rc_delivery_stage', 'rc_service_context', 'rc_regulatory_context']);
+        }
+
+        $type = Session::get('rc_type');
+        if (!$type) {
+            return redirect()->route('rapid-consulting.select-type');
+        }
+
+        if (
+            ($type === 'pir' && !Session::has('rc_delivery_stage')) ||
+            ($type === 'sir' && !Session::has('rc_service_context'))
+        ) {
+            return redirect()->route('rapid-consulting.context');
         }
 
         $questions = $this->getFrameworkQuestions($type);
@@ -281,6 +467,9 @@ class RapidConsultingController extends Controller
             'pillar_scores' => $pillarScores,
             'index_scores' => $indexScores,
             'type' => $type,
+            'delivery_stage' => Session::get('rc_delivery_stage'),
+            'service_context' => Session::get('rc_service_context'),
+            'regulatory_context' => Session::get('rc_regulatory_context'),
             'recommendation' => $this->generateRecommendation($overallScore, $pillarScores, $type)
         ];
         
@@ -291,18 +480,7 @@ class RapidConsultingController extends Controller
 
     private function calculateIndices(string $type, array $pillarScores, array $answers)
     {
-        $indexScores = [];
         if (strtolower($type) === 'pir') {
-            $p3 = $pillarScores['P3']['score'] ?? 0;
-            $p4 = $pillarScores['P4']['score'] ?? 0;
-            $p5 = $pillarScores['P5']['score'] ?? 0;
-            $p7 = $pillarScores['P7']['score'] ?? 0;
-            $p9 = $pillarScores['P9']['score'] ?? 0;
-            $p10 = $pillarScores['P10']['score'] ?? 0;
-
-            $bri = round(($p3 * 1.3 + $p4 * 1.2 + $p5 * 1.2 + $p7 * 1.2) / 4.9, 2);
-            $dmi = round(($p9 * 1.0 + $p10 * 1.1) / 2.1, 2);
-
             $complianceQuestions = ['P1.F8', 'P3.F11', 'P5.F8', 'P5.F9', 'P8.F8', 'P8.F9'];
             $cScores = [];
             foreach ($complianceQuestions as $qId) {
@@ -312,32 +490,16 @@ class RapidConsultingController extends Controller
             }
             $chi = count($cScores) > 0 ? round(array_sum($cScores) / count($cScores), 2) : 0.0;
 
-            $indexScores = [
-                'BRI' => $bri,
-                'VRI' => $p3,
-                'DMI' => $dmi,
+            return array_filter([
+                ...AssessmentIndexCalculator::calculatePir($pillarScores, $answers),
                 'CHI' => $chi
-            ];
-        } else {
-            $d1 = $pillarScores['D1']['score'] ?? 0;
-            $d2 = $pillarScores['D2']['score'] ?? 0;
-            $d4 = $pillarScores['D4']['score'] ?? 0;
-            $d6 = $pillarScores['D6']['score'] ?? 0;
-            $d7 = $pillarScores['D7']['score'] ?? 0;
-            $d8 = $pillarScores['D8']['score'] ?? 0;
-            $d10 = $pillarScores['D10']['score'] ?? 0;
-            $d11 = $pillarScores['D11']['score'] ?? 0;
-            $d12 = $pillarScores['D12']['score'] ?? 0;
-
-            $indexScores = [
-                'SSI' => round(($d1 + $d2) / 2, 2),
-                'SMI' => round(($d4 * 1.2 + $d6 * 1.2 + $d11 * 0.9) / 3.3, 2),
-                'SIMI' => round(($d4 * 1.2 + $d11 * 0.9 + $d12 * 1.1) / 3.2, 2),
-                'BAURI' => round(($d7 + $d8) / 2, 2),
-                'CHI' => $d10
-            ];
+            ], fn ($value) => $value !== null);
         }
-        return $indexScores;
+
+        return [
+            ...AssessmentIndexCalculator::calculateSir($pillarScores),
+            'CHI' => $pillarScores['D10']['score'] ?? 0,
+        ];
     }
 
     public function personalForm()
@@ -388,6 +550,11 @@ class RapidConsultingController extends Controller
           'type' => strtoupper($type),
           'results' => $results,
           'answers' => $answers,
+          'assessment_context' => [
+              'delivery_stage' => Session::get('rc_delivery_stage'),
+              'service_context' => Session::get('rc_service_context'),
+              'regulatory_context' => Session::get('rc_regulatory_context'),
+          ],
           'submitted_at' => now()->toDateTimeString(),
         ]);
 
@@ -415,6 +582,11 @@ class RapidConsultingController extends Controller
             'type' => strtoupper($type),
             'results' => $results,
             'answers' => $answers,
+            'assessment_context' => [
+                'delivery_stage' => Session::get('rc_delivery_stage'),
+                'service_context' => Session::get('rc_service_context'),
+                'regulatory_context' => Session::get('rc_regulatory_context'),
+            ],
             'submitted_at' => now()->toDateTimeString(),
         ]);
 

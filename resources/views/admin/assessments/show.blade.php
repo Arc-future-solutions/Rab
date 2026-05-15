@@ -126,6 +126,14 @@
                         {{ $assessment->dmi !== null ? number_format($assessment->dmi, 1) : 'N/A' }}
                     </span>
                 </div>
+                @if($assessment->type === 'PIR')
+                    <div class="border rounded-lg p-4 text-center">
+                        <span class="block text-sm text-gray-500">Risk Intelligence Index (RII)</span>
+                        <span class="block mt-2 text-2xl font-bold text-slate-800">
+                            {{ $assessment->rii !== null ? number_format($assessment->rii, 1) : 'N/A' }}
+                        </span>
+                    </div>
+                @endif
                 <div class="border rounded-lg p-4 text-center">
                     <span class="block text-sm text-gray-500">Compliance Health (CHI)</span>
                     <span class="block mt-2 text-2xl font-bold text-slate-800">

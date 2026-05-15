@@ -210,7 +210,8 @@ class AssessmentBankSeeder extends Seeder
             'D8' => ['name' => 'Service Operations & Support Model', 'weight' => 1.2, 'critical' => false],
             'D9' => ['name' => 'Supplier & Vendor Service Management', 'weight' => 1.0, 'critical' => false],
             'D10' => ['name' => 'Operational Resilience & Continuity', 'weight' => 1.3, 'critical' => true],
-            'D11' => ['name' => 'Automation, Tooling & Service Optimisation', 'weight' => 1.0, 'critical' => false],
+            'D11' => ['name' => 'Service Tooling, CMDB & Knowledge Management', 'weight' => 1.2, 'critical' => false],
+            'D12' => ['name' => 'Service Intelligence & Continuous Value', 'weight' => 1.1, 'critical' => false],
         ];
 
         foreach ($itsmDomains as $code => $data) {

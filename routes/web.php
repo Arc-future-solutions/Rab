@@ -56,8 +56,11 @@
     // Public — assessment flow
     Route::get('/rapid-consulting/select-type', [RapidConsultingController::class, 'selectType'])->name('rapid-consulting.select-type');
     Route::post('/rapid-consulting/select-type', [RapidConsultingController::class, 'storeType'])->name('rapid-consulting.store-type');
+    Route::get('/rapid-consulting/context', [RapidConsultingController::class, 'context'])->name('rapid-consulting.context');
+    Route::post('/rapid-consulting/context', [RapidConsultingController::class, 'storeContext'])->name('rapid-consulting.store-context');
     Route::get('/rapid-consulting/assessment', [RapidConsultingController::class, 'assessment'])->name('rapid-consulting.assessment');
     Route::post('/rapid-consulting/assessment/submit', [RapidConsultingController::class, 'submit'])->name('rapid-consulting.submit');
+    Route::get('/assessment', [RapidConsultingController::class, 'assessment'])->name('assessment');
     Route::get('/rapid-consulting/personal-form', [RapidConsultingController::class, 'personalForm'])->name('rapid-consulting.personal-form');
     Route::post('/rapid-consulting/personal-form', [RapidConsultingController::class, 'processPersonalForm'])->name('rapid-consulting.process-personal-form');
     Route::get('/rapid-consulting/results', [RapidConsultingController::class, 'results'])->name('rapid-consulting.results');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Assessment;
 use Illuminate\Http\Request;
+use App\Services\AssessmentIndexCalculator;
 
 use App\Traits\HasAssessmentQuestions;
 
@@ -80,6 +81,7 @@ class AssessmentController extends Controller
                 $assessment->smi = is_array($indexScores['SMI'] ?? null) ? ($indexScores['SMI']['score'] ?? null) : ($indexScores['SMI'] ?? null);
                 $assessment->simi = is_array($indexScores['SIMI'] ?? null) ? ($indexScores['SIMI']['score'] ?? null) : ($indexScores['SIMI'] ?? null);
                 $assessment->dmi = is_array($indexScores['DMI'] ?? null) ? ($indexScores['DMI']['score'] ?? null) : ($indexScores['DMI'] ?? null);
+                $assessment->rii = is_array($indexScores['RII'] ?? null) ? ($indexScores['RII']['score'] ?? null) : ($indexScores['RII'] ?? null);
                 $assessment->chi = is_array($indexScores['CHI'] ?? null) ? ($indexScores['CHI']['score'] ?? null) : ($indexScores['CHI'] ?? null);
                 
                 $bauVal = $indexScores['BAURI'] ?? $indexScores['BAU Readiness'] ?? null;
@@ -93,11 +95,7 @@ class AssessmentController extends Controller
                     }
                     if ($assessment->bri === null) {
                         if ($assessment->type === 'PIR') {
-                            $p3 = $pScores['P3'] ?? 0;
-                            $p4 = $pScores['P4'] ?? 0;
-                            $p5 = $pScores['P5'] ?? 0;
-                            $p7 = $pScores['P7'] ?? 0;
-                            $assessment->bri = round(($p3 * 1.3 + $p4 * 1.2 + $p5 * 1.2 + $p7 * 1.2) / 4.9, 2);
+                            $assessment->bri = AssessmentIndexCalculator::calculatePir($pScores, $lead->answers_json ?? [])['BRI'];
                         } else {
                             // Legacy PHI
                             $briSum = ($pScores['P1'] ?? 0) + ($pScores['P2'] ?? 0) + ($pScores['P4'] ?? 0) + ($pScores['P6'] ?? 0) + ($pScores['P7'] ?? 0);
@@ -105,12 +103,13 @@ class AssessmentController extends Controller
                         }
                     }
                     if ($assessment->vri === null) {
-                        $assessment->vri = $pScores['P3'] ?? null;
+                        $assessment->vri = AssessmentIndexCalculator::calculatePir($pScores, $lead->answers_json ?? [])['VRI'];
                     }
                     if ($assessment->dmi === null && $assessment->type === 'PIR') {
-                        $p9 = $pScores['P9'] ?? 0;
-                        $p10 = $pScores['P10'] ?? 0;
-                        $assessment->dmi = round(($p9 * 1.0 + $p10 * 1.1) / 2.1, 2);
+                        $assessment->dmi = AssessmentIndexCalculator::calculatePir($pScores, $lead->answers_json ?? [])['DMI'];
+                    }
+                    if ($assessment->rii === null && $assessment->type === 'PIR') {
+                        $assessment->rii = AssessmentIndexCalculator::calculatePir($pScores, $lead->answers_json ?? [])['RII'];
                     }
                     if ($assessment->chi === null && $assessment->type === 'PIR') {
                         $complianceQuestions = ['P1.F8', 'P3.F11', 'P5.F8', 'P5.F9', 'P8.F8', 'P8.F9'];
@@ -134,16 +133,16 @@ class AssessmentController extends Controller
                     }
 
                     if ($assessment->ssi === null) {
-                        $assessment->ssi = $pScores['SSI'] ?? $pScores['Governance & Incident'] ?? round((($pScores['D1'] ?? 0) + ($pScores['D2'] ?? 0)) / 2, 2);
+                        $assessment->ssi = $pScores['SSI'] ?? AssessmentIndexCalculator::calculateSir($pScores)['SSI'];
                     }
                     if ($assessment->smi === null) {
-                        $assessment->smi = $pScores['SMI'] ?? 0;
+                        $assessment->smi = $pScores['SMI'] ?? AssessmentIndexCalculator::calculateSir($pScores)['SMI'];
                     }
                     if ($assessment->simi === null) {
-                        $assessment->simi = $pScores['SIMI'] ?? $pScores['Change & Readiness'] ?? 0;
+                        $assessment->simi = $pScores['SIMI'] ?? AssessmentIndexCalculator::calculateSir($pScores)['SIMI'];
                     }
                     if ($assessment->bau_readiness === null) {
-                        $assessment->bau_readiness = $pScores['BAURI'] ?? $pScores['BAU Readiness'] ?? round((($pScores['D7'] ?? 0) + ($pScores['D8'] ?? 0)) / 2, 2);
+                        $assessment->bau_readiness = $pScores['BAURI'] ?? $pScores['BAU Readiness'] ?? AssessmentIndexCalculator::calculateSir($pScores)['BAURI'];
                     }
                     if ($assessment->chi === null) {
                         $assessment->chi = $pScores['CHI'] ?? $pScores['D10'] ?? $pScores['Resilience'] ?? null;
@@ -161,7 +160,7 @@ class AssessmentController extends Controller
                 $indexScores = $lead->index_scores_json ?? [];
                 
                 // List of indices to exclude from the pillar scores breakdown
-                $excludedIndices = ['BRI', 'VRI', 'DMI', 'CHI', 'SSI', 'SMI', 'SIMI', 'BAURI'];
+                $excludedIndices = ['BRI', 'VRI', 'DMI', 'RII', 'CHI', 'SSI', 'SMI', 'SIMI', 'BAURI', 'smi_simi_delta'];
 
                 foreach ($indexScores as $name => $data) {
                     // Skip if this is an index, not a pillar

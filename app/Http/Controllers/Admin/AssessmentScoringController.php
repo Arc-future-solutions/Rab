@@ -7,6 +7,7 @@ use App\Models\Assessment;
 use App\Models\Client;
 use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentPillarScore;
+use App\Services\AssessmentIndexCalculator;
 use Illuminate\Http\Request;
 
 class AssessmentScoringController extends Controller
@@ -168,11 +169,15 @@ class AssessmentScoringController extends Controller
                 'BRI' => $assessment->bri,
                 'VRI' => $assessment->vri,
                 'DMI' => $assessment->dmi,
+                'RII' => $assessment->rii,
                 'CHI' => $assessment->chi,
                 'SSI' => $assessment->ssi,
                 'SMI' => $assessment->smi,
                 'SIMI' => $assessment->simi,
                 'BAURI' => $assessment->bau_readiness,
+                'smi_simi_delta' => $assessment->smi !== null && $assessment->simi !== null
+                    ? round($assessment->smi - $assessment->simi, 2)
+                    : null,
             ],
             'type' => $assessment->type,
             'user' => [
@@ -317,27 +322,15 @@ class AssessmentScoringController extends Controller
                 return explode(' — ', $p->name)[0]; // Get the code like P1, P2...
             });
 
-            // VRI is primarily Pillar 3 (Value)
-            if (isset($pillarScores['P3'])) {
-                $updates['vri'] = $pillarScores['P3']->score;
-            }
+            $pirIndices = AssessmentIndexCalculator::calculatePir(
+                $pillarScores->all(),
+                AssessmentIndexCalculator::normalizeQuestionAnswers($responses->pluck('score', 'question')->toArray())
+            );
 
-            // BRI: (P3*1.3 + P4*1.2 + P5*1.2 + P7*1.2) / 4.9
-            $p3 = $pillarScores['P3']->score ?? 0;
-            $p4 = $pillarScores['P4']->score ?? 0;
-            $p5 = $pillarScores['P5']->score ?? 0;
-            $p7 = $pillarScores['P7']->score ?? 0;
-
-            if ($p3 || $p4 || $p5 || $p7) {
-                $updates['bri'] = round(($p3 * 1.3 + $p4 * 1.2 + $p5 * 1.2 + $p7 * 1.2) / 4.9, 2);
-            }
-
-            // DMI: (P9*1.0 + P10*1.1) / 2.1
-            $p9 = $pillarScores['P9']->score ?? 0;
-            $p10 = $pillarScores['P10']->score ?? 0;
-            if ($p9 || $p10) {
-                $updates['dmi'] = round(($p9 * 1.0 + $p10 * 1.1) / 2.1, 2);
-            }
+            $updates['bri'] = $pirIndices['BRI'];
+            $updates['vri'] = $pirIndices['VRI'];
+            $updates['dmi'] = $pirIndices['DMI'];
+            $updates['rii'] = $pirIndices['RII'];
 
             // CHI: specific compliance questions
             $complianceQuestions = ['P1.F8', 'P3.F11', 'P5.F8', 'P5.F9', 'P8.F8', 'P8.F9'];
@@ -358,33 +351,12 @@ class AssessmentScoringController extends Controller
                 return explode(' — ', $p->name)[0]; // Get the code like D1, D2...
             });
 
-            // SSI (Service Stability): (D1 + D2) / 2
-            $d1 = $pillarScores['D1']->score ?? 0;
-            $d2 = $pillarScores['D2']->score ?? 0;
-            if ($d1 || $d2) {
-                $updates['ssi'] = round(($d1 + $d2) / 2, 2);
-            }
+            $sirIndices = AssessmentIndexCalculator::calculateSir($pillarScores->all());
 
-            // SMI (Service Maturity): (D4*1.2 + D6*1.2 + D11*0.9) / 3.3
-            $d4 = $pillarScores['D4']->score ?? 0;
-            $d6 = $pillarScores['D6']->score ?? 0;
-            $d11 = $pillarScores['D11']->score ?? 0;
-            if ($d4 || $d6 || $d11) {
-                $updates['smi'] = round(($d4 * 1.2 + $d6 * 1.2 + $d11 * 0.9) / 3.3, 2);
-            }
-
-            // SIMI (Service Improvement): (D4*1.2 + D11*0.9 + D12*1.1) / 3.2
-            $d12 = $pillarScores['D12']->score ?? 0;
-            if ($d4 || $d11 || $d12) {
-                $updates['simi'] = round(($d4 * 1.2 + $d11 * 0.9 + $d12 * 1.1) / 3.2, 2);
-            }
-
-            // BAURI (BAU Readiness): (D7 + D8) / 2
-            $d7 = $pillarScores['D7']->score ?? 0;
-            $d8 = $pillarScores['D8']->score ?? 0;
-            if ($d7 || $d8) {
-                $updates['bau_readiness'] = round(($d7 + $d8) / 2, 2);
-            }
+            $updates['ssi'] = $sirIndices['SSI'];
+            $updates['smi'] = $sirIndices['SMI'];
+            $updates['simi'] = $sirIndices['SIMI'];
+            $updates['bau_readiness'] = $sirIndices['BAURI'];
 
             // CHI: average of D10 (Security & Compliance)
             if (isset($pillarScores['D10'])) {

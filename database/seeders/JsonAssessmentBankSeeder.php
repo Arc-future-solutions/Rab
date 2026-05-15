@@ -40,7 +40,7 @@ class JsonAssessmentBankSeeder extends Seeder
 
         // Define new weights
         $pirWeights = json_decode('{"P1":1.5,"P2":1.4,"P3":1.3,"P4":1.2,"P5":1.2,"P6":1.1,"P7":1.2,"P8":1.1,"P9":1.0,"P10":1.1}', true);
-        $sirWeights = json_decode('{"D1":1.4,"D2":1.4,"D3":1.0,"D4":1.2,"D5":1.3,"D6":1.2,"D7":1.2,"D8":1.2,"D9":1.0,"D10":1.3,"D11":0.9,"D12":1.1}', true);
+        $sirWeights = json_decode('{"D1":1.4,"D2":1.4,"D3":1.0,"D4":1.2,"D5":1.3,"D6":1.2,"D7":1.2,"D8":1.2,"D9":1.0,"D10":1.3,"D11":1.2,"D12":1.1}', true);
 
         foreach ($data as $key => $questions) {
             $parts = explode('_', $key);
