@@ -13,7 +13,10 @@ class Assessment extends Model
 
     protected $casts = [
         'ai_draft_json' => 'array',
-        'critical_flag' => 'boolean'
+        'critical_flag' => 'boolean',
+        'documents_reviewed' => 'array',
+        'divergence_areas' => 'array',
+        'reporting_accuracy_risk' => 'boolean',
     ];
 
     public function client()

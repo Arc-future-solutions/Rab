@@ -5,18 +5,20 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 
 
-function getAccessToken() {
-    $response = Http::withOptions(['verify' => false])->asForm()->post(
-        'https://login.microsoftonline.com/'.env('TEAMS_TENANT_ID').'/oauth2/v2.0/token',
-        [
-            'client_id' => env('TEAMS_CLIENT_ID'),
-            'client_secret' => env('TEAMS_CLIENT_SECRET'),
-            'scope' => 'https://graph.microsoft.com/.default',
-            'grant_type' => 'client_credentials',
-        ]
-    );
+if (! function_exists('getAccessToken')) {
+    function getAccessToken() {
+        $response = Http::withOptions(['verify' => false])->asForm()->post(
+            'https://login.microsoftonline.com/'.env('TEAMS_TENANT_ID').'/oauth2/v2.0/token',
+            [
+                'client_id' => env('TEAMS_CLIENT_ID'),
+                'client_secret' => env('TEAMS_CLIENT_SECRET'),
+                'scope' => 'https://graph.microsoft.com/.default',
+                'grant_type' => 'client_credentials',
+            ]
+        );
 
-    return $response->json()['access_token'];
+        return $response->json()['access_token'];
+    }
 }
 
 Route::get('/teams/users', function () {

@@ -7,6 +7,7 @@ use App\Models\Assessment;
 use App\Models\Client;
 use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentPillarScore;
+use App\Services\AssessmentAiPayloadBuilder;
 use App\Services\AssessmentIndexCalculator;
 use Illuminate\Http\Request;
 
@@ -105,7 +106,19 @@ class AssessmentScoringController extends Controller
     {
         // Accept either a single question response update, or context/global fields update
         if ($request->has('question_code')) {
-            $data = $request->only(['question_code', 'pillar_name', 'question', 'score', 'evidence_note', 'source_type', 'confidence', 'assessor_comment']);
+            $data = $request->only([
+                'question_code',
+                'pillar_name',
+                'question',
+                'score',
+                'evidence_note',
+                'source_type',
+                'respondent_role',
+                'document_source',
+                'stakeholder_divergence_note',
+                'confidence',
+                'assessor_comment',
+            ]);
             
             AssessmentQuestionResponse::updateOrCreate(
                 [
@@ -116,6 +129,10 @@ class AssessmentScoringController extends Controller
                 [
                     'score' => $data['score'] ?? 0,
                     'evidence_note' => $data['evidence_note'],
+                    'source_type' => $data['source_type'] ?? null,
+                    'respondent_role' => $data['respondent_role'] ?? null,
+                    'document_source' => $data['document_source'] ?? null,
+                    'stakeholder_divergence_note' => $data['stakeholder_divergence_note'] ?? null,
                     'confidence' => $data['confidence'] ?? 'medium',
                 ]
             );
@@ -128,7 +145,7 @@ class AssessmentScoringController extends Controller
         
         // If it's a context / global fields save
         if ($request->has('fields')) {
-            $assessment->update($request->input('fields'));
+            $assessment->update($this->normaliseContextFields($request->input('fields', [])));
             return response()->json(['status' => 'saved context']);
         }
 
@@ -147,7 +164,7 @@ class AssessmentScoringController extends Controller
         return response()->json(['status' => 'ignored']);
     }
 
-    public function generateReport(Assessment $assessment)
+    public function generateReport(Assessment $assessment, AssessmentAiPayloadBuilder $payloadBuilder)
     {
         $assessment->load(['questionResponses', 'pillarScores', 'client']);
         
@@ -160,6 +177,12 @@ class AssessmentScoringController extends Controller
                 }
             }
         }
+
+        $pillarScores = $assessment->pillarScores
+            ->mapWithKeys(fn ($score) => [$score->name => (float) $score->score])
+            ->toArray();
+        $aiPayload = $payloadBuilder->buildFullPayload($assessment);
+        $promptKey = $payloadBuilder->promptKey($assessment);
 
         $results = [
             'overall_score' => $assessment->overall_score,
@@ -192,6 +215,9 @@ class AssessmentScoringController extends Controller
                     'question_text' => $questionMap[$qCode] ?? $resp->question,
                     'score' => $resp->score,
                     'evidence_note' => $resp->evidence_note,
+                    'respondent_role' => $resp->respondent_role,
+                    'document_source' => $resp->document_source,
+                    'stakeholder_divergence_note' => $resp->stakeholder_divergence_note,
                     'confidence' => $resp->confidence,
                 ];
             })->toArray(),
@@ -205,6 +231,9 @@ class AssessmentScoringController extends Controller
                 'is_full' => true,
                 'results' => $results,
                 'answers' => $answers,
+                'ai_payload' => $aiPayload,
+                'prompt_key' => $promptKey,
+                'system_prompt' => config("ai.prompts.{$promptKey}"),
                 'assessment_id' => $assessment->id,
                 'submitted_at' => now()->toDateTimeString(),
             ]);
@@ -365,6 +394,62 @@ class AssessmentScoringController extends Controller
         }
 
         $assessment->update($updates);
+    }
+
+    private function normaliseContextFields(array $fields): array
+    {
+        $allowed = [
+            'call_date',
+            'call_type',
+            'call_attendees',
+            'call_summary',
+            'client_concerns',
+            'next_agreed_action',
+            'delivery_stage',
+            'service_context',
+            'regulatory_context',
+            'sponsor_name',
+            'interview_count',
+            'documents_reviewed',
+            'programme_value',
+            'annual_service_cost',
+            'reporting_accuracy_risk',
+            'reporting_accuracy_evidence',
+            'sponsor_position',
+            'operational_position',
+            'divergence_areas',
+            'overall_assessor_comment',
+            'top_5_risks',
+            'executive_summary_override',
+            'recommended_next_step',
+            'service_criticality',
+            'service_hours',
+            'primary_support_model',
+            'vendor_landscape_summary',
+            'top_incident_themes',
+            'top_problem_themes',
+            'service_debt_notes',
+        ];
+
+        $normalised = array_intersect_key($fields, array_flip($allowed));
+
+        foreach (['documents_reviewed', 'divergence_areas'] as $listField) {
+            if (array_key_exists($listField, $normalised) && is_string($normalised[$listField])) {
+                $normalised[$listField] = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n|,/', $normalised[$listField]))));
+            }
+        }
+
+        if (array_key_exists('reporting_accuracy_risk', $normalised)) {
+            $normalised['reporting_accuracy_risk'] = filter_var($normalised['reporting_accuracy_risk'], FILTER_VALIDATE_BOOLEAN);
+        }
+
+        foreach (['interview_count', 'programme_value', 'annual_service_cost'] as $numericField) {
+            if (array_key_exists($numericField, $normalised) && $normalised[$numericField] === '') {
+                $normalised[$numericField] = null;
+            }
+        }
+
+        return $normalised;
     }
 
 }

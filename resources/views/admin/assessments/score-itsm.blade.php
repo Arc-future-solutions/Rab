@@ -109,6 +109,40 @@ $savedPillars = $assessment->pillarScores->keyBy('name');
                 <label class="block text-sm text-gray-600">Next Action</label>
                 <input type="text" @change="saveContext" x-model="context.next_agreed_action" class="mt-1 block w-full rounded border-gray-300 p-2 border">
             </div>
+            <div>
+                <label class="block text-sm text-gray-600">Service Context</label>
+                <select @change="saveContext" x-model="context.service_context" class="mt-1 block w-full rounded border-gray-300 p-2 border">
+                    <option value="">Select...</option>
+                    <option value="NSI">New Service Introduction</option>
+                    <option value="Established">Established</option>
+                    <option value="UnderPressure">Under Pressure</option>
+                    <option value="Transformation">Transformation</option>
+                    <option value="LegacyPreRetirement">Legacy Pre-Retirement</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-600">Regulatory Context</label>
+                <select @change="saveContext" x-model="context.regulatory_context" class="mt-1 block w-full rounded border-gray-300 p-2 border">
+                    <option value="">None / not applicable</option>
+                    <option value="fca_uk">FCA UK</option>
+                    <option value="dora_eu">DORA EU</option>
+                    <option value="nhs_cqc">NHS / CQC</option>
+                    <option value="public_sector">Public sector</option>
+                    <option value="gdpr_only">GDPR only</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-gray-600">Sponsor / CIO</label>
+                <input type="text" @change="saveContext" x-model="context.sponsor_name" class="mt-1 block w-full rounded border-gray-300 p-2 border">
+            </div>
+            <div>
+                <label class="block text-sm text-gray-600">Interview Count</label>
+                <input type="number" min="0" @change="saveContext" x-model="context.interview_count" class="mt-1 block w-full rounded border-gray-300 p-2 border">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm text-gray-600">Documents Reviewed</label>
+                <textarea @change="saveContext" x-model="context.documents_reviewed" class="mt-1 block w-full rounded border-gray-300 p-2 border" rows="2" placeholder="One document per line"></textarea>
+            </div>
         </div>
     </div>
 
@@ -174,6 +208,20 @@ $savedPillars = $assessment->pillarScores->keyBy('name');
                                 <option value="high" {{ ($ans->confidence ?? '') == 'high' ? 'selected' : '' }}>High</option>
                             </select>
                         </div>
+                        <div class="lg:col-span-3">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Respondent Role</label>
+                            <input id="role_{{ $code }}" type="text" value="{{ $ans->respondent_role ?? '' }}" class="w-full text-sm rounded border-gray-300 px-2 py-1 border" placeholder="Service Manager" @change="saveQ('{{ $code }}', '{{ addslashes($pillarName) }}', '{{ addslashes($text) }}')">
+                        </div>
+                        <div class="lg:col-span-4">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Document Source</label>
+                            <input id="doc_{{ $code }}" type="text" value="{{ $ans->document_source ?? '' }}" class="w-full text-sm rounded border-gray-300 px-2 py-1 border" placeholder="Incident Report Q1" @change="saveQ('{{ $code }}', '{{ addslashes($pillarName) }}', '{{ addslashes($text) }}')">
+                        </div>
+                        @if($assessment->report_tier === 'Tier 2 Full')
+                            <div class="lg:col-span-5">
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Stakeholder Divergence Note</label>
+                                <textarea id="div_{{ $code }}" class="w-full text-sm rounded border-gray-300 px-2 py-1 border" rows="2" @change="saveQ('{{ $code }}', '{{ addslashes($pillarName) }}', '{{ addslashes($text) }}')">{{ $ans->stakeholder_divergence_note ?? '' }}</textarea>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endforeach
@@ -217,6 +265,10 @@ $savedPillars = $assessment->pillarScores->keyBy('name');
                 </select>
             </div>
             <div>
+                <label class="block text-sm text-gray-600">Annual Service Cost</label>
+                <input type="number" min="0" step="0.01" @change="saveContext" x-model="context.annual_service_cost" class="mt-1 block w-full rounded border-gray-300 p-2 border">
+            </div>
+            <div>
                 <label class="block text-sm text-gray-600">Service Hours</label>
                 <input type="text" @change="saveContext" x-model="context.service_hours" class="mt-1 block w-full rounded border-gray-300 p-2 border">
             </div>
@@ -257,6 +309,23 @@ $savedPillars = $assessment->pillarScores->keyBy('name');
                 <label class="block text-sm text-gray-600">Recommended Next Step</label>
                 <input type="text" @change="saveContext" x-model="context.recommended_next_step" class="mt-1 block w-full rounded border-gray-300 p-2 border">
             </div>
+            @if($assessment->report_tier === 'Tier 2 Full')
+                <div class="md:col-span-2 mt-4 pt-4 border-t">
+                    <h4 class="font-bold text-gray-700">Stakeholder Notes</h4>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Sponsor / CIO Position</label>
+                    <textarea @change="saveContext" x-model="context.sponsor_position" class="mt-1 block w-full rounded border-gray-300 p-2 border" rows="3"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-600">Operational Position</label>
+                    <textarea @change="saveContext" x-model="context.operational_position" class="mt-1 block w-full rounded border-gray-300 p-2 border" rows="3"></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm text-gray-600">Divergence Areas</label>
+                    <textarea @change="saveContext" x-model="context.divergence_areas" class="mt-1 block w-full rounded border-gray-300 p-2 border" rows="2" placeholder="One divergence area per line"></textarea>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -308,27 +377,36 @@ $savedPillars = $assessment->pillarScores->keyBy('name');
 document.addEventListener('alpine:init', () => {
     Alpine.data('scorerComponent', () => ({
         context: {
-            call_date: '{{ $assessment->call_date }}',
-            call_type: '{{ $assessment->call_type }}',
-            call_attendees: '{{ $assessment->call_attendees }}',
-            call_summary: '{{ addslashes($assessment->call_summary) }}',
-            client_concerns: '{{ addslashes($assessment->client_concerns) }}',
-            next_agreed_action: '{{ addslashes($assessment->next_agreed_action) }}',
+            call_date: @json($assessment->call_date),
+            call_type: @json($assessment->call_type),
+            call_attendees: @json($assessment->call_attendees),
+            call_summary: @json($assessment->call_summary),
+            client_concerns: @json($assessment->client_concerns),
+            next_agreed_action: @json($assessment->next_agreed_action),
+            service_context: @json($assessment->service_context),
+            regulatory_context: @json($assessment->regulatory_context),
+            sponsor_name: @json($assessment->sponsor_name),
+            interview_count: @json($assessment->interview_count),
+            documents_reviewed: @json(implode("\n", $assessment->documents_reviewed ?? [])),
             
             // ITSM specific
-            service_criticality: '{{ addslashes($assessment->service_criticality) }}',
-            service_hours: '{{ addslashes($assessment->service_hours) }}',
-            primary_support_model: '{{ addslashes($assessment->primary_support_model) }}',
-            vendor_landscape_summary: '{{ addslashes($assessment->vendor_landscape_summary) }}',
-            top_incident_themes: '{{ addslashes($assessment->top_incident_themes) }}',
-            top_problem_themes: '{{ addslashes($assessment->top_problem_themes) }}',
-            service_debt_notes: '{{ addslashes($assessment->service_debt_notes) }}',
+            service_criticality: @json($assessment->service_criticality),
+            annual_service_cost: @json($assessment->annual_service_cost),
+            service_hours: @json($assessment->service_hours),
+            primary_support_model: @json($assessment->primary_support_model),
+            vendor_landscape_summary: @json($assessment->vendor_landscape_summary),
+            top_incident_themes: @json($assessment->top_incident_themes),
+            top_problem_themes: @json($assessment->top_problem_themes),
+            service_debt_notes: @json($assessment->service_debt_notes),
             
             // Shared globals
-            overall_assessor_comment: '{{ addslashes($assessment->overall_assessor_comment) }}',
-            top_5_risks: '{{ addslashes($assessment->top_5_risks) }}',
-            executive_summary_override: '{{ addslashes($assessment->executive_summary_override) }}',
-            recommended_next_step: '{{ addslashes($assessment->recommended_next_step) }}'
+            sponsor_position: @json($assessment->sponsor_position),
+            operational_position: @json($assessment->operational_position),
+            divergence_areas: @json(implode("\n", $assessment->divergence_areas ?? [])),
+            overall_assessor_comment: @json($assessment->overall_assessor_comment),
+            top_5_risks: @json($assessment->top_5_risks),
+            executive_summary_override: @json($assessment->executive_summary_override),
+            recommended_next_step: @json($assessment->recommended_next_step)
         },
         
         saveContext() {
@@ -353,6 +431,9 @@ document.addEventListener('alpine:init', () => {
                 score: scoreInp.value,
                 evidence_note: document.getElementById(`ev_${code}`).value,
                 source_type: document.getElementById(`src_${code}`).value,
+                respondent_role: document.getElementById(`role_${code}`).value,
+                document_source: document.getElementById(`doc_${code}`).value,
+                stakeholder_divergence_note: document.getElementById(`div_${code}`)?.value || null,
                 confidence: document.getElementById(`conf_${code}`).value
             };
             
