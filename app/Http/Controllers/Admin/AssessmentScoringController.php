@@ -184,6 +184,11 @@ class AssessmentScoringController extends Controller
             ->toArray();
         $aiPayload = $payloadBuilder->buildFullPayload($assessment);
         $promptKey = $payloadBuilder->promptKey($assessment);
+        $systemPrompt = config("ai.prompts.{$promptKey}");
+
+        if (!$systemPrompt) {
+            throw new \Exception("Prompt not found: {$promptKey}");
+        }
 
         $results = [
             'overall_score' => $assessment->overall_score,
@@ -234,7 +239,7 @@ class AssessmentScoringController extends Controller
                 'answers' => $answers,
                 'ai_payload' => $aiPayload,
                 'prompt_key' => $promptKey,
-                'system_prompt' => config("ai.prompts.{$promptKey}"),
+                'system_prompt' => $systemPrompt,
                 'assessment_id' => $assessment->id,
                 'submitted_at' => now()->toDateTimeString(),
             ]);
