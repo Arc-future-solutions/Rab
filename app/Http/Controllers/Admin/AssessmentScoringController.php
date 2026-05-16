@@ -9,6 +9,7 @@ use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentPillarScore;
 use App\Services\AssessmentAiPayloadBuilder;
 use App\Services\AssessmentIndexCalculator;
+use App\Services\ReportPdfService;
 use Illuminate\Http\Request;
 
 class AssessmentScoringController extends Controller
@@ -246,6 +247,7 @@ class AssessmentScoringController extends Controller
 
             $data = $response->json();
             $aiRecommendation = $data['output'] ?? ($data['recommendation'] ?? 'AI recommendation could not be generated at this time.');
+            $aiDraft = $this->normaliseAiDraft($aiRecommendation, $data);
             $topRisks = $data['top_5_risks'] ?? null;
             
             if ($topRisks && is_array($topRisks)) {
@@ -253,16 +255,29 @@ class AssessmentScoringController extends Controller
             }
         } catch (\Exception $e) {
             $aiRecommendation = 'Error connecting to AI service: ' . $e->getMessage();
+            $aiDraft = null;
             $topRisks = null;
         }
 
         $assessment->update([
             'ai_recommendation' => $aiRecommendation,
+            'ai_draft_json' => $aiDraft,
             'top_5_risks' => $topRisks,
             'status' => 'completed'
         ]);
 
         return redirect()->route('admin.assessments.show', $assessment)->with('success', 'AI Report generated successfully.');
+    }
+
+    public function exportPdf(Assessment $assessment, ReportPdfService $reportPdfService)
+    {
+        if (!$assessment->ai_draft_json) {
+            return redirect()
+                ->route('admin.assessments.show', $assessment)
+                ->with('error', 'Generate AI report first before exporting the PDF.');
+        }
+
+        return $reportPdfService->download($assessment);
     }
 
     private function recalculateScores(Assessment $assessment)
@@ -456,6 +471,39 @@ class AssessmentScoringController extends Controller
         }
 
         return $normalised;
+    }
+
+    private function normaliseAiDraft($aiRecommendation, array $responseData): ?array
+    {
+        if (is_array($aiRecommendation)) {
+            return $aiRecommendation;
+        }
+
+        if (is_string($aiRecommendation)) {
+            $decoded = json_decode($aiRecommendation, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        $structuredKeys = [
+            'cover_letter',
+            'executive_position',
+            'intelligence_dashboard',
+            'stakeholder_intelligence',
+            'intelligence_profile',
+            'risk_register',
+            'raid_summary',
+            'root_cause_analysis',
+            'priority_plan',
+            'compliance_risk_signals',
+            'final_position',
+            'tier1_bridge',
+        ];
+
+        $draft = array_intersect_key($responseData, array_flip($structuredKeys));
+
+        return $draft !== [] ? $draft : null;
     }
 
 }

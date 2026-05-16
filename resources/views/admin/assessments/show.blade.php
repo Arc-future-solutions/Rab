@@ -41,10 +41,13 @@
                 {{ number_format($assessment->overall_score, 1) }} ({{ $assessment->rag_status }})
             </span>
             <div class="mt-4 flex flex-wrap gap-3">
-                <button id="exportPdf" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm flex items-center justify-center gap-2 transition-all active:scale-95 flex-1 sm:flex-none">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                    <span>Export Report</span>
-                </button>
+                <form action="{{ route('admin.assessments.exportPdf', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
+                    @csrf
+                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm flex items-center justify-center gap-2 transition-all active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span>Export Report</span>
+                    </button>
+                </form>
                 @if($assessment->status !== 'approved')
                     <a href="{{ in_array($assessment->type, ['PHI', 'PIR']) ? route('admin.assessments.score.phi', $assessment->id) : route('admin.assessments.score.itsm', $assessment->id) }}" 
                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 flex-1 sm:flex-none">
@@ -557,342 +560,18 @@
     @endif
 </div>
 
-<!-- HIDDEN PDF HEADER TEMPLATE -->
-<div style="position: absolute; left: -9999px; top: 0; width: 210mm;">
-    <div id="pdf-header-template" class="w-[210mm] bg-white p-10 font-sans border-b-2 border-slate-900 mb-6">
-        <header class="flex items-center justify-between pb-4">
-            <div class="flex items-center gap-6">
-                <img src="/assets/images/logo-rab.png" alt="RAB" class="h-10">
-                <div class="h-10 w-px bg-slate-200"></div>
-                <div>
-                    <h1 class="text-2xl font-black text-slate-900 uppercase tracking-tighter leading-none mb-1">{{ $reportConfig['tier_label'] }}</h1>
-                    <div class="flex items-center gap-2">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ $assessment->client->company_name ?? $assessment->client_name }}</p>
-                        <span class="text-slate-300">•</span>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ now()->format('d M Y') }}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-6">
-                <div class="flex items-center gap-4">
-                    <div class="relative w-14 h-14">
-                        <canvas id="pdfScoreGauge"></canvas>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <span class="text-xl font-black text-slate-900">{{ number_format($assessment->overall_score, 1) }}</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col justify-center">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="text-[14px] font-black text-slate-900">{{ number_format($assessment->overall_score, 1) }} / 5.0</span>
-                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest @if($assessment->rag_status === 'Red') bg-red-600 text-white @elseif($assessment->rag_status === 'Amber') bg-amber-500 text-white @else bg-green-600 text-white @endif">
-                                {{ strtoupper($assessment->rag_status) }} STATUS
-                            </span>
-                        </div>
-                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em]">
-                            @if($assessment->rag_status === 'Red') Critical Intervention Required @elseif($assessment->rag_status === 'Amber') Targeted Improvement Needed @else Continuous Optimization @endif
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </header>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
 {{-- Ensure Chart.js is loaded before the plugin --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     // Register the datalabels plugin inside the listener to ensure Chart is defined
     if (typeof Chart !== 'undefined' && typeof ChartDataLabels !== 'undefined') {
         Chart.register(ChartDataLabels);
-    }
-    // PDF Export Logic
-    const exportBtn = document.getElementById('exportPdf');
-    if(exportBtn) {
-        exportBtn.addEventListener('click', async function() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'mm', 'a4');
-            const pageWidth = doc.internal.pageSize.getWidth();
-            
-            exportBtn.disabled = true;
-            exportBtn.innerText = 'Generating...';
-
-            try {
-                await new Promise(r => setTimeout(r, 150));
-                const pageHeight = doc.internal.pageSize.getHeight();
-                const margin = 14;
-                const usableWidth = pageWidth - margin * 2;
-                let y = margin;
-
-                // ─── PAGE HEADER (Captured from HTML Template) ────────────────
-                const headerEl = document.getElementById('pdf-header-template');
-                const headerCvs = await html2canvas(headerEl, {scale:3, backgroundColor:'#ffffff'});
-                const headerImg = headerCvs.toDataURL('image/png');
-                const headerH = (headerCvs.height * pageWidth) / headerCvs.width;
-                doc.addImage(headerImg, 'PNG', 0, 0, pageWidth, headerH);
-
-                y = headerH + 8;
-
-                // ─── TWO-COLUMN SECTION: Chart | Pillar Scores ──────────────
-                const colL = margin;
-                const colR = pageWidth / 2 + 4;
-                const colW = (pageWidth / 2) - margin - 4;
-
-                // Radar
-                const radarEl = document.getElementById('radarChartContainer');
-                const radarCvs = await html2canvas(radarEl, {scale:3, backgroundColor:'#ffffff'});
-                const radarImg = radarCvs.toDataURL('image/png');
-                const radarH = (radarCvs.height * colW) / radarCvs.width;
-                doc.addImage(radarImg, 'PNG', colL, y, colW, radarH);
-
-                // Bar
-                const barEl = document.getElementById('barChartContainer');
-                const barCvs = await html2canvas(barEl, {scale:3, backgroundColor:'#ffffff'});
-                const barImg = barCvs.toDataURL('image/png');
-                const barH = (barCvs.height * colW) / barCvs.width;
-                doc.addImage(barImg, 'PNG', colR, y, colW, barH);
-
-                y += Math.max(radarH, barH) + 10;
-
-                // ─── RISK MATRIX & ACTION REGISTER (TIER 1 & 2) ──────────────
-                @if($reportConfig['show_risk_matrix'])
-                    if (y > pageHeight - 60) { doc.addPage(); y = 20; }
-                    doc.setFontSize(12);
-                    doc.setFont(undefined, 'bold');
-                    doc.text("Risk Matrix & Priorities", margin, y);
-                    y += 8;
-
-                    const matrixEl = document.getElementById('pdf-risk-matrix');
-                    const matrixCvs = await html2canvas(matrixEl, {scale:2, backgroundColor:'#ffffff'});
-                    const matrixImg = matrixCvs.toDataURL('image/png');
-                    const matrixH = (matrixCvs.height * usableWidth) / matrixCvs.width;
-                    doc.addImage(matrixImg, 'PNG', margin, y, usableWidth, matrixH);
-                    y += matrixH + 10;
-                @endif
-
-                @if($reportConfig['show_intelligence_profile'])
-                    if (y > pageHeight - 100) { doc.addPage(); y = 20; }
-                    doc.setFontSize(12);
-                    doc.setFont(undefined, 'bold');
-                    doc.text("Intelligence Profile (Deep Dive)", margin, y);
-                    y += 8;
-
-                    const profileEl = document.getElementById('pdf-intelligence-profile');
-                    const profileCvs = await html2canvas(profileEl, {scale:2, backgroundColor:'#ffffff'});
-                    const profileImg = profileCvs.toDataURL('image/png');
-                    const profileH = (profileCvs.height * usableWidth) / profileCvs.width;
-                    doc.addImage(profileImg, 'PNG', margin, y, usableWidth, profileH);
-                    y += profileH + 10;
-                @endif
-
-                @if($reportConfig['show_final_position'])
-                    if (y > pageHeight - 40) { doc.addPage(); y = 20; }
-                    const finalEl = document.getElementById('pdf-final-position');
-                    const finalCvs = await html2canvas(finalEl, {scale:2, backgroundColor:'#ffffff'});
-                    const finalImg = finalCvs.toDataURL('image/png');
-                    const finalH = (finalCvs.height * usableWidth) / finalCvs.width;
-                    doc.addImage(finalImg, 'PNG', margin, y, usableWidth, finalH);
-                    y += finalH + 10;
-                @endif
-
-                // ─── DIVIDER ────────────────────────────────────────────────
-                if (y < pageHeight - 20) {
-                    doc.setDrawColor(226, 232, 240);
-                    doc.line(margin, y, pageWidth - margin, y);
-                    y += 10;
-                } else {
-                    doc.addPage();
-                    y = 20;
-                }
-
-                // ─── QUESTIONS TABLE ─────────────────────────────────────────
-                // Section title
-                doc.setFontSize(11);
-                doc.setFont(undefined, 'bold');
-                doc.setTextColor(15, 23, 42);
-                doc.text("Detailed Assessment Findings", margin, y);
-                y += 6;
-
-                // Table header row
-                const col1W = usableWidth * 0.08;  // Pillar code
-                const col2W = usableWidth * 0.55;  // Question
-                const col3W = usableWidth * 0.30;  // Evidence note
-                const col4W = usableWidth * 0.07;  // Score
-
-                doc.setFillColor(15, 23, 42);
-                doc.rect(margin, y, usableWidth, 7, 'F');
-                doc.setFontSize(7);
-                doc.setFont(undefined, 'bold');
-                doc.setTextColor(255, 255, 255);
-                doc.text("PILLAR", margin + 2, y + 5);
-                doc.text("QUESTION", margin + col1W + 2, y + 5);
-                doc.text("EVIDENCE NOTE", margin + col1W + col2W + 2, y + 5);
-                doc.text("SCORE", pageWidth - margin - 2, y + 5, {align:'right'});
-                y += 10;
-
-                let rowBg = false;
-                let splitQ, splitNote, rowLines, rowH, scoreNum, chipFill, displayPillarCode;
-
-                @foreach($assessment->questionResponses as $resp)
-                    @php
-                        // Extract only the P1/P2 code from the pillar name
-                        $pParts = explode(' ', $resp->pillar_name);
-                        $pCode = $pParts[0] ?? '—';
-
-                        $qLookup = strtoupper(str_replace(['_', ' '], '', $resp->question));
-                        $displayQuestion = $resp->question;
-                        $type = $assessment->type;
-                        if(isset($frameworkQuestions[$type])) {
-                            foreach($frameworkQuestions[$type] as $pill) {
-                                foreach($pill['questions'] as $code => $qMeta) {
-                                    if(strtoupper(str_replace(['_', ' '], '', $code)) === $qLookup) {
-                                        $displayQuestion = $code . ": " . (is_array($qMeta) ? $qMeta['text'] : $qMeta);
-                                        break 2;
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Decode any HTML entities and clean for JS
-                        $cleanQ    = addslashes(str_replace(["\r","\n"],' ', html_entity_decode($displayQuestion, ENT_QUOTES)));
-                        $cleanNote = addslashes(str_replace(["\r","\n"],' ', html_entity_decode($resp->evidence_note ?: '—', ENT_QUOTES)));
-                    @endphp
-
-                    splitQ    = doc.splitTextToSize({!! json_encode($cleanQ) !!}, col2W - 4);
-                    splitNote = doc.splitTextToSize({!! json_encode($cleanNote) !!}, col3W - 4);
-                    rowLines  = Math.max(splitQ.length, splitNote.length, 1);
-                    rowH      = rowLines * 4.4 + 5;
-
-                    if(y + rowH > pageHeight - 14) {
-                        doc.addPage();
-                        // Repeat header on continuation pages
-                        doc.setFillColor(15, 23, 42);
-                        doc.rect(0, 0, pageWidth, 12, 'F');
-                        doc.setFontSize(8);
-                        doc.setFont(undefined, 'bold');
-                        doc.setTextColor(255,255,255);
-                        doc.text("Detailed Assessment Findings (cont.)", margin, 8);
-                        y = 20;
-                        rowBg = false;
-
-                        doc.setFillColor(15, 23, 42);
-                        doc.rect(margin, y, usableWidth, 7, 'F');
-                        doc.setFontSize(7);
-                        doc.setFont(undefined, 'bold');
-                        doc.setTextColor(255, 255, 255);
-                        doc.text("PILLAR", margin + 2, y + 5);
-                        doc.text("QUESTION", margin + col1W + 2, y + 5);
-                        doc.text("EVIDENCE NOTE", margin + col1W + col2W + 2, y + 5);
-                        doc.text("SCORE", pageWidth - margin - 2, y + 5, {align:'right'});
-                        y += 10;
-                    }
-
-                    // Alternating row background
-                    if(rowBg) {
-                        doc.setFillColor(248, 250, 252);
-                        doc.rect(margin, y - 2, usableWidth, rowH, 'F');
-                    }
-                    rowBg = !rowBg;
-
-                    // Pillar code (small pill)
-                    doc.setFillColor(226, 232, 240);
-                    doc.roundedRect(margin, y, col1W - 2, 5.5, 1, 1, 'F');
-                    doc.setFontSize(7);
-                    doc.setFont(undefined, 'bold');
-                    doc.setTextColor(71, 85, 105);
-                    doc.text("{{ $pCode }}", margin + (col1W - 2)/2, y + 4, {align:'center'});
-
-                    // Question text
-                    doc.setFontSize(7.5);
-                    doc.setFont(undefined, 'normal');
-                    doc.setTextColor(30, 41, 59);
-                    doc.text(splitQ, margin + col1W + 2, y + 4);
-
-                    // Evidence note
-                    doc.setFontSize(7);
-                    doc.setTextColor(100, 116, 139);
-                    doc.text(splitNote, margin + col1W + col2W + 2, y + 4);
-
-                    // Score chip
-                    scoreNum = parseFloat("{{ $resp->score }}");
-                    chipFill = scoreNum < 2.5 ? [239,68,68] : (scoreNum < 3.8 ? [245,158,11] : [16,185,129]);
-                    doc.setFillColor(chipFill[0], chipFill[1], chipFill[2]);
-                    doc.roundedRect(pageWidth - margin - 10, y - 0.5, 10, 6, 1, 1, 'F');
-                    doc.setFontSize(7);
-                    doc.setFont(undefined, 'bold');
-                    doc.setTextColor(255,255,255);
-                    doc.text("{{ $resp->score }}", pageWidth - margin - 5, y + 4, {align:'center'});
-
-                    y += rowH;
-
-                    // Bottom border per row
-                    doc.setDrawColor(226, 232, 240);
-                    doc.setLineWidth(0.2);
-                    doc.line(margin, y - 1, pageWidth - margin, y - 1);
-                @endforeach
-
-                // Pillar Legend / Key
-                y += 6;
-                if(y + 15 > pageHeight - 15) {
-                    doc.addPage();
-                    y = 20;
-                }
-                doc.setFontSize(7);
-                doc.setFont(undefined, 'bold');
-                doc.setTextColor(15, 23, 42);
-                doc.text("Pillar Key:", margin, y);
-                y += 4;
-                doc.setFont(undefined, 'normal');
-                doc.setTextColor(100, 116, 139);
-                
-                let legendFullText = "";
-                @foreach($assessment->pillarScores as $pillar)
-                    legendFullText += "{!! addslashes(html_entity_decode($pillar->name, ENT_QUOTES)) !!}    ·    ";
-                @endforeach
-                // Remove trailing separator
-                legendFullText = legendFullText.replace(/    ·    $/, "");
-
-                let splitLegendText = doc.splitTextToSize(legendFullText, usableWidth);
-                doc.text(splitLegendText, margin, y);
-
-                // Footer disclaimer (Mandatory for all pages)
-                const addDisclaimerFooter = (docPage) => {
-                    const disclaimer = "This report is produced by RAB Consulting Services Ltd. All findings are based on information provided during the diagnostic or consultant-led engagement. This report constitutes operational intelligence and professional advisory guidance only. It does not constitute legal, regulatory, financial, or compliance advice. Clients should engage their own legal, compliance, and regulatory advisers to confirm any regulatory position. RAB Consulting Services Ltd accepts no liability for decisions made solely on the basis of this report without independent legal or professional verification. ©2026 RAB Consulting Services Ltd.";
-                    doc.setFontSize(5);
-                    doc.setFont(undefined, 'normal');
-                    doc.setTextColor(148, 163, 184);
-                    const splitDisclaimer = doc.splitTextToSize(disclaimer, usableWidth);
-                    
-                    const pageCount = doc.internal.getNumberOfPages();
-                    for(let i = 1; i <= pageCount; i++) {
-                        doc.setPage(i);
-                        doc.setDrawColor(226, 232, 240);
-                        doc.line(margin, pageHeight - 14, pageWidth - margin, pageHeight - 14);
-                        doc.text(splitDisclaimer, margin, pageHeight - 11);
-                        doc.text("Page " + i + " of " + pageCount, pageWidth - margin, pageHeight - 6, {align:'right'});
-                    }
-                };
-
-                addDisclaimerFooter(doc);
-
-                doc.save(`Assessment_{{ Str::slug($assessment->client->company_name ?? 'Report') }}_{{ date('Ymd') }}.pdf`);
-
-            } catch (error) {
-                console.error("PDF generation failed", error);
-                alert("Failed to generate PDF. Check console for details.");
-            } finally {
-                exportBtn.disabled = false;
-                exportBtn.innerText = 'Export Report';
-            }
-        });
     }
 
     const pillars = @json($assessment->pillarScores);
@@ -1068,28 +747,6 @@ document.addEventListener("DOMContentLoaded", function() {
                         display: (ctx) => ctx.datasetIndex === 0
                     }
                 }
-            }
-        });
-
-        // --- PDF SCORE GAUGE ---
-        new Chart(document.getElementById('pdfScoreGauge'), {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: [{{ $assessment->overall_score }}, {{ 5 - $assessment->overall_score }}],
-                    backgroundColor: ['{{ $assessment->rag_status === 'Red' ? '#ef4444' : ($assessment->rag_status === 'Amber' ? '#f59e0b' : '#10b981') }}', '#f1f5f9'],
-                    borderWidth: 0,
-                    circumference: 270,
-                    rotation: 225,
-                    cutout: '80%',
-                    borderRadius: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
-                plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: false } }
             }
         });
     }

@@ -52,6 +52,33 @@ class AdminGenerateReportPromptTest extends TestCase
             ->post(route('admin.assessments.generateReport', $assessment));
     }
 
+    public function test_generate_report_stores_structured_ai_output_as_draft_json(): void
+    {
+        $draft = [
+            'cover_letter' => 'Formal transmittal',
+            'executive_position' => 'Recoverable with intervention',
+            'final_position' => 'Proceed with controlled recovery',
+        ];
+
+        Http::fake([
+            'n8n.srv1139767.hstgr.cloud/*' => Http::response([
+                'output' => json_encode($draft),
+                'top_5_risks' => ['Risk one'],
+            ]),
+        ]);
+
+        $assessment = $this->assessment('PIR', 'Tier 2 Full');
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.assessments.generateReport', $assessment))
+            ->assertRedirect(route('admin.assessments.show', $assessment));
+
+        $assessment->refresh();
+
+        $this->assertSame($draft, $assessment->ai_draft_json);
+        $this->assertSame('["Risk one"]', $assessment->top_5_risks);
+    }
+
     private function admin(): User
     {
         return User::create([

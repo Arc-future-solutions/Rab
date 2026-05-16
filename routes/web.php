@@ -100,6 +100,7 @@
         Route::get('assessments/itsm/{assessment}/score', [\App\Http\Controllers\Admin\AssessmentScoringController::class, 'scoreItsm'])->name('assessments.score.itsm');
         Route::put('assessments/{assessment}/auto-save', [\App\Http\Controllers\Admin\AssessmentScoringController::class, 'autoSave'])->name('assessments.autosave');
         Route::post('assessments/{assessment}/generate-report', [\App\Http\Controllers\Admin\AssessmentScoringController::class, 'generateReport'])->name('assessments.generateReport');
+        Route::post('assessments/{assessment}/export-pdf', [\App\Http\Controllers\Admin\AssessmentScoringController::class, 'exportPdf'])->name('assessments.exportPdf');
         
         Route::resource('clients', \App\Http\Controllers\Admin\ClientController::class);
         Route::resource('assessments', \App\Http\Controllers\Admin\AssessmentController::class)->except(['create', 'store']);
