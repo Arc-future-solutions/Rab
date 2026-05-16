@@ -7,6 +7,17 @@ use PHPUnit\Framework\TestCase;
 
 class AssessmentIndexCalculatorTest extends TestCase
 {
+    public function test_pir_overall_uses_verified_build_guide_denominator(): void
+    {
+        $scores = array_fill_keys(
+            ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'P9', 'P10'],
+            3.5
+        );
+
+        $this->assertSame(12.1, AssessmentIndexCalculator::PIR_DENOMINATOR);
+        $this->assertSame(3.5, AssessmentIndexCalculator::calculatePirOverall($scores));
+    }
+
     public function test_pir_indices_match_build_guide_examples(): void
     {
         $bri = AssessmentIndexCalculator::calculatePir([
@@ -32,6 +43,7 @@ class AssessmentIndexCalculatorTest extends TestCase
             'P2.F9' => 5.0,
         ]);
 
+        // The guide formula produces 3.24 for this input, despite the table listing 3.20.
         $this->assertSame(3.24, $bri['BRI']);
         $this->assertSame(3.63, $vri['VRI']);
         $this->assertSame(2.5, $rii['RII']);
@@ -45,6 +57,17 @@ class AssessmentIndexCalculatorTest extends TestCase
         ]);
 
         $this->assertSame(3.0, $indices['DMI']);
+    }
+
+    public function test_sir_overall_uses_updated_build_guide_denominator(): void
+    {
+        $scores = array_fill_keys(
+            ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12'],
+            3.5
+        );
+
+        $this->assertSame(14.5, AssessmentIndexCalculator::SIR_DENOMINATOR);
+        $this->assertSame(3.5, AssessmentIndexCalculator::calculateSirOverall($scores));
     }
 
     public function test_sir_indices_match_build_guide_examples(): void

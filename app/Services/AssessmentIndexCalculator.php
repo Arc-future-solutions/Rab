@@ -4,6 +4,37 @@ namespace App\Services;
 
 class AssessmentIndexCalculator
 {
+    private const PIR_WEIGHTS = [
+        'P1' => 1.5,
+        'P2' => 1.4,
+        'P3' => 1.3,
+        'P4' => 1.2,
+        'P5' => 1.2,
+        'P6' => 1.1,
+        'P7' => 1.2,
+        'P8' => 1.1,
+        'P9' => 1.0,
+        'P10' => 1.1,
+    ];
+
+    private const SIR_WEIGHTS = [
+        'D1' => 1.4,
+        'D2' => 1.4,
+        'D3' => 1.0,
+        'D4' => 1.2,
+        'D5' => 1.3,
+        'D6' => 1.2,
+        'D7' => 1.2,
+        'D8' => 1.2,
+        'D9' => 1.0,
+        'D10' => 1.3,
+        'D11' => 1.2,
+        'D12' => 1.1,
+    ];
+
+    public const PIR_DENOMINATOR = 12.1;
+    public const SIR_DENOMINATOR = 14.5;
+
     private const RII_QUESTIONS = [
         'P1.F1',
         'P1.F2',
@@ -13,6 +44,11 @@ class AssessmentIndexCalculator
         'P2.F5',
         'P2.F6',
     ];
+
+    public static function calculatePirOverall(array $pillarScores): float
+    {
+        return self::weightedAverage($pillarScores, self::PIR_WEIGHTS, self::PIR_DENOMINATOR);
+    }
 
     public static function calculatePir(array $pillarScores, array $answers = []): array
     {
@@ -34,6 +70,11 @@ class AssessmentIndexCalculator
             'DMI' => $dmi,
             'RII' => self::averageAnswers($answers, self::RII_QUESTIONS),
         ];
+    }
+
+    public static function calculateSirOverall(array $pillarScores): float
+    {
+        return self::weightedAverage($pillarScores, self::SIR_WEIGHTS, self::SIR_DENOMINATOR);
     }
 
     public static function calculateSir(array $pillarScores): array
@@ -97,5 +138,16 @@ class AssessmentIndexCalculator
         }
 
         return $scores === [] ? null : round(array_sum($scores) / count($scores), 2);
+    }
+
+    private static function weightedAverage(array $scores, array $weights, float $denominator): float
+    {
+        $weightedScoreSum = 0.0;
+
+        foreach ($weights as $code => $weight) {
+            $weightedScoreSum += self::score($scores, $code) * $weight;
+        }
+
+        return round($weightedScoreSum / $denominator, 2);
     }
 }
