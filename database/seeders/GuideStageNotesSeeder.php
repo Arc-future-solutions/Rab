@@ -29,7 +29,7 @@ class GuideStageNotesSeeder extends Seeder
                 'P7.F14' => 'At Design: hypercare model defined. At Build: resourcing confirmed. At Go-Live: hypercare team deployed and operational.',
                 'P9.F1' => 'At Design: operational reporting requirements identified. At Build: reporting design confirmed. At Test: validated. At Go-Live: live and accepted.',
                 'P9.F3' => 'Not expected before Build. At Test/Go-Live: AI/automation components tested and governed.',
-                'P2.F9' => 'At Mobilisation: Change Control process and authority must be defined before any delivery commences. At Design: process active for design decisions. At Build/Test: no scope, technical, or budget changes without formal approval - this is the highest-risk period for undocumented change. At Cutover: strict change freeze or emergency-only process in force.',
+                'P2.F9' => 'At Mobilisation: Change Control process and authority must be defined before any delivery commences. At Design: process active for design decisions. At Build/Test: no scope, technical, or budget changes without formal approval — this is the highest-risk period for undocumented change. At Cutover: strict change freeze or emergency-only process in force.',
             ],
             'SIR' => [
                 'D7.F1' => 'NSI: assess whether transition plan is complete before introduction. Transformation: assess whether service can absorb change alongside current load.',

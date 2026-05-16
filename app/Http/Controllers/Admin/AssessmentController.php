@@ -229,9 +229,13 @@ class AssessmentController extends Controller
                     if (is_string($anchors)) {
                         $anchors = json_decode($anchors, true) ?? [];
                     }
+                    if (!is_array($anchors)) {
+                        $anchors = [];
+                    }
 
                     $cards = $type3Map[$q->question_code] ?? null;
                     if ($q->question_type == 3 && empty($cards)) {
+                        $cards = [];
                         foreach ($anchors as $score => $resp) {
                             $cards[] = ['score' => $score, 'response' => $resp];
                         }

@@ -16,6 +16,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(JsonAssessmentBankSeeder::class);
+        $this->call(AdditionalAssessmentQuestionsSeeder::class);
+        $this->call(GuideStageNotesSeeder::class);
 
         $faker = \Faker\Factory::create();
 
