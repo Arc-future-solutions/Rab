@@ -58,9 +58,9 @@ class AssessmentAiPayloadBuilder
         'D12' => 'D12 — Service Intelligence & Continuous Value',
     ];
 
-    public function buildFullPayload(Assessment $assessment): array
+    public function buildSnapshotPayload(Assessment $assessment): array
     {
-        $assessment->loadMissing(['client', 'assessor', 'pillarScores', 'questionResponses']);
+        $assessment->loadMissing(['client', 'pillarScores', 'questionResponses']);
 
         $framework = strtoupper($assessment->type);
         $pillarScores = $this->scoreMap($assessment);
@@ -83,25 +83,13 @@ class AssessmentAiPayloadBuilder
             'assessment_id' => $assessment->id,
             'client_company' => $assessment->client->company_name ?? null,
             'assessment_date' => optional($assessment->updated_at)->toDateString(),
-            'tier' => $assessment->report_tier === 'Tier 2 Full' ? 'Briefing' : 'Review',
-            'consultant_name' => $assessment->assessor->name ?? 'Reda Boukhiar',
-            'sponsor_name' => $assessment->sponsor_name,
-            'interview_count' => $assessment->interview_count,
-            'documents_reviewed' => $this->stringList($assessment->documents_reviewed),
-            'confidence_level' => $this->overallConfidence($assessment),
+            'primary_concern' => $assessment->client_concerns,
             'overall_score' => (float) $assessment->overall_score,
             'rag_status' => $assessment->rag_status,
             'regulatory_context' => $assessment->regulatory_context,
             'alert_flags' => $this->alertFlags($pillarScores),
             'question_responses' => $this->questionResponses($assessment),
             'compliance_question_scores' => $this->complianceQuestionScores($assessment),
-            'evidence_notes' => $this->evidenceNotes($assessment),
-            'emerging_issues' => $this->stringList($assessment->top_5_risks),
-            'stakeholder_notes' => $assessment->report_tier === 'Tier 2 Full' ? [
-                'sponsor_position' => $assessment->sponsor_position,
-                'operational_position' => $assessment->operational_position,
-                'divergence_areas' => $this->stringList($assessment->divergence_areas),
-            ] : null,
         ];
 
         if ($framework === 'PIR') {
@@ -117,9 +105,6 @@ class AssessmentAiPayloadBuilder
                 'dmi' => $indices['DMI'],
                 'rii' => $indices['RII'],
                 'chi' => $indices['CHI'],
-                'programme_value' => $assessment->programme_value !== null ? (float) $assessment->programme_value : null,
-                'reporting_accuracy_risk' => (bool) $assessment->reporting_accuracy_risk,
-                'reporting_accuracy_evidence' => $assessment->reporting_accuracy_evidence,
             ];
         }
 
@@ -135,6 +120,42 @@ class AssessmentAiPayloadBuilder
             'bau_ri' => $indices['BAURI'],
             'chi' => $indices['CHI'],
             'smi_simi_delta' => $indices['smi_simi_delta'],
+        ];
+    }
+
+    public function buildFullPayload(Assessment $assessment): array
+    {
+        $assessment->loadMissing(['assessor']);
+
+        $framework = strtoupper($assessment->type);
+        $payload = [
+            ...$this->buildSnapshotPayload($assessment),
+            'tier' => $assessment->report_tier === 'Tier 2 Full' ? 'Briefing' : 'Review',
+            'consultant_name' => $assessment->assessor->name ?? 'Reda Boukhiar',
+            'sponsor_name' => $assessment->sponsor_name,
+            'interview_count' => $assessment->interview_count,
+            'documents_reviewed' => $this->stringList($assessment->documents_reviewed),
+            'confidence_level' => $this->overallConfidence($assessment),
+            'evidence_notes' => $this->evidenceNotes($assessment),
+            'emerging_issues' => $this->stringList($assessment->top_5_risks),
+            'stakeholder_notes' => $assessment->report_tier === 'Tier 2 Full' ? [
+                'sponsor_position' => $assessment->sponsor_position,
+                'operational_position' => $assessment->operational_position,
+                'divergence_areas' => $this->stringList($assessment->divergence_areas),
+            ] : null,
+        ];
+
+        if ($framework === 'PIR') {
+            return [
+                ...$payload,
+                'programme_value' => $assessment->programme_value !== null ? (float) $assessment->programme_value : null,
+                'reporting_accuracy_risk' => (bool) $assessment->reporting_accuracy_risk,
+                'reporting_accuracy_evidence' => $assessment->reporting_accuracy_evidence,
+            ];
+        }
+
+        return [
+            ...$payload,
             'annual_service_cost' => $assessment->annual_service_cost !== null ? (float) $assessment->annual_service_cost : null,
         ];
     }
@@ -194,7 +215,8 @@ class AssessmentAiPayloadBuilder
                     'note' => $response->evidence_note,
                     'respondent_role' => $response->respondent_role,
                     'document_source' => $response->document_source,
-                    'confidence' => $this->normaliseConfidence($response->confidence),
+                    'confidence' => $this->normaliseConfidence($response->confidence_level ?? $response->confidence),
+                    'stakeholder_divergence_note' => $response->stakeholder_divergence_note,
                 ],
             ])
             ->toArray();
@@ -235,8 +257,12 @@ class AssessmentAiPayloadBuilder
             return 'Medium';
         }
 
-        $low = $responses->where('confidence', 'low')->count();
-        $high = $responses->where('confidence', 'high')->count();
+        $normalised = $responses->map(fn ($response) => $this->normaliseConfidence(
+            $response->confidence_level ?? $response->confidence
+        ));
+
+        $low = $normalised->filter(fn ($confidence) => $confidence === 'Low')->count();
+        $high = $normalised->filter(fn ($confidence) => $confidence === 'High')->count();
 
         if ($low > 0) {
             return 'Low';

@@ -134,6 +134,7 @@ class AssessmentScoringController extends Controller
                     'document_source' => $data['document_source'] ?? null,
                     'stakeholder_divergence_note' => $data['stakeholder_divergence_note'] ?? null,
                     'confidence' => $data['confidence'] ?? 'medium',
+                    'confidence_level' => $data['confidence'] ?? 'medium',
                 ]
             );
 

@@ -34,6 +34,7 @@ class AssessmentAiPayloadBuilderTest extends TestCase
             'rag_status' => 'Amber',
             'status' => 'draft',
             'delivery_stage' => 'Build',
+            'client_concerns' => 'Sponsor is concerned about governance drift.',
             'regulatory_context' => 'fca_uk',
             'sponsor_name' => 'Alex Sponsor',
             'interview_count' => 3,
@@ -81,16 +82,28 @@ class AssessmentAiPayloadBuilderTest extends TestCase
             'respondent_role' => 'Programme Director',
             'document_source' => 'Governance pack',
             'confidence' => 'low',
+            'confidence_level' => 'low',
+            'stakeholder_divergence_note' => 'Sponsor and delivery lead disagree on escalation quality.',
         ]);
 
         $builder = new AssessmentAiPayloadBuilder();
 
+        $snapshotPayload = $builder->buildSnapshotPayload($assessment);
         $payload = $builder->buildFullPayload($assessment);
 
+        $this->assertSame('Sponsor is concerned about governance drift.', $snapshotPayload['primary_concern']);
+        $this->assertSame('ERP Replacement', $snapshotPayload['programme_name']);
+        $this->assertSame('Build', $snapshotPayload['delivery_stage']);
+        $this->assertSame(2, $snapshotPayload['compliance_question_scores']['P1.F1']);
+        $this->assertArrayHasKey('pillar_scores', $snapshotPayload);
+        $this->assertArrayHasKey('pillar_names', $snapshotPayload);
+        $this->assertArrayNotHasKey('tier', $snapshotPayload);
+        $this->assertArrayNotHasKey('evidence_notes', $snapshotPayload);
         $this->assertSame('pir_full_tier2', $builder->promptKey($assessment));
         $this->assertSame('PIR', $payload['framework']);
         $this->assertSame('Briefing', $payload['tier']);
         $this->assertSame('ERP Replacement', $payload['programme_name']);
+        $this->assertSame('Sponsor is concerned about governance drift.', $payload['primary_concern']);
         $this->assertSame('Build', $payload['delivery_stage']);
         $this->assertSame('fca_uk', $payload['regulatory_context']);
         $this->assertSame(['RAID log', 'PID'], $payload['documents_reviewed']);
@@ -99,6 +112,9 @@ class AssessmentAiPayloadBuilderTest extends TestCase
         $this->assertSame(['P1 below 3.0'], $payload['alert_flags']);
         $this->assertSame(2, $payload['compliance_question_scores']['P1.F1']);
         $this->assertSame('Programme Director', $payload['evidence_notes']['P1.F1']['respondent_role']);
+        $this->assertSame('Governance pack', $payload['evidence_notes']['P1.F1']['document_source']);
+        $this->assertSame('Low', $payload['evidence_notes']['P1.F1']['confidence']);
+        $this->assertSame('Sponsor and delivery lead disagree on escalation quality.', $payload['evidence_notes']['P1.F1']['stakeholder_divergence_note']);
         $this->assertSame('Low', $payload['confidence_level']);
         $this->assertSame(['status reporting', 'cutover readiness'], $payload['stakeholder_notes']['divergence_areas']);
         $this->assertSame('P1 — Governance & Decision-Making', $payload['pillar_names']['PP1']);
@@ -122,6 +138,7 @@ class AssessmentAiPayloadBuilderTest extends TestCase
             'overall_score' => 3.4,
             'rag_status' => 'Amber',
             'status' => 'draft',
+            'client_concerns' => 'Recurring incidents are not visible in service reporting.',
             'service_context' => 'Transformation',
             'annual_service_cost' => 250000,
             'chi' => 3.0,
@@ -162,11 +179,20 @@ class AssessmentAiPayloadBuilderTest extends TestCase
 
         $builder = new AssessmentAiPayloadBuilder();
 
+        $snapshotPayload = $builder->buildSnapshotPayload($assessment);
         $payload = $builder->buildFullPayload($assessment);
 
+        $this->assertSame('Recurring incidents are not visible in service reporting.', $snapshotPayload['primary_concern']);
+        $this->assertSame('Payments Platform', $snapshotPayload['service_name']);
+        $this->assertSame('Transformation', $snapshotPayload['service_context']);
+        $this->assertArrayHasKey('domain_scores', $snapshotPayload);
+        $this->assertArrayHasKey('domain_names', $snapshotPayload);
+        $this->assertArrayNotHasKey('tier', $snapshotPayload);
+        $this->assertArrayNotHasKey('annual_service_cost', $snapshotPayload);
         $this->assertSame('sir_full_tier2', $builder->promptKey($assessment));
         $this->assertSame('SIR', $payload['framework']);
         $this->assertSame('Payments Platform', $payload['service_name']);
+        $this->assertSame('Recurring incidents are not visible in service reporting.', $payload['primary_concern']);
         $this->assertSame('Transformation', $payload['service_context']);
         $this->assertSame(250000.0, $payload['annual_service_cost']);
         $this->assertSame('D1 — Service Governance & Ownership', $payload['domain_names']['DD1']);
