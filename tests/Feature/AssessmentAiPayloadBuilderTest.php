@@ -101,5 +101,77 @@ class AssessmentAiPayloadBuilderTest extends TestCase
         $this->assertSame('Programme Director', $payload['evidence_notes']['P1.F1']['respondent_role']);
         $this->assertSame('Low', $payload['confidence_level']);
         $this->assertSame(['status reporting', 'cutover readiness'], $payload['stakeholder_notes']['divergence_areas']);
+        $this->assertSame('P1 — Governance & Decision-Making', $payload['pillar_names']['PP1']);
+        $this->assertSame('P10 — Digital & Transformation Maturity', $payload['pillar_names']['PP10']);
+        $this->assertSame('P1 — Governance & Decision-Making', $payload['pillar_names']['P1']);
+    }
+
+    public function test_sir_full_payload_includes_domain_name_lookup_aliases(): void
+    {
+        $client = Client::create([
+            'company_name' => 'Service Co',
+            'primary_contact' => 'Sam Owner',
+        ]);
+
+        $assessment = Assessment::create([
+            'client_id' => $client->id,
+            'name' => 'Managed Service',
+            'target_entity' => 'Payments Platform',
+            'type' => 'SIR',
+            'report_tier' => 'Tier 2 Full',
+            'overall_score' => 3.4,
+            'rag_status' => 'Amber',
+            'status' => 'draft',
+            'service_context' => 'Transformation',
+            'annual_service_cost' => 250000,
+            'chi' => 3.0,
+        ]);
+
+        $framework = AssessmentFramework::create([
+            'code' => 'SIR',
+            'name' => 'Service Intelligence Review',
+        ]);
+        $pillar = AssessmentPillar::create([
+            'framework_id' => $framework->id,
+            'code' => 'D11',
+            'name' => 'Service Tooling, CMDB & Knowledge Management',
+            'weight' => 1.2,
+        ]);
+        AssessmentQuestionBank::create([
+            'framework_id' => $framework->id,
+            'pillar_id' => $pillar->id,
+            'level' => 'full',
+            'question_code' => 'D11.F1',
+            'question_text' => 'Is CMDB governance accurate?',
+            'is_compliance' => false,
+        ]);
+
+        AssessmentPillarScore::create([
+            'assessment_id' => $assessment->id,
+            'name' => 'D11 — Service Tooling, CMDB & Knowledge Management',
+            'score' => 2.8,
+            'rag_status' => 'Amber',
+        ]);
+        AssessmentQuestionResponse::create([
+            'assessment_id' => $assessment->id,
+            'pillar_name' => 'D11 — Service Tooling, CMDB & Knowledge Management',
+            'question' => 'D11.F1: Is CMDB governance accurate?',
+            'score' => 3,
+            'confidence' => 'medium',
+        ]);
+
+        $builder = new AssessmentAiPayloadBuilder();
+
+        $payload = $builder->buildFullPayload($assessment);
+
+        $this->assertSame('sir_full_tier2', $builder->promptKey($assessment));
+        $this->assertSame('SIR', $payload['framework']);
+        $this->assertSame('Payments Platform', $payload['service_name']);
+        $this->assertSame('Transformation', $payload['service_context']);
+        $this->assertSame(250000.0, $payload['annual_service_cost']);
+        $this->assertSame('D1 — Service Governance & Ownership', $payload['domain_names']['DD1']);
+        $this->assertSame('D11 — Service Tooling, CMDB & Knowledge Management', $payload['domain_names']['DD11']);
+        $this->assertSame('D11 — Service Tooling, CMDB & Knowledge Management', $payload['domain_names']['D11']);
+        $this->assertArrayNotHasKey('pillar_names', $payload);
     }
 }

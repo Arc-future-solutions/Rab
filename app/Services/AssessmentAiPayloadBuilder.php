@@ -9,6 +9,16 @@ use App\Models\AssessmentQuestionBank;
 class AssessmentAiPayloadBuilder
 {
     private const PIR_PILLAR_NAMES = [
+        'PP1' => 'P1 — Governance & Decision-Making',
+        'PP2' => 'P2 — Planning, Stage Gates & Delivery Control',
+        'PP3' => 'P3 — Business Alignment, Value & Financial Control',
+        'PP4' => 'P4 — Change Management, Training & Adoption',
+        'PP5' => 'P5 — Data Readiness, Migration & GDPR',
+        'PP6' => 'P6 — Solution, Process Fit & UAT',
+        'PP7' => 'P7 — Cutover, Go-Live, Decommissioning & Archiving',
+        'PP8' => 'P8 — Delivery Capability, Security & RACI',
+        'PP9' => 'P9 — Operational, Automation Readiness & Data Archiving',
+        'PP10' => 'P10 — Digital & Transformation Maturity',
         'P1' => 'P1 — Governance & Decision-Making',
         'P2' => 'P2 — Planning, Stage Gates & Delivery Control',
         'P3' => 'P3 — Business Alignment, Value & Financial Control',
@@ -22,6 +32,18 @@ class AssessmentAiPayloadBuilder
     ];
 
     private const SIR_DOMAIN_NAMES = [
+        'DD1' => 'D1 — Service Governance & Ownership',
+        'DD2' => 'D2 — Incident & Major Incident Management',
+        'DD3' => 'D3 — Service Request Management',
+        'DD4' => 'D4 — Problem Management',
+        'DD5' => 'D5 — Change & Release Management',
+        'DD6' => 'D6 — Service Performance, SLA & Reporting',
+        'DD7' => 'D7 — Service Transition & BAU Readiness',
+        'DD8' => 'D8 — Service Operations & Support Model',
+        'DD9' => 'D9 — Supplier & Vendor Management',
+        'DD10' => 'D10 — Operational Resilience & Continuity',
+        'DD11' => 'D11 — Service Tooling, CMDB & Knowledge Management',
+        'DD12' => 'D12 — Service Intelligence & Continuous Value',
         'D1' => 'D1 — Service Governance & Ownership',
         'D2' => 'D2 — Incident & Major Incident Management',
         'D3' => 'D3 — Service Request Management',
