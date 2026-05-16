@@ -24,6 +24,7 @@ class AssessmentQuestionBank extends Model
         'score_anchors', 
         'is_compliance',
         'is_hybrid',
+        'hybrid_context',
         'version',
         'is_active', 
         'display_order'
@@ -31,6 +32,8 @@ class AssessmentQuestionBank extends Model
 
     protected $casts = [
         'score_anchors' => 'array',
+        'is_compliance' => 'boolean',
+        'is_hybrid' => 'boolean',
     ];
 
     public function framework()

@@ -95,6 +95,7 @@ class AdditionalAssessmentQuestionsSeeder extends Seeder
                     'score_anchors' => $scoreAnchors,
                     'is_compliance' => (bool) ($question['is_compliance'] ?? false),
                     'is_hybrid' => (bool) ($question['is_hybrid'] ?? false),
+                    'hybrid_context' => $question['hybrid_context'] ?? null,
                     'version' => (int) ($question['version'] ?? 1),
                     'is_active' => (bool) ($question['published'] ?? true),
                     'display_order' => (int) ($question['order_index'] ?? 0),

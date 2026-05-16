@@ -3147,7 +3147,7 @@
           "type": "TYPE_SELECT",
           "area_type": "domain",
           "area_code": "D11",
-          "area_name": "Automation, Tooling & Knowledge",
+          "area_name": "Service Tooling, CMDB & Knowledge Management",
           "question": "What percentage of the top five highest-volume ticket types are handled through automation or self-service — and what has been the measurable impact on FCR and agent capacity?",
           "hidden_risk": "Agents handle the same routine requests manually every day. Automation is on the roadmap but not in operations.",
           "anchor_responses": [
@@ -3185,7 +3185,7 @@
           "type": "TYPE_SELECT",
           "area_type": "domain",
           "area_code": "D11",
-          "area_name": "Automation, Tooling & Knowledge",
+          "area_name": "Service Tooling, CMDB & Knowledge Management",
           "question": "When was the knowledge base last formally reviewed for accuracy and currency — and what percentage of high-volume ticket types have a current, validated knowledge article?",
           "hidden_risk": "The knowledge base was built during implementation and has not been maintained. Agents resolve tickets from memory.",
           "anchor_responses": [
@@ -3223,7 +3223,7 @@
           "type": "TYPE_SELECT",
           "area_type": "domain",
           "area_code": "D11",
-          "area_name": "Automation, Tooling & Knowledge",
+          "area_name": "Service Tooling, CMDB & Knowledge Management",
           "question": "What is the current self-service adoption rate — and is there a confirmed plan to improve adoption with a clear owner, timeline, and targeted reduction in agent-handled volume?",
           "hidden_risk": "Self-service exists but adoption is low. Users prefer calling the service desk. The organisation is paying for agent-handled resolution of requests that could be self-served.",
           "anchor_responses": [
