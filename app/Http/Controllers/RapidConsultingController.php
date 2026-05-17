@@ -2,8 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendToCrmWebhook;
+use App\Jobs\SendToN8nWebhook;
+use App\Mail\HighPriorityDiagnosticAlert;
 use App\Models\Lead;
+use App\Services\CrmWebhookPayloadBuilder;
+use App\Services\DiagnosticOutcomeService;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\File;
@@ -293,7 +300,7 @@ class RapidConsultingController extends Controller
         // If type is pre-selected, go to the required context step before questions.
         if ($request->has('type') && in_array(strtolower($request->type), ['pir', 'sir'])) {
             Session::put('rc_type', strtolower($request->type));
-            Session::forget(['rc_answers', 'rc_results', 'rc_delivery_stage', 'rc_service_context', 'rc_regulatory_context']);
+            Session::forget(['rc_answers', 'rc_confidence', 'rc_results', 'rc_delivery_stage', 'rc_service_context', 'rc_regulatory_context']);
             return redirect()->route('rapid-consulting.context');
         }
 
@@ -322,7 +329,7 @@ class RapidConsultingController extends Controller
         ]);
 
         Session::put('rc_type', $request->type);
-        Session::forget(['rc_answers', 'rc_results', 'rc_delivery_stage', 'rc_service_context', 'rc_regulatory_context']);
+        Session::forget(['rc_answers', 'rc_confidence', 'rc_results', 'rc_delivery_stage', 'rc_service_context', 'rc_regulatory_context']);
 
         return redirect()->route('rapid-consulting.context');
     }
@@ -331,7 +338,7 @@ class RapidConsultingController extends Controller
     {
         if ($request->has('type') && in_array(strtolower($request->type), ['pir', 'sir'])) {
             Session::put('rc_type', strtolower($request->type));
-            Session::forget(['rc_answers', 'rc_results', 'rc_delivery_stage', 'rc_service_context', 'rc_regulatory_context']);
+            Session::forget(['rc_answers', 'rc_confidence', 'rc_results', 'rc_delivery_stage', 'rc_service_context', 'rc_regulatory_context']);
         }
 
         $type = Session::get('rc_type');
@@ -415,8 +422,17 @@ class RapidConsultingController extends Controller
                 if ($score === null) {
                     return back()->withErrors("Please answer all questions. Missing: {$qCode}")->withInput();
                 }
+
+                if (filter_var($score, FILTER_VALIDATE_INT) === false || (int) $score < 1 || (int) $score > 5) {
+                    return back()->withErrors("Invalid score for {$qCode}. Scores must be integers between 1 and 5.")->withInput();
+                }
+
+                if ($conf !== null && !in_array(strtolower((string) $conf), ['high', 'medium', 'low'], true)) {
+                    return back()->withErrors("Invalid confidence level for {$qCode}.")->withInput();
+                }
+
                 $answers[$qCode] = $score;
-                $confidence[$qCode] = $conf ?? 'medium';
+                $confidence[$qCode] = strtolower((string) ($conf ?? 'medium'));
 
                 $noteKey = 'note_' . $qCode;
                 $note = $request->input($noteKey) ?? $request->input(str_replace('.', '_', $noteKey));
@@ -427,6 +443,7 @@ class RapidConsultingController extends Controller
         }
 
         Session::put('rc_answers', $answers);
+        Session::put('rc_confidence', $confidence);
 
         // Calculate scores temporarily for session
         $pillarScores = [];
@@ -510,7 +527,11 @@ class RapidConsultingController extends Controller
         return view('rapid-consulting.personal-form');
     }
 
-    public function processPersonalForm(Request $request)
+    public function processPersonalForm(
+        Request $request,
+        DiagnosticOutcomeService $outcomeService,
+        CrmWebhookPayloadBuilder $crmWebhookPayloadBuilder
+    )
     {
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
@@ -519,34 +540,38 @@ class RapidConsultingController extends Controller
             'industry' => 'required|string|max:255',
             'email' => 'required|email|max:255',
             'phone' => 'nullable|string|max:20',
+            'consent_given' => 'accepted',
         ]);
 
         $type = Session::get('rc_type');
         $answers = Session::get('rc_answers');
+        $confidence = Session::get('rc_confidence', []);
         $results = Session::get('rc_results');
 
         if (!$type || !$answers || !$results) {
             return redirect()->route('rapid-consulting.index');
         }
 
-        $results['user'] = $validatedData;
+        $results['user'] = Arr::only($validatedData, [
+            'name',
+            'job_title',
+            'company',
+            'industry',
+            'email',
+            'phone',
+        ]);
         Session::put('rc_user', $validatedData);
         Session::put('rc_results', $results);
 
-        // Finalize calculation and save
-        $leadPriority = 'Normal';
-        $lowCriticalPillars = false;
-        foreach ($results['pillar_scores'] as $code => $data) {
-            if ($data['is_critical'] && $data['score'] < 3.0) {
-                $lowCriticalPillars = true;
-                break;
-            }
-        }
-        if ($results['overall_score'] < 3.0 || $lowCriticalPillars) {
-            $leadPriority = 'High';
-        }
+        $leadPriority = $outcomeService->leadPriority(
+            (float) $results['overall_score'],
+            $results['pillar_scores'] ?? []
+        );
+        $consentTimestamp = now();
 
-        $test = Http::withoutVerifying()->post('https://n8n.srv1139767.hstgr.cloud/webhook-test/91523c95-9254-40e5-847d-047ae99956bd',[
+        $test = Http::withoutVerifying()
+            ->withHeaders(['anthropic-beta' => 'zdr-2024-10-23'])
+            ->post('https://n8n.srv1139767.hstgr.cloud/webhook-test/91523c95-9254-40e5-847d-047ae99956bd',[
           'type' => strtoupper($type),
           'results' => $results,
           'answers' => $answers,
@@ -573,22 +598,42 @@ class RapidConsultingController extends Controller
             'lead_status' => 'Warm',
             'index_scores_json' => $results['index_scores'],
             'answers_json' => $answers,
+            'confidence_json' => $confidence,
             'converted_to_client' => false,
+            'consent_given' => true,
+            'consent_timestamp' => $consentTimestamp,
             'ai_recommendation' => $test->json()['output'] ?? null,
         ]);
 
-        \App\Jobs\SendToN8nWebhook::dispatch([
+        $context = [
+            'framework' => strtoupper($type),
+            'delivery_stage' => Session::get('rc_delivery_stage'),
+            'service_context' => Session::get('rc_service_context'),
+            'regulatory_context' => Session::get('rc_regulatory_context'),
+        ];
+
+        SendToN8nWebhook::dispatch([
             'lead_id' => $lead->id,
             'type' => strtoupper($type),
             'results' => $results,
             'answers' => $answers,
-            'assessment_context' => [
-                'delivery_stage' => Session::get('rc_delivery_stage'),
-                'service_context' => Session::get('rc_service_context'),
-                'regulatory_context' => Session::get('rc_regulatory_context'),
-            ],
+            'assessment_context' => $context,
             'submitted_at' => now()->toDateTimeString(),
         ]);
+
+        SendToCrmWebhook::dispatch(
+            $crmWebhookPayloadBuilder->build($lead, $results, $context, $consentTimestamp)
+        );
+
+        if ($leadPriority === 'High') {
+            Mail::to(config('services.crm.high_priority_email'))
+                ->queue(new HighPriorityDiagnosticAlert(
+                    $validatedData,
+                    $results,
+                    $context,
+                    $outcomeService->topThreeInsightAreas($results['pillar_scores'] ?? [])
+                ));
+        }
 
         return redirect()->route('rapid-consulting.results');
     }

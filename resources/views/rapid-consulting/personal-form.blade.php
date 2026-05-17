@@ -83,6 +83,15 @@
                     </div>
                 </div>
 
+                <div class="mb-8 p-5 border border-slate-200 rounded-lg bg-slate-50">
+                    <label class="flex items-start gap-3 text-sm text-slate-700 leading-relaxed">
+                        <input type="checkbox" name="consent_given" value="1" {{ old('consent_given') ? 'checked' : '' }} style="margin-top: 2px;">
+                        <span>
+                            I consent to RAB Consulting Services storing my details and diagnostic submission, generating my report, and sending the resulting assessment data to its CRM workflow as described in the <a href="/privacy" class="underline">Privacy Policy</a>.
+                        </span>
+                    </label>
+                </div>
+
                 <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 1.1rem;">
                     Generate My Intelligence Report →
                 </button>

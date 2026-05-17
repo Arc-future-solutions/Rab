@@ -16,6 +16,8 @@ class Lead extends Model
         'answers_json' => 'array',
         'confidence_json' => 'array',
         'converted_to_client' => 'boolean',
+        'consent_given' => 'boolean',
+        'consent_timestamp' => 'datetime',
     ];
 
     public function client()

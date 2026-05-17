@@ -233,7 +233,9 @@ class AssessmentScoringController extends Controller
         $answers = $assessment->questionResponses->pluck('score', 'question')->toArray();
 
         try {
-            $response = \Illuminate\Support\Facades\Http::withoutVerifying()->post('https://n8n.srv1139767.hstgr.cloud/webhook-test/91523c95-9254-40e5-847d-047ae99956bd',[
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->withHeaders(['anthropic-beta' => 'zdr-2024-10-23'])
+                ->post('https://n8n.srv1139767.hstgr.cloud/webhook-test/91523c95-9254-40e5-847d-047ae99956bd',[
                 'type' => strtoupper($assessment->type) . '_FULL',
                 'is_full' => true,
                 'results' => $results,

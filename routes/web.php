@@ -59,12 +59,18 @@
     Route::get('/rapid-consulting/context', [RapidConsultingController::class, 'context'])->name('rapid-consulting.context');
     Route::post('/rapid-consulting/context', [RapidConsultingController::class, 'storeContext'])->name('rapid-consulting.store-context');
     Route::get('/rapid-consulting/assessment', [RapidConsultingController::class, 'assessment'])->name('rapid-consulting.assessment');
-    Route::post('/rapid-consulting/assessment/submit', [RapidConsultingController::class, 'submit'])->name('rapid-consulting.submit');
+    Route::post('/rapid-consulting/assessment/submit', [RapidConsultingController::class, 'submit'])
+        ->middleware('throttle:public-diagnostics')
+        ->name('rapid-consulting.submit');
     Route::get('/assessment', [RapidConsultingController::class, 'assessment'])->name('assessment');
     Route::get('/rapid-consulting/personal-form', [RapidConsultingController::class, 'personalForm'])->name('rapid-consulting.personal-form');
-    Route::post('/rapid-consulting/personal-form', [RapidConsultingController::class, 'processPersonalForm'])->name('rapid-consulting.process-personal-form');
+    Route::post('/rapid-consulting/personal-form', [RapidConsultingController::class, 'processPersonalForm'])
+        ->middleware('throttle:public-diagnostics')
+        ->name('rapid-consulting.process-personal-form');
     Route::get('/rapid-consulting/results', [RapidConsultingController::class, 'results'])->name('rapid-consulting.results');
-    Route::get('/rapid-consulting/report-status', [RapidConsultingController::class, 'reportStatus'])->name('rapid-consulting.report-status');
+    Route::get('/rapid-consulting/report-status', [RapidConsultingController::class, 'reportStatus'])
+        ->middleware('throttle:public-diagnostics')
+        ->name('rapid-consulting.report-status');
     // Service Inquiries
     Route::post('/services/dev/submit', [\App\Http\Controllers\ServiceLeadController::class, 'submitDev'])->name('services.dev.submit');
     Route::post('/services/consulting/submit', [\App\Http\Controllers\ServiceLeadController::class, 'submitConsulting'])->name('services.consulting.submit');

@@ -34,7 +34,8 @@ class AdminGenerateReportPromptTest extends TestCase
 
             return $payload['prompt_key'] === 'pir_full_tier2'
                 && $payload['system_prompt'] === config('ai.prompts.pir_full_tier2')
-                && $payload['ai_payload']['tier'] === 'Briefing';
+                && $payload['ai_payload']['tier'] === 'Briefing'
+                && $request->hasHeader('anthropic-beta', 'zdr-2024-10-23');
         });
     }
 
