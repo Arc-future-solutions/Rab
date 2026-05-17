@@ -11,6 +11,8 @@
 @php
     $reportConfig = $assessment->reportConfig();
     $aiText = $lead->ai_recommendation ?? $assessment->ai_recommendation ?? null;
+    $hasStructuredDraft = !empty($assessment->ai_draft_json);
+    $needsStructuredDraft = !$hasStructuredDraft;
 @endphp
 <!-- Header Summary -->
 <div id="pdf-header" class="bg-white shadow rounded-lg mb-6 p-6">
@@ -48,6 +50,15 @@
                         <span>Export Report</span>
                     </button>
                 </form>
+                @if($needsStructuredDraft)
+                    <form action="{{ route('admin.assessments.generateReport', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
+                        @csrf
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <span>{{ $assessment->status === 'completed' ? 'Rebuild AI Insights' : 'Generate AI Insights' }}</span>
+                        </button>
+                    </form>
+                @endif
                 @if($assessment->status !== 'approved')
                     <a href="{{ in_array($assessment->type, ['PHI', 'PIR']) ? route('admin.assessments.score.phi', $assessment->id) : route('admin.assessments.score.itsm', $assessment->id) }}" 
                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 flex-1 sm:flex-none">
@@ -541,22 +552,28 @@
         </div>
         </div>
     @else
-        <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center">
-            <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-            </div>
-            <h4 class="text-lg font-bold text-slate-800 mb-2">No AI Strategy Yet</h4>
-            <p class="text-slate-500 text-sm max-w-xs mx-auto mb-6">Complete the assessment and click "Generate Report" to receive AI-powered strategic consulting insights.</p>
-            @if($assessment->status !== 'completed' && $assessment->overall_score > 0)
-                <form action="{{ route('admin.assessments.generateReport', $assessment) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        <span>Generate AI Insights</span>
-                    </button>
-                </form>
-            @endif
+    <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center">
+        <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
         </div>
+        <h4 class="text-lg font-bold text-slate-800 mb-2">No AI Strategy Yet</h4>
+        <p class="text-slate-500 text-sm max-w-xs mx-auto mb-6">
+            @if($assessment->status === 'completed')
+                This assessment was completed before structured AI drafts were stored. Rebuild the AI insights to enable PDF export.
+            @else
+                Complete the assessment and click "Generate AI Insights" to receive AI-powered strategic consulting insights.
+            @endif
+        </p>
+        @if($assessment->overall_score > 0 && ($assessment->status !== 'approved' || $needsStructuredDraft))
+            <form action="{{ route('admin.assessments.generateReport', $assessment) }}" method="POST">
+                @csrf
+                <button type="submit" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span>{{ $assessment->status === 'completed' ? 'Rebuild AI Insights' : 'Generate AI Insights' }}</span>
+                </button>
+            </form>
+        @endif
+    </div>
     @endif
 </div>
 

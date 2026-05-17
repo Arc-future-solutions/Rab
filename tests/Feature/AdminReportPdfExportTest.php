@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Assessment;
+use App\Models\AssessmentFramework;
+use App\Models\AssessmentPillar;
 use App\Models\AssessmentPillarScore;
+use App\Models\AssessmentQuestionBank;
 use App\Models\AssessmentQuestionResponse;
 use App\Models\Client;
 use App\Models\User;
@@ -24,6 +27,16 @@ class AdminReportPdfExportTest extends TestCase
             ->post(route('admin.assessments.exportPdf', $assessment))
             ->assertRedirect(route('admin.assessments.show', $assessment))
             ->assertSessionHas('error', 'Generate AI report first before exporting the PDF.');
+    }
+
+    public function test_export_error_message_is_visible_after_redirect(): void
+    {
+        $assessment = $this->assessment();
+
+        $this->actingAs($this->admin())
+            ->followingRedirects()
+            ->post(route('admin.assessments.exportPdf', $assessment))
+            ->assertSee('Generate AI report first before exporting the PDF.');
     }
 
     public function test_export_downloads_pdf_through_report_pdf_service(): void
@@ -58,6 +71,43 @@ class AdminReportPdfExportTest extends TestCase
         $this->assertSame($assessment->id, $fakeService->assessmentId);
     }
 
+    public function test_export_uses_legacy_ai_recommendation_when_structured_draft_is_missing(): void
+    {
+        $assessment = $this->assessment([
+            'ai_draft_json' => null,
+            'ai_recommendation' => 'Legacy AI summary',
+            'status' => 'completed',
+        ]);
+
+        $fakeService = new class extends ReportPdfService {
+            public ?int $assessmentId = null;
+
+            public function download(Assessment $assessment): BinaryFileResponse
+            {
+                $this->assessmentId = $assessment->id;
+
+                $directory = storage_path('framework/testing');
+                if (!is_dir($directory)) {
+                    mkdir($directory, 0755, true);
+                }
+
+                $path = $directory . '/legacy-rab-report.pdf';
+                file_put_contents($path, '%PDF-1.4 fake');
+
+                return response()->download($path, 'legacy-rab-report.pdf');
+            }
+        };
+
+        $this->app->instance(ReportPdfService::class, $fakeService);
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.assessments.exportPdf', $assessment))
+            ->assertOk()
+            ->assertDownload('legacy-rab-report.pdf');
+
+        $this->assertSame($assessment->id, $fakeService->assessmentId);
+    }
+
     public function test_assessment_page_uses_server_side_export_form_without_browser_pdf_libraries(): void
     {
         $assessment = $this->assessment(['ai_draft_json' => $this->draft()]);
@@ -73,6 +123,21 @@ class AdminReportPdfExportTest extends TestCase
         $response->assertDontSee('pdf-header-template', false);
     }
 
+    public function test_completed_assessment_without_structured_draft_shows_rebuild_action(): void
+    {
+        $assessment = $this->assessment([
+            'ai_draft_json' => null,
+            'ai_recommendation' => 'Legacy AI summary',
+            'status' => 'completed',
+        ]);
+
+        $this->actingAs($this->admin())
+            ->get(route('admin.assessments.show', $assessment))
+            ->assertOk()
+            ->assertSee('Rebuild AI Insights')
+            ->assertSee(route('admin.assessments.generateReport', $assessment), false);
+    }
+
     public function test_report_html_matches_required_step_11_structure(): void
     {
         $assessment = $this->assessment([
@@ -80,6 +145,7 @@ class AdminReportPdfExportTest extends TestCase
             'report_tier' => 'Tier 2 Full',
             'type' => 'PIR',
         ]);
+        $this->seedQuestionBank('PIR');
 
         AssessmentPillarScore::create([
             'assessment_id' => $assessment->id,
@@ -97,23 +163,47 @@ class AdminReportPdfExportTest extends TestCase
             'evidence_note' => 'Steering group evidence missing.',
             'confidence' => 'High',
             'confidence_level' => 'High',
+            'respondent_role' => 'Programme Sponsor',
+            'document_source' => 'Steering minutes',
+            'stakeholder_divergence_note' => 'Delivery lead reported a stronger control position.',
         ]);
 
         $html = app(ReportPdfService::class)->renderHtml($assessment->fresh());
 
         $this->assertStringContainsString('RAB PROGRAMME INTELLIGENCE BRIEFING', $html);
         $this->assertStringContainsString('CONFIDENTIAL', $html);
+        $this->assertStringNotContainsString('file://', $html);
+        $this->assertSame(5, substr_count($html, '<div class="index-card">'));
+        $this->assertStringContainsString('score-dial', $html);
+        $this->assertStringContainsString('Controlled', $html);
+        $this->assertStringContainsString('At Risk', $html);
+        $this->assertStringContainsString('confidence-legend', $html);
+        $this->assertStringContainsString('Radar Chart', $html);
+        $this->assertStringContainsString('Bar Chart', $html);
+        $this->assertStringContainsString('pdfRadarChart', $html);
+        $this->assertStringContainsString('pdfBarChart', $html);
         $this->assertStringContainsString('Transmittal Letter', $html);
         $this->assertStringContainsString('Executive Intelligence Position', $html);
         $this->assertStringContainsString('Intelligence Dashboard', $html);
         $this->assertStringContainsString('Stakeholder Intelligence', $html);
         $this->assertStringContainsString('RAID Summary', $html);
-        $this->assertStringContainsString('Appendix — Evidence Base + Methodology Note', $html);
-        $this->assertStringContainsString('This report is produced by RAB Consulting Services Ltd.', $html);
-        $this->assertStringContainsString('RAB Consulting Services Ltd | rboukhiar@rabconsultingservices.com | +44 7717 544322 | rabconsultingservices.com', $html);
+        $this->assertStringContainsString('Risk Register + Risk Heat Map', $html);
+        $this->assertStringContainsString('risk-matrix-grid', $html);
+        $this->assertStringContainsString('Compliance Risk Signals', $html);
+        $this->assertStringContainsString('Appendix — Database Extract', $html);
+        $this->assertStringContainsString('Appendix — Methodology Note', $html);
+        $this->assertStringContainsString('Question ID', $html);
+        $this->assertStringContainsString('Question Text', $html);
+        $this->assertStringContainsString('Pillar / Domain', $html);
+        $this->assertStringContainsString('Evidence Note', $html);
+        $this->assertStringContainsString('Confidence Level', $html);
+        $this->assertStringContainsString('Respondent Role', $html);
+        $this->assertStringContainsString('Document Source', $html);
+        $this->assertStringContainsString('Stakeholder Divergence', $html);
+        $this->assertStringContainsString('P1.F1', $html);
+        $this->assertStringContainsString('Is decision ownership clear?', $html);
+        $this->assertStringContainsString('ABOUT RAB INTELLIGENCE INDICES', $html);
         $this->assertStringContainsString('RAB Proprietary Methodology™', $html);
-        $this->assertStringContainsString('Page 1 of 12', $html);
-        $this->assertStringContainsString('Appendix — Page 12 of 12', $html);
         $this->assertStringNotContainsString('jspdf', strtolower($html));
         $this->assertStringNotContainsString('html2canvas', strtolower($html));
     }
@@ -214,5 +304,33 @@ class AdminReportPdfExportTest extends TestCase
             'compliance_risk_signals' => 'Regulatory evidence trail is incomplete.',
             'final_position' => 'Proceed with controlled recovery.',
         ];
+    }
+
+    private function seedQuestionBank(string $frameworkCode): void
+    {
+        $framework = AssessmentFramework::create([
+            'code' => $frameworkCode,
+            'name' => $frameworkCode === 'PIR' ? 'Programme Intelligence Review' : 'Service Intelligence Review',
+            'is_active' => true,
+        ]);
+
+        $pillar = AssessmentPillar::create([
+            'framework_id' => $framework->id,
+            'code' => $frameworkCode === 'PIR' ? 'P1' : 'D1',
+            'name' => $frameworkCode === 'PIR' ? 'Governance & Decision-Making' : 'Service Governance & Ownership',
+            'weight' => 1.0,
+            'is_critical' => false,
+            'display_order' => 1,
+        ]);
+
+        AssessmentQuestionBank::create([
+            'framework_id' => $framework->id,
+            'pillar_id' => $pillar->id,
+            'level' => 'full',
+            'question_code' => $frameworkCode === 'PIR' ? 'P1.F1' : 'D1.F1',
+            'question_text' => 'Is decision ownership clear?',
+            'is_active' => true,
+            'display_order' => 1,
+        ]);
     }
 }

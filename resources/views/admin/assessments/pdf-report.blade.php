@@ -8,7 +8,49 @@
     $scores = $assessment->pillarScores->sortBy('score')->values();
     $isPir = $meta['is_pir'];
     $isBriefing = $meta['is_briefing'];
-    $logo = 'file://' . public_path('assets/images/logo-rab.png');
+    $appendix = is_array($appendix ?? null) ? $appendix : [];
+    $appendixRows = $appendix['rows'] ?? [];
+    $appendixIsTier2 = (bool) ($appendix['is_tier2'] ?? $isBriefing);
+    $appendixNote = $appendix['methodology_note'] ?? '';
+    $logo = $logo ?? '';
+    $scoreValue = (float) $assessment->overall_score;
+    $scorePct = max(0, min(100, round(($scoreValue / 5) * 100)));
+    $scoreTone = function (float $score): array {
+        if ($score >= 4) return ['label' => 'Controlled', 'color' => '#166534', 'bg' => '#DCFCE7'];
+        if ($score >= 3) return ['label' => 'At Risk', 'color' => '#B45309', 'bg' => '#FEF3C7'];
+        if ($score >= 2) return ['label' => 'Weak', 'color' => '#B91C1C', 'bg' => '#FEE2E2'];
+        return ['label' => 'Critical Failure', 'color' => '#7B0000', 'bg' => '#FEE2E2'];
+    };
+    $dialTone = $scoreTone($scoreValue);
+    $confidenceLegend = $dashboard['confidence_legend'] ?? [
+        ['label' => 'High', 'color' => '#166534', 'bg' => '#DCFCE7', 'definition' => 'Confirmed by documentary evidence and interview.'],
+        ['label' => 'Medium', 'color' => '#B45309', 'bg' => '#FEF3C7', 'definition' => 'Supported by interview or partial evidence.'],
+        ['label' => 'Low', 'color' => '#B91C1C', 'bg' => '#FEE2E2', 'definition' => 'Single-source, contradictory, or weakly evidenced.'],
+    ];
+    $radarEntries = $scores->map(function ($score) use ($scoreTone) {
+        $parts = explode(' — ', $score->name);
+        $code = $parts[0] ?? $score->name;
+
+        return [
+            'code' => $code,
+            'label' => $score->name,
+            'score' => (float) $score->score,
+            'tone' => $scoreTone((float) $score->score),
+        ];
+    })->values()->all();
+    $barEntries = collect($radarEntries)->sortBy('score')->values()->all();
+    $riskMatrixBuckets = [];
+    foreach ($riskRegister as $index => $risk) {
+        $probability = strtoupper(substr((string) ($risk['probability'] ?? 'M'), 0, 1));
+        $impact = strtoupper(substr((string) ($risk['impact'] ?? 'M'), 0, 1));
+        $riskMatrixBuckets["{$probability}|{$impact}"][] = $index + 1;
+    }
+    $riskMatrixTone = function (string $probability, string $impact): string {
+        if ($probability === 'H' && $impact === 'H') return 'risk-cell risk-cell-critical';
+        if ($probability === 'H' || $impact === 'H') return 'risk-cell risk-cell-high';
+        if ($probability === 'M' || $impact === 'M') return 'risk-cell risk-cell-medium';
+        return 'risk-cell risk-cell-low';
+    };
 
     $ragClass = function ($value) {
         $score = is_numeric($value) ? (float) $value : null;
@@ -40,6 +82,96 @@
         if (!is_array($items)) return [];
         return array_values($items);
     };
+
+    $renderRadarSvg = function (array $entries) {
+        if ($entries === []) {
+            return '<div class="panel">No radar data available.</div>';
+        }
+
+        $count = count($entries);
+        $cx = 180;
+        $cy = 170;
+        $radius = 104;
+        $rings = '';
+        $spokes = '';
+        $labels = '';
+        $areaPoints = [];
+
+        for ($ring = 1; $ring <= 5; $ring++) {
+            $points = [];
+            for ($i = 0; $i < $count; $i++) {
+                $angle = (-90 + (360 / $count) * $i) * (M_PI / 180);
+                $ringRadius = $radius * ($ring / 5);
+                $x = $cx + cos($angle) * $ringRadius;
+                $y = $cy + sin($angle) * $ringRadius;
+                $points[] = round($x, 2) . ',' . round($y, 2);
+            }
+            $rings .= '<polygon points="' . implode(' ', $points) . '" fill="none" stroke="#CBD5E1" stroke-width="1" />';
+        }
+
+        for ($i = 0; $i < $count; $i++) {
+            $angle = (-90 + (360 / $count) * $i) * (M_PI / 180);
+            $x = $cx + cos($angle) * $radius;
+            $y = $cy + sin($angle) * $radius;
+            $spokes .= '<line x1="' . $cx . '" y1="' . $cy . '" x2="' . round($x, 2) . '" y2="' . round($y, 2) . '" stroke="#E2E8F0" stroke-width="1" />';
+
+            $labelRadius = $radius + 28;
+            $lx = $cx + cos($angle) * $labelRadius;
+            $ly = $cy + sin($angle) * $labelRadius;
+            $labelAnchor = abs(cos($angle)) < 0.15 ? 'middle' : (cos($angle) > 0 ? 'start' : 'end');
+            $labels .= '<text x="' . round($lx, 2) . '" y="' . round($ly, 2) . '" text-anchor="' . $labelAnchor . '" fill="#374151" font-size="9" font-weight="700">' . e($entries[$i]['code']) . '</text>';
+        }
+
+        foreach ($entries as $i => $entry) {
+            $angle = (-90 + (360 / $count) * $i) * (M_PI / 180);
+            $normalized = max(0.1, min(1, $entry['score'] / 5));
+            $x = $cx + cos($angle) * $radius * $normalized;
+            $y = $cy + sin($angle) * $radius * $normalized;
+            $areaPoints[] = round($x, 2) . ',' . round($y, 2);
+        }
+
+        $poly = '<polygon points="' . implode(' ', $areaPoints) . '" fill="#2563EB" fill-opacity="0.16" stroke="#2563EB" stroke-width="2" />';
+        $dots = '';
+        foreach ($entries as $i => $entry) {
+            $angle = (-90 + (360 / $count) * $i) * (M_PI / 180);
+            $normalized = max(0.1, min(1, $entry['score'] / 5));
+            $x = $cx + cos($angle) * $radius * $normalized;
+            $y = $cy + sin($angle) * $radius * $normalized;
+            $dots .= '<circle cx="' . round($x, 2) . '" cy="' . round($y, 2) . '" r="3.5" fill="#2563EB" stroke="#fff" stroke-width="1.5" />';
+        }
+
+        return '<svg viewBox="0 0 360 315" role="img" aria-label="Radar chart">' .
+            '<rect x="0" y="0" width="360" height="315" fill="#fff" />' .
+            $rings . $spokes . $poly . $dots . $labels .
+            '</svg>';
+    };
+
+    $renderBarSvg = function (array $entries) {
+        if ($entries === []) {
+            return '<div class="panel">No bar chart data available.</div>';
+        }
+
+        $width = 460;
+        $rowHeight = 26;
+        $chartHeight = 40 + count($entries) * $rowHeight;
+        $maxBarWidth = 260;
+        $svg = '<svg viewBox="0 0 460 ' . $chartHeight . '" role="img" aria-label="Sorted horizontal bar chart">';
+        $svg .= '<rect x="0" y="0" width="460" height="' . $chartHeight . '" fill="#fff" />';
+        $svg .= '<line x1="140" y1="20" x2="140" y2="' . ($chartHeight - 16) . '" stroke="#E2E8F0" stroke-width="1" />';
+
+        foreach ($entries as $i => $entry) {
+            $y = 26 + ($i * $rowHeight);
+            $barWidth = round(($entry['score'] / 5) * $maxBarWidth, 2);
+            $tone = $entry['tone'];
+            $svg .= '<text x="6" y="' . ($y + 10) . '" fill="#0F172A" font-size="10" font-weight="700">' . e($entry['code']) . '</text>';
+            $svg .= '<rect x="140" y="' . ($y - 2) . '" rx="4" ry="4" width="' . $barWidth . '" height="16" fill="' . e($tone['color']) . '" />';
+            $svg .= '<text x="' . (148 + $barWidth) . '" y="' . ($y + 10) . '" fill="#0F172A" font-size="10" font-weight="700">' . number_format($entry['score'], 1) . '</text>';
+        }
+
+        $svg .= '</svg>';
+
+        return $svg;
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -47,10 +179,12 @@
     <meta charset="UTF-8">
     <title>{{ $meta['report_label'] }} | {{ $meta['client'] }}</title>
     <style>
-        @page { size: A4; margin: 10mm; }
+        @page { size: A4; margin: 10mm 10mm 24mm 10mm; }
         * { box-sizing: border-box; }
         body { margin: 0; font-family: Inter, Arial, sans-serif; color: #0F172A; font-size: 11pt; line-height: 1.45; background: #fff; }
-        .cover { width: 210mm; min-height: 297mm; margin: -10mm; padding: 40px; background: #1E3A8A; color: #fff; page-break-after: always; position: relative; overflow: hidden; }
+
+        /* ── Cover ── */
+        .cover { width: 100%; height: 277mm; padding: 40px; background: #1E3A8A; color: #fff; page-break-after: always; position: relative; overflow: hidden; }
         .cover-logo { width: 180px; filter: brightness(0) invert(1); }
         .cover-type { margin-top: 52px; font-size: 13pt; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; }
         .cover-rule { height: 1px; background: #fff; margin-top: 20px; width: 100%; opacity: .9; }
@@ -63,9 +197,14 @@
         .cover-date { font-size: 12pt; }
         .cover-confidential { font-size: 11pt; text-align: right; }
         .cover-stamp { margin-top: 10px; font-size: 9pt; text-align: right; opacity: .9; }
-        .report-page { min-height: 277mm; page-break-after: always; position: relative; overflow: hidden; padding: 0 0 28mm; }
-        .report-page::before { content: "CONFIDENTIAL"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-family: Inter, Arial, sans-serif; font-size: 72pt; font-weight: 700; letter-spacing: 8px; color: rgba(30,58,138,0.05); white-space: nowrap; pointer-events: none; user-select: none; z-index: 0; }
+
+        /* ── Report pages ── */
+        .report-page { page-break-after: always; position: relative; padding: 0; }
+        .report-page:last-child { page-break-after: auto; }
+        .report-page::before { content: "CONFIDENTIAL"; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-family: Inter, Arial, sans-serif; font-size: 72pt; font-weight: 700; letter-spacing: 8px; color: rgba(30,58,138,0.05); white-space: nowrap; pointer-events: none; user-select: none; z-index: 0; }
         .report-page > * { position: relative; z-index: 1; }
+
+        /* ── Page header ── */
         .page-header { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; padding-bottom: 10px; border-bottom: .5pt solid #1E3A8A; margin-bottom: 20px; }
         .header-left { display: flex; gap: 12px; align-items: center; }
         .header-logo { width: 80px; }
@@ -74,38 +213,120 @@
         .header-client { font-size: 10pt; font-weight: 800; color: #0F172A; }
         .header-subject { font-size: 9pt; color: #374151; }
         .header-confidential { font-size: 8pt; color: #1E3A8A; font-weight: 800; letter-spacing: 2px; }
+
+        /* ── Typography ── */
         h1 { font-size: 18pt; color: #1E3A8A; margin: 0 0 14px; }
         h2 { font-size: 14pt; color: #0F172A; margin: 0 0 8px; }
         p { margin: 0 0 10px; }
-        .panel { border: 1px solid #E5E7EB; background: #F8FAFC; padding: 14px; margin-bottom: 14px; }
+
+        /* ── Panels & cards (avoid breaking mid-element) ── */
+        .panel { border: 1px solid #E5E7EB; background: #F8FAFC; padding: 14px; margin-bottom: 14px; page-break-inside: avoid; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .index-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 14px 0; }
-        .index-card { border: 1px solid #CBD5E1; padding: 10px; min-height: 92px; background: #fff; }
-        .index-name { font-size: 8pt; color: #64748B; font-weight: 800; text-transform: uppercase; }
+        .index-card { border: 1px solid #CBD5E1; padding: 10px; min-height: 92px; background: #fff; page-break-inside: avoid; }
+        .index-name { font-size: 8pt; color: #64748B; font-weight: 800; text-transform: uppercase; min-height: 24px; }
         .index-value { font-size: 24pt; font-weight: 800; color: #0F172A; line-height: 1.1; }
+        .index-rag { display: inline-block; margin-top: 6px; padding: 3px 7px; border-radius: 999px; font-size: 7pt; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; }
         .methodology-stamp, .chart-attribution { font-size: 7pt; color: #1E3A8A; margin-top: 7px; }
         .chart-attribution { color: #64748B; }
-        .alert { padding: 9px 10px; margin-bottom: 7px; border-left: 4px solid #B45309; background: #FEF3C7; color: #78350F; font-weight: 700; }
+
+        /* ── Score dial ── */
+        .score-dial-wrap { display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; page-break-inside: avoid; }
+        .score-dial {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            padding: 12px;
+            background: conic-gradient(#2563EB {{ $scorePct }}%, #E2E8F0 0);
+            flex: 0 0 auto;
+        }
+        .score-dial-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #fff;
+            border: 1px solid #CBD5E1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .score-dial-score { font-size: 56pt; line-height: 1; font-weight: 800; color: #0F172A; }
+        .score-dial-label { margin-top: 4px; font-size: 10pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: {{ $dialTone['color'] }}; }
+        .score-dial-sub { margin-top: 4px; font-size: 8pt; color: #64748B; text-transform: uppercase; letter-spacing: .5px; }
+        .score-legend { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+        .score-legend span { display: inline-block; padding: 4px 7px; font-size: 7pt; font-weight: 800; text-transform: uppercase; border: 1px solid #E2E8F0; background: #fff; color: #334155; }
+
+        /* ── Alerts ── */
+        .alert-stack { display: grid; gap: 8px; }
+        .alert-banner { border-left: 5px solid #B45309; background: #FEF3C7; color: #78350F; padding: 10px 12px; font-size: 9pt; font-weight: 700; page-break-inside: avoid; }
+        .alert-banner-critical { border-left-color: #B91C1C; background: #FEE2E2; color: #7B0000; }
+        .alert { padding: 9px 10px; margin-bottom: 7px; border-left: 4px solid #B45309; background: #FEF3C7; color: #78350F; font-weight: 700; page-break-inside: avoid; }
         .alert-critical { border-color: #B91C1C; background: #FEE2E2; color: #7B0000; }
+
+        /* ── Confidence ── */
+        .confidence-legend { display: grid; gap: 8px; margin: 10px 0 14px; }
+        .confidence-row { display: grid; grid-template-columns: 70px 1fr; gap: 10px; align-items: start; border: 1px solid #E2E8F0; background: #fff; padding: 8px 10px; page-break-inside: avoid; }
+        .confidence-badge { display: inline-block; min-width: 56px; text-align: center; padding: 4px 8px; border-radius: 999px; font-size: 7pt; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: #fff; }
+        .confidence-def { font-size: 9pt; color: #374151; }
+
+        /* ── Charts ── */
+        .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+        .chart-card { border: 1px solid #E5E7EB; background: #fff; padding: 12px; page-break-inside: avoid; }
+        .chart-card h2 { font-size: 12pt; margin-bottom: 10px; }
+        .chart-shell { position: relative; width: 100%; min-height: 300px; }
+        .chart-canvas { width: 100%; height: 300px; display: block; }
+        .chart-fallback { width: 100%; }
+        .chart-fallback.is-hidden { display: none; }
+
+        /* ── Dashboard ── */
+        .summary-table td:first-child { font-weight: 800; color: #1E3A8A; text-transform: uppercase; }
+        .dashboard-lead { display: grid; grid-template-columns: 1.05fr .95fr; gap: 16px; align-items: start; }
+        .dashboard-stats { display: flex; flex-direction: column; gap: 10px; }
+
+        /* ── Risk matrix ── */
+        .risk-matrix { margin-top: 12px; page-break-inside: avoid; }
+        .risk-matrix-grid { display: grid; grid-template-columns: 70px repeat(3, 1fr); grid-template-rows: 28px repeat(3, minmax(54px, auto)); gap: 4px; align-items: stretch; }
+        .risk-matrix-axis { display: flex; align-items: center; justify-content: center; font-size: 8pt; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: .5px; }
+        .risk-matrix-row-label { display: flex; align-items: center; justify-content: center; font-size: 8pt; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: .5px; }
+        .risk-cell { position: relative; min-height: 54px; border: 1px solid #CBD5E1; padding: 6px; font-size: 8pt; font-weight: 800; overflow: hidden; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 2px; }
+        .risk-cell-low { background: #DCFCE7; color: #166534; }
+        .risk-cell-medium { background: #FEF3C7; color: #B45309; }
+        .risk-cell-high { background: #FEE2E2; color: #B91C1C; }
+        .risk-cell-critical { background: #7B0000; color: #fff; }
+        .risk-cell-point { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.9); color: #0F172A; font-size: 8pt; font-weight: 800; }
+        .risk-cell-empty { opacity: .35; }
+        .risk-grid-caption { margin-top: 8px; font-size: 7pt; color: #64748B; }
+
+        /* ── Tables ── */
+        .compliance-table td:first-child { font-weight: 700; }
         table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; }
+        thead { display: table-header-group; }
         th { text-align: left; background: #1E3A8A; color: #fff; font-size: 8pt; padding: 7px; text-transform: uppercase; letter-spacing: .5px; }
         td { border-bottom: 1px solid #E5E7EB; padding: 7px; vertical-align: top; font-size: 9pt; }
-        .heat-map { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 16px; }
+        tr { page-break-inside: avoid; }
+        .appendix-table { table-layout: fixed; }
+        .appendix-table th { font-size: 7pt; padding: 6px; }
+        .appendix-table td { font-size: 7.5pt; padding: 6px; word-break: break-word; }
+        .appendix-table .appendix-code { font-weight: 800; color: #1E3A8A; }
+        .appendix-intro { margin-bottom: 10px; }
+        .appendix-note { font-size: 10pt; line-height: 1.7; }
+
+        /* ── Heat map ── */
+        .heat-map { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 16px; page-break-inside: avoid; }
         .heat-cell { padding: 8px; font-size: 8pt; font-weight: 800; text-align: center; }
         .rag-green { background: #DCFCE7; color: #166534; }
         .rag-amber { background: #FEF3C7; color: #B45309; }
         .rag-red { background: #FEE2E2; color: #B91C1C; }
         .rag-dark-red { background: #7B0000; color: #fff; }
+
+        /* ── Misc ── */
         .badge { display: inline-block; padding: 3px 6px; font-size: 7pt; font-weight: 800; text-transform: uppercase; }
         .evidence { font-size: 10pt; color: #374151; font-style: italic; }
         .risk-map { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 30px); border: 1px solid #CBD5E1; margin-top: 10px; }
         .risk-map div { border: 1px solid #CBD5E1; text-align: center; font-size: 8pt; padding-top: 7px; }
-        .footer { position: absolute; bottom: 0; left: 0; right: 0; border-top: 1px solid #E5E7EB; padding-top: 6px; color: #64748B; font-size: 8pt; }
-        .footer-grid { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
-        .footer-main { font-size: 7.3pt; line-height: 1.25; }
-        .footer-contact { margin-top: 4px; font-size: 7.5pt; }
-        .page-number { white-space: nowrap; font-size: 8pt; }
         .appendix-label { font-weight: 800; color: #1E3A8A; }
     </style>
 </head>
@@ -131,27 +352,18 @@
     </div>
 </section>
 
-@php
-    $page = 1;
-    $totalPages = 9 + ($isBriefing ? 1 : 0) + ($isPir ? 1 : 0) + (!empty($report['compliance_risk_signals']) ? 1 : 0);
-    $footerText = 'This report is produced by RAB Consulting Services Ltd. All findings are based on information provided during the engagement. This constitutes operational intelligence and professional advisory guidance only. It does not constitute legal, regulatory, financial, or compliance advice. Clients should engage their own legal, compliance, and regulatory advisers before acting on any finding. © 2026 RAB Consulting Services Ltd. All methodology, indices, scoring frameworks, and report content are proprietary intellectual property. Reproduction or distribution without written consent is prohibited.';
-    $footerContact = 'RAB Consulting Services Ltd | rboukhiar@rabconsultingservices.com | +44 7717 544322 | rabconsultingservices.com';
-@endphp
+{{-- Footer is rendered natively by Puppeteer via ReportPdfService::footerTemplate() --}}
 
 @once
     @php
-        $pageTemplate = function ($title, $slot, $appendix = false) use (&$page, $totalPages, $logo, $meta, $footerText, $footerContact) {
-            $pageLabel = ($appendix ? 'Appendix — ' : '') . 'Page ' . $page . ' of ' . $totalPages;
-            $html = '<section class="report-page">'
+        $pageTemplate = function ($title, $slot) use ($logo, $meta) {
+            return '<section class="report-page">'
                 . '<header class="page-header"><div class="header-left">'
                 . '<img src="' . e($logo) . '" class="header-logo" alt="RAB"><div class="header-type">' . e($meta['report_type']) . '</div></div>'
                 . '<div class="header-right"><div class="header-client">' . e($meta['client']) . '</div><div class="header-subject">' . e($meta['subject']) . '</div><div class="header-confidential">CONFIDENTIAL</div></div></header>'
                 . '<h1>' . e($title) . '</h1>'
                 . $slot
-                . '<footer class="footer"><div class="footer-grid"><div><div class="footer-main">' . e($footerText) . '</div><div class="footer-contact">' . e($footerContact) . '</div></div><div class="page-number">' . e($pageLabel) . '</div></div></footer>'
                 . '</section>';
-            $page++;
-            return $html;
         };
     @endphp
 @endonce
@@ -161,10 +373,12 @@
 @php
     $alerts = $dashboard['alert_flags'] ?? $report['intelligence_dashboard']['alert_flags'] ?? [];
     if (!is_array($alerts)) $alerts = [];
-    $exec = '<div class="grid-2"><div><p>' . nl2br(e($report['executive_position'] ?? 'Executive position not available.')) . '</p></div><div>';
+    $exec = '<div class="dashboard-lead">';
+    $exec .= '<div class="score-dial-wrap"><div class="score-dial"><div class="score-dial-inner"><div class="score-dial-score">' . e(number_format($scoreValue, 1)) . '</div><div class="score-dial-label">' . e($dialTone['label']) . '</div><div class="score-dial-sub">RAG ' . e($assessment->rag_status) . ' · ' . e($assessment->type) . '</div></div></div><div class="score-legend"><span>Controlled</span><span>At Risk</span><span>Weak</span><span>Critical Failure</span></div></div>';
+    $exec .= '<div><p>' . nl2br(e($report['executive_position'] ?? 'Executive position not available.')) . '</p><div class="alert-stack">';
     foreach ($alerts as $alert) {
-        $class = str_contains(strtolower((string) $alert), 'critical') || str_contains(strtolower((string) $alert), 'compliance') ? ' alert-critical' : '';
-        $exec .= '<div class="alert' . $class . '">' . e($asText($alert)) . '</div>';
+        $class = str_contains(strtolower((string) $alert), 'critical') || str_contains(strtolower((string) $alert), 'compliance') ? ' alert-banner-critical' : '';
+        $exec .= '<div class="alert-banner' . $class . '">' . e($asText($alert)) . '</div>';
     }
     $exec .= $alerts === [] ? '<div class="panel">No alert flags reported.</div>' : '';
     $exec .= '</div></div>';
@@ -172,24 +386,30 @@
 {!! $pageTemplate('Executive Intelligence Position', $exec) !!}
 
 @php
-    $dashboardHtml = '<div class="panel"><strong>Overall:</strong> ' . e($assessment->overall_score) . ' · ' . e($assessment->rag_status) . '</div><div class="index-grid">';
-    foreach ($indices as $name => $item) {
+    $dashboardHtml = '<div class="index-grid">';
+    foreach (array_slice($indices, 0, 5, true) as $name => $item) {
         $value = is_array($item) ? ($item['score'] ?? $item['value'] ?? '') : $item;
         $interpretation = is_array($item) ? ($item['interpretation'] ?? '') : '';
-        $dashboardHtml .= '<div class="index-card"><div class="index-name">' . e($name) . '</div><div class="index-value">' . e($value) . '</div><div>' . e($interpretation) . '</div><div class="methodology-stamp">RAB Proprietary Methodology™</div></div>';
+        $tone = is_numeric($value) ? $scoreTone((float) $value) : $scoreTone((float) ($assessment->overall_score ?? 0));
+        $dashboardHtml .= '<div class="index-card"><div class="index-name">' . e($name) . '</div><div class="index-value">' . e($value) . '</div><div class="index-rag" style="color:' . e($tone['color']) . '; background:' . e($tone['bg']) . ';">' . e($tone['label']) . '</div><div class="evidence" style="font-style: normal; margin-top: 6px;">' . e($interpretation) . '</div><div class="methodology-stamp">RAB Proprietary Methodology™</div></div>';
     }
-    $dashboardHtml .= '</div><div class="grid-2"><div class="panel"><h2>Score Distribution</h2><div class="heat-map">';
-    foreach ($scores as $score) {
-        $dashboardHtml .= '<div class="heat-cell ' . $ragClass($score->score) . '">' . e(explode(' — ', $score->name)[0]) . '<br>' . e($score->score) . '</div>';
+    $dashboardHtml .= '</div>';
+    $dashboardHtml .= '<div class="confidence-legend">';
+    foreach ($confidenceLegend as $row) {
+        $dashboardHtml .= '<div class="confidence-row"><span class="confidence-badge" style="background:' . e($row['color']) . ';">' . e($row['label']) . '</span><div class="confidence-def">' . e($row['definition']) . '</div></div>';
     }
-    $dashboardHtml .= '</div><div class="chart-attribution">© RAB Consulting Services Ltd. Proprietary methodology.</div></div>';
-    $dashboardHtml .= '<div class="panel"><h2>Priority Plan Summary</h2><table><tr><th>Horizon</th><th>Headline</th><th>Owner</th></tr>';
+    $dashboardHtml .= '</div>';
+    $dashboardHtml .= '<div class="chart-grid">';
+    $dashboardHtml .= '<div class="chart-card"><h2>Radar Chart</h2><div class="chart-shell"><canvas id="pdfRadarChart" class="chart-canvas" width="460" height="300"></canvas><div id="pdfRadarFallback" class="chart-fallback">' . $renderRadarSvg($radarEntries) . '</div></div><div class="chart-attribution">© RAB Consulting Services Ltd. Proprietary methodology.</div></div>';
+    $dashboardHtml .= '<div class="chart-card"><h2>Bar Chart</h2><div class="chart-shell"><canvas id="pdfBarChart" class="chart-canvas" width="460" height="300"></canvas><div id="pdfBarFallback" class="chart-fallback">' . $renderBarSvg($barEntries) . '</div></div><div class="chart-attribution">© RAB Consulting Services Ltd. Proprietary methodology.</div></div>';
+    $dashboardHtml .= '</div>';
+    $dashboardHtml .= '<div class="panel"><h2>30/60/90 Summary</h2><table class="summary-table"><tr><th>Horizon</th><th>Headline</th><th>Owner</th></tr>';
     foreach (['30_days', '60_days', '90_days'] as $horizon) {
         $items = $rowsForHorizon($priorityPlan[$horizon] ?? []);
         $first = $items[0] ?? [];
         $dashboardHtml .= '<tr><td>' . e(str_replace('_', ' ', $horizon)) . '</td><td>' . e($first['action_title'] ?? $first['action'] ?? '-') . '</td><td>' . e($first['owner'] ?? '-') . '</td></tr>';
     }
-    $dashboardHtml .= '</table></div></div>';
+    $dashboardHtml .= '</table></div>';
 @endphp
 {!! $pageTemplate('Intelligence Dashboard', $dashboardHtml) !!}
 
@@ -206,12 +426,18 @@
 @php
     $profileHtml = '<div class="heat-map">';
     foreach ($scores as $score) {
-        $profileHtml .= '<div class="heat-cell ' . $ragClass($score->score) . '">' . e(explode(' — ', $score->name)[0]) . '<br>' . e($score->score) . '</div>';
+        $profileHtml .= '<div class="heat-cell ' . $ragClass($score->score) . '">' . e(explode(' — ', $score->name)[0]) . '<br>' . e(number_format((float) $score->score, 1)) . '</div>';
     }
     $profileHtml .= '</div>';
     foreach ($profile as $finding) {
+        $confidence = strtoupper((string) ($finding['confidence'] ?? 'Medium'));
+        $confidenceTone = match ($confidence) {
+            'HIGH' => ['color' => '#166534', 'bg' => '#DCFCE7'],
+            'LOW' => ['color' => '#B91C1C', 'bg' => '#FEE2E2'],
+            default => ['color' => '#B45309', 'bg' => '#FEF3C7'],
+        };
         $profileHtml .= '<div class="panel"><h2>' . e($finding['headline'] ?? $finding['pillar_name'] ?? $finding['domain_name'] ?? 'Finding') . '</h2>'
-            . '<p><span class="badge ' . $ragClass($finding['score'] ?? null) . '">' . e($finding['confidence'] ?? 'Medium') . '</span> Score: ' . e($finding['score'] ?? '-') . '</p>'
+            . '<p><span class="confidence-badge" style="background:' . e($confidenceTone['bg']) . '; color:' . e($confidenceTone['color']) . ';">' . e($confidence) . '</span> Score: ' . e($finding['score'] ?? '-') . '</p>'
             . '<p class="evidence">' . e($asText($finding['evidence'] ?? 'Evidence not available.')) . '</p>'
             . '<p>' . e($asText($finding['business_impact'] ?? '')) . '</p>'
             . '<p><strong>Action:</strong> ' . e($asText($finding['action'] ?? '')) . '</p></div>';
@@ -225,9 +451,28 @@
     foreach ($riskRegister as $index => $risk) {
         $riskHtml .= '<tr><td>' . ($index + 1) . '</td><td>' . e($risk['risk_title'] ?? '-') . '</td><td>' . e($risk['probability'] ?? '-') . '</td><td>' . e($risk['impact'] ?? '-') . '</td><td>' . e($risk['owner'] ?? '-') . '</td><td>' . e($risk['current_control'] ?? '-') . '</td><td>' . e($risk['action'] ?? '-') . '</td></tr>';
     }
-    $riskHtml .= '</table><div class="risk-map">';
-    foreach (['L/H','M/H','H/H','L/M','M/M','H/M','L/L','M/L','H/L'] as $cell) $riskHtml .= '<div>' . $cell . '</div>';
-    $riskHtml .= '</div><div class="chart-attribution">© RAB Consulting Services Ltd. Proprietary methodology.</div>';
+    $riskHtml .= '</table>';
+    $riskHtml .= '<div class="risk-matrix">';
+    $riskHtml .= '<div class="risk-matrix-grid">';
+    $riskHtml .= '<div></div><div class="risk-matrix-axis">Impact L</div><div class="risk-matrix-axis">Impact M</div><div class="risk-matrix-axis">Impact H</div>';
+    foreach (['H', 'M', 'L'] as $probability) {
+        $riskHtml .= '<div class="risk-matrix-row-label">Probability ' . $probability . '</div>';
+        foreach (['L', 'M', 'H'] as $impact) {
+            $bucket = $riskMatrixBuckets["{$probability}|{$impact}"] ?? [];
+            $classes = $riskMatrixTone($probability, $impact);
+            $riskHtml .= '<div class="' . $classes . '">';
+            if ($bucket === []) {
+                $riskHtml .= '<div class="risk-cell-empty">' . e($probability . '/' . $impact) . '</div>';
+            }
+            foreach ($bucket as $number) {
+                $riskHtml .= '<span class="risk-cell-point">' . e($number) . '</span>';
+            }
+            $riskHtml .= '</div>';
+        }
+    }
+    $riskHtml .= '</div>';
+    $riskHtml .= '<div class="risk-grid-caption">Numbered points correspond to table rows above. Green = lower exposure, amber = medium exposure, red = higher exposure.</div>';
+    $riskHtml .= '<div class="chart-attribution">© RAB Consulting Services Ltd. Proprietary methodology.</div>';
 @endphp
 {!! $pageTemplate('Risk Register + Risk Heat Map', $riskHtml) !!}
 
@@ -260,7 +505,27 @@
 {!! $pageTemplate('Priority Plan 30/60/90', $planHtml) !!}
 
 @if(!empty($report['compliance_risk_signals']))
-    {!! $pageTemplate('Compliance Risk Signals', '<div class="panel">' . nl2br(e($asText($report['compliance_risk_signals']))) . '</div>') !!}
+    @php
+        $complianceRows = [];
+        if (is_array($report['compliance_risk_signals'])) {
+            foreach ($report['compliance_risk_signals'] as $item) {
+                if (is_array($item)) {
+                    $complianceRows[] = $item;
+                } else {
+                    $complianceRows[] = ['finding' => $item];
+                }
+            }
+        } else {
+            $complianceRows[] = ['finding' => $asText($report['compliance_risk_signals'])];
+        }
+
+        $complianceHtml = '<table class="compliance-table"><tr><th>Finding</th><th>Domain</th><th>Obligation</th><th>Action</th><th>Deadline</th></tr>';
+        foreach ($complianceRows as $row) {
+            $complianceHtml .= '<tr><td>' . e($row['finding'] ?? '-') . '</td><td>' . e($row['domain'] ?? '-') . '</td><td>' . e($row['obligation'] ?? '-') . '</td><td>' . e($row['action'] ?? '-') . '</td><td>' . e($row['deadline'] ?? '-') . '</td></tr>';
+        }
+        $complianceHtml .= '</table>';
+    @endphp
+    {!! $pageTemplate('Compliance Risk Signals', $complianceHtml) !!}
 @endif
 
 @php
@@ -271,6 +536,170 @@
 @endphp
 {!! $pageTemplate('Final Position', $finalHtml) !!}
 
-{!! $pageTemplate('Appendix — Evidence Base + Methodology Note', '<p><span class="appendix-label">Evidence Base:</span> database extract to be added under Step 13.</p><p>ABOUT RAB INTELLIGENCE INDICES — The indices in this briefing are proprietary commercial intelligence signals developed by RAB Consulting Services. They are not standard industry metrics. They are weighted composites calculated by the RAB Platform scoring engine. The AI generation engine uses them — it does not compute them. © 2026 RAB Consulting Services Ltd. All rights reserved.</p>', true) !!}
+@php
+    $appendixHtml = '<div class="panel appendix-intro"><p><span class="appendix-label">Evidence Base:</span> Database extract from stored assessment responses. This section is not AI-generated.</p></div>';
+
+    if ($appendixRows === []) {
+        $appendixHtml .= '<div class="panel">No stored question responses were found for this assessment.</div>';
+    } else {
+        $appendixHtml .= '<table class="appendix-table"><thead><tr>'
+            . '<th style="width:8%;">Question ID</th>'
+            . '<th style="width:24%;">Question Text</th>'
+            . '<th style="width:8%;">Pillar / Domain</th>'
+            . '<th style="width:6%;">Score</th>'
+            . '<th style="width:10%;">RAG</th>'
+            . '<th style="width:' . ($appendixIsTier2 ? '16%' : '44%') . ';">Evidence Note</th>';
+
+        if ($appendixIsTier2) {
+            $appendixHtml .= '<th style="width:8%;">Confidence Level</th>'
+                . '<th style="width:8%;">Respondent Role</th>'
+                . '<th style="width:8%;">Document Source</th>'
+                . '<th style="width:12%;">Stakeholder Divergence</th>';
+        }
+
+        $appendixHtml .= '</tr></thead><tbody>';
+
+        foreach ($appendixRows as $row) {
+            $appendixHtml .= '<tr>'
+                . '<td class="appendix-code">' . e($row['question_id'] ?? '-') . '</td>'
+                . '<td>' . e($row['question_text'] ?? '-') . '</td>'
+                . '<td>' . e($row['pillar_code'] ?? '-') . '</td>'
+                . '<td>' . e(number_format((float) ($row['score'] ?? 0), 0)) . '</td>'
+                . '<td>' . e($row['rag'] ?? '-') . '</td>'
+                . '<td>' . e($row['evidence_note'] ?: '-') . '</td>';
+
+            if ($appendixIsTier2) {
+                $appendixHtml .= '<td>' . e($row['confidence_level'] ?: '-') . '</td>'
+                    . '<td>' . e($row['respondent_role'] ?: '-') . '</td>'
+                    . '<td>' . e($row['document_source'] ?: '-') . '</td>'
+                    . '<td>' . e($row['stakeholder_divergence_note'] ?: '-') . '</td>';
+            }
+
+            $appendixHtml .= '</tr>';
+        }
+
+        $appendixHtml .= '</tbody></table>';
+    }
+
+    $appendixNoteHtml = '<div class="panel appendix-note"><p>' . e($appendixNote) . '</p></div>';
+@endphp
+{!! $pageTemplate('Appendix — Database Extract', $appendixHtml) !!}
+{!! $pageTemplate('Appendix — Methodology Note', $appendixNoteHtml) !!}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const radarData = @json($radarEntries);
+    const barData = @json($barEntries);
+
+    const fallbackRadar = document.getElementById('pdfRadarFallback');
+    const fallbackBar = document.getElementById('pdfBarFallback');
+    const radarCanvas = document.getElementById('pdfRadarChart');
+    const barCanvas = document.getElementById('pdfBarChart');
+
+    const showFallback = () => {
+        if (fallbackRadar) fallbackRadar.classList.remove('is-hidden');
+        if (fallbackBar) fallbackBar.classList.remove('is-hidden');
+        if (radarCanvas) radarCanvas.style.display = 'none';
+        if (barCanvas) barCanvas.style.display = 'none';
+    };
+
+    if (typeof Chart === 'undefined') {
+        showFallback();
+        return;
+    }
+
+    if (typeof ChartDataLabels !== 'undefined') {
+        Chart.register(ChartDataLabels);
+    }
+
+    const radarLabels = radarData.map((item) => item.code);
+    const radarValues = radarData.map((item) => item.score);
+    const radarColors = radarData.map((item) => item.tone.color);
+
+    if (radarCanvas) {
+        if (fallbackRadar) fallbackRadar.classList.add('is-hidden');
+        radarCanvas.style.display = 'block';
+        new Chart(radarCanvas, {
+            type: 'radar',
+            data: {
+                labels: radarLabels,
+                datasets: [{
+                    data: radarValues,
+                    backgroundColor: 'rgba(37, 99, 235, 0.16)',
+                    borderColor: '#2563EB',
+                    pointBackgroundColor: '#2563EB',
+                    pointRadius: 3,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    r: {
+                        min: 1,
+                        max: 5,
+                        ticks: { stepSize: 1, backdropColor: 'transparent' },
+                        grid: { color: 'rgba(148,163,184,0.25)' },
+                        angleLines: { color: 'rgba(148,163,184,0.25)' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: { display: false }
+                }
+            }
+        });
+    }
+
+    if (barCanvas) {
+        if (fallbackBar) fallbackBar.classList.add('is-hidden');
+        barCanvas.style.display = 'block';
+        new Chart(barCanvas, {
+            type: 'bar',
+            data: {
+                labels: barData.map((item) => item.code),
+                datasets: [{
+                    data: barData.map((item) => item.score),
+                    backgroundColor: barData.map((item) => item.tone.color),
+                    borderRadius: 4,
+                    barThickness: 14
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    x: {
+                        min: 0,
+                        max: 5,
+                        ticks: { stepSize: 1 },
+                        grid: { color: 'rgba(148,163,184,0.18)' }
+                    },
+                    y: {
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'end',
+                        clamp: true,
+                        formatter: (value) => Number(value).toFixed(1),
+                        color: '#0F172A',
+                        font: { weight: 'bold', size: 9 }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 </body>
 </html>

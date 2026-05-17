@@ -271,7 +271,7 @@ class AssessmentScoringController extends Controller
 
     public function exportPdf(Assessment $assessment, ReportPdfService $reportPdfService)
     {
-        if (!$assessment->ai_draft_json) {
+        if (!$assessment->ai_draft_json && blank($assessment->ai_recommendation)) {
             return redirect()
                 ->route('admin.assessments.show', $assessment)
                 ->with('error', 'Generate AI report first before exporting the PDF.');
