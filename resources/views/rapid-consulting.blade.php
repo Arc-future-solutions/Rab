@@ -158,7 +158,7 @@
   <div class="container bg-white p-8 md:p-12 rounded-2xl shadow-lg border border-line">
     <h2 class="font-manrope text-4xl md:text-5xl font-bold text-ink mb-10 text-center">Book Your Session</h2>
     <!-- Calendly inline widget begin -->
-    <div class="calendly-inline-widget" data-url="{{ env('CALENDLY_EMBED_URL', 'https://calendly.com/your-calendly-id') }}" style="min-width:320px;height:700px;"></div>
+    <div class="calendly-inline-widget" data-url="{{ config('services.calendly.embed_url', 'https://calendly.com/your-calendly-id') }}" style="min-width:320px;height:700px;"></div>
     <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
     <!-- Calendly inline widget end -->
   </div>

@@ -36,6 +36,9 @@ return [
     ],
 
     'calendly' => [
+        'api_token'      => env('CALENDLY_API_TOKEN', ''),
+        'user_uri'       => env('CALENDLY_USER_URI', ''),
+        'embed_url'      => env('CALENDLY_EMBED_URL', ''),
         'url'            => env('CALENDLY_URL', ''),
         'webhook_secret' => env('CALENDLY_WEBHOOK_SECRET', ''),
     ],

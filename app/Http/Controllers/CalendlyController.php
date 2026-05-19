@@ -9,19 +9,19 @@ use Carbon\Carbon;
 class CalendlyController extends Controller
 {
     /**
-     * Get the personal access token from env.
+     * Get the personal access token from config.
      */
     private function getToken()
     {
-        return env('CALENDLY_API_TOKEN');
+        return config('services.calendly.api_token');
     }
 
     /**
-     * Get the user URI from env or fetch it if not set.
+     * Get the user URI from config or fetch it if not set.
      */
     private function getUserUri()
     {
-        $uri = env('CALENDLY_USER_URI');
+        $uri = config('services.calendly.user_uri');
         if ($uri && $uri !== 'https://api.calendly.com/users/me') {
             return $uri;
         }
