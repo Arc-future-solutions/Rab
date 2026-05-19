@@ -12,6 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(\App\Http\Middleware\ForceConfiguredHttps::class);
+
         $middleware->alias([
             'admin-only' => \App\Http\Middleware\AdminOnly::class,
             'user-only' => \App\Http\Middleware\UserOnly::class,
