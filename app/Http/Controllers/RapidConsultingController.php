@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendToN8nWebhook;
 use App\Mail\HighPriorityDiagnosticAlert;
+use App\Models\Lead;
 use App\Services\DiagnosticOutcomeService;
 use App\Services\InternalCrmService;
 use Illuminate\Support\Arr;
