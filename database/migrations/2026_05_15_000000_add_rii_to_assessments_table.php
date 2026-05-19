@@ -9,14 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('assessments', function (Blueprint $table) {
-            $table->decimal('rii', 8, 2)->nullable()->after('dmi');
+            if (! Schema::hasColumn('assessments', 'rii')) {
+                $table->decimal('rii', 8, 2)->nullable()->after('dmi');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('assessments', function (Blueprint $table) {
-            $table->dropColumn('rii');
+            if (Schema::hasColumn('assessments', 'rii')) {
+                $table->dropColumn('rii');
+            }
         });
     }
 };

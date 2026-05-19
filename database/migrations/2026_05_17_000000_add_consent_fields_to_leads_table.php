@@ -9,18 +9,27 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('leads', function (Blueprint $table) {
-            $table->boolean('consent_given')->default(false)->after('phone');
-            $table->timestamp('consent_timestamp')->nullable()->after('consent_given');
+            if (! Schema::hasColumn('leads', 'consent_given')) {
+                $table->boolean('consent_given')->default(false)->after('phone');
+            }
+
+            if (! Schema::hasColumn('leads', 'consent_timestamp')) {
+                $table->timestamp('consent_timestamp')->nullable()->after('consent_given');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('leads', function (Blueprint $table) {
-            $table->dropColumn([
+            foreach ([
                 'consent_given',
                 'consent_timestamp',
-            ]);
+            ] as $column) {
+                if (Schema::hasColumn('leads', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
         });
     }
 };
