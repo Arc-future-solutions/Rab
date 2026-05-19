@@ -10,7 +10,7 @@ class AdminBookingsController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Booking::query()->orderBy('starts_at', 'desc');
+        $query = Booking::query()->with('lead')->orderBy('starts_at', 'desc');
 
         // Filter by status
         if ($request->filled('status') && in_array($request->status, ['active', 'cancelled'])) {

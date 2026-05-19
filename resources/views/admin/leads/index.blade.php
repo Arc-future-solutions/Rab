@@ -19,7 +19,8 @@
                 <select name="priority" class="w-full lg:w-auto rounded-xl border-gray-200 shadow-sm px-4 py-2.5 border focus:ring-blue-500/20 focus:border-blue-500 text-sm appearance-none bg-white min-w-[120px]" onchange="this.form.submit()">
                     <option value="">All Priorities</option>
                     <option value="High" {{ request('priority') == 'High' ? 'selected' : '' }}>High</option>
-                    <option value="Normal" {{ request('priority') == 'Normal' ? 'selected' : '' }}>Normal</option>
+                    <option value="Medium" {{ request('priority') == 'Medium' ? 'selected' : '' }}>Medium</option>
+                    <option value="Low" {{ request('priority') == 'Low' ? 'selected' : '' }}>Low</option>
                 </select>
 
                 <select name="lead_status" class="w-full lg:w-auto rounded-xl border-gray-200 shadow-sm px-4 py-2.5 border focus:ring-blue-500/20 focus:border-blue-500 text-sm appearance-none bg-white min-w-[150px]" onchange="this.form.submit()">
@@ -35,13 +36,24 @@
                     <option value="Dev" {{ request('source') == 'Dev' ? 'selected' : '' }}>Dev Service</option>
                     <option value="Consulting" {{ request('source') == 'Consulting' ? 'selected' : '' }}>Consulting</option>
                 </select>
+
+                <select name="booking_status" class="w-full lg:w-auto rounded-xl border-gray-200 shadow-sm px-4 py-2.5 border focus:ring-blue-500/20 focus:border-blue-500 text-sm appearance-none bg-white min-w-[160px]" onchange="this.form.submit()">
+                    <option value="">All Booking Statuses</option>
+                    <option value="NotBooked" {{ request('booking_status') == 'NotBooked' ? 'selected' : '' }}>Not Booked</option>
+                    <option value="BookingRequested" {{ request('booking_status') == 'BookingRequested' ? 'selected' : '' }}>Booking Requested</option>
+                    <option value="Booked" {{ request('booking_status') == 'Booked' ? 'selected' : '' }}>Booked</option>
+                </select>
+
+                <input type="date" name="date_from" value="{{ request('date_from') }}" class="w-full lg:w-auto rounded-xl border-gray-200 shadow-sm px-4 py-2.5 border focus:ring-blue-500/20 focus:border-blue-500 text-sm bg-white" onchange="this.form.submit()">
+                <input type="date" name="date_to" value="{{ request('date_to') }}" class="w-full lg:w-auto rounded-xl border-gray-200 shadow-sm px-4 py-2.5 border focus:ring-blue-500/20 focus:border-blue-500 text-sm bg-white" onchange="this.form.submit()">
             </div>
             
-            @if(request()->anyFilled(['type', 'priority', 'converted', 'lead_status', 'source']))
-                <div class="flex lg:items-center">
+            <div class="flex lg:items-center gap-3">
+                <a href="{{ route('admin.leads.export', request()->query()) }}" class="text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-800">Export CSV</a>
+            @if(request()->anyFilled(['type', 'priority', 'converted', 'lead_status', 'source', 'booking_status', 'date_from', 'date_to']))
                     <a href="{{ route('admin.leads.index') }}" class="text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-800">Clear Filters</a>
-                </div>
             @endif
+            </div>
         </form>
     </div>
 
@@ -55,7 +67,7 @@
                     <th class="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Type / Score</th>
                     <th class="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Source</th>
                     <th class="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Risk Level</th>
-                    <th class="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">AI Recommendation</th>
+                    <th class="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Booking</th>
                     <th class="px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                     <th @click="sortBy('created_at')" class="cursor-pointer px-8 py-4 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Received <span x-show="sortCol === 'created_at'" x-text="sortAsc ? '↑' : '↓'"></span></th>
                     <th class="px-8 py-4 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
@@ -88,23 +100,21 @@
                             }" class="px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-tighter border" x-text="lead.source || 'Direct Entry'"></span>
                         </td>
                         <td class="px-8 py-5 text-center">
-                            <template x-if="lead.priority === 'High' || lead.rag_status === 'Red'">
+                            <template x-if="lead.priority === 'High' || lead.lead_status === 'Hot' || lead.rag_status === 'Red'">
                                 <span class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase shadow-lg shadow-red-500/20 tracking-tighter">High Risk</span>
                             </template>
-                            <template x-if="(lead.priority === 'Normal' || !lead.priority) && lead.rag_status !== 'Red'">
-                                <span class="text-slate-300 text-[10px] font-black uppercase tracking-widest">Normal</span>
+                            <template x-if="lead.priority === 'Medium' && lead.lead_status !== 'Hot' && lead.rag_status !== 'Red'">
+                                <span class="bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded text-[10px] font-black uppercase border border-amber-200">Medium</span>
+                            </template>
+                            <template x-if="lead.priority === 'Low' && lead.lead_status !== 'Hot' && lead.rag_status !== 'Red'">
+                                <span class="text-slate-300 text-[10px] font-black uppercase tracking-widest">Low</span>
                             </template>
                         </td>
                         <td class="px-8 py-5">
-                            <div class="flex items-center gap-2">
-                                <template x-if="lead.overall_score < 2.5">
-                                    <span class="text-[11px] font-bold text-red-600 italic">Critical Recovery Action</span>
-                                </template>
-                                <template x-if="lead.overall_score >= 2.5 && lead.overall_score < 3.8">
-                                    <span class="text-[11px] font-bold text-amber-600 italic">Strategic Discovery Workshop</span>
-                                </template>
-                                <template x-if="lead.overall_score >= 3.8">
-                                    <span class="text-[11px] font-bold text-emerald-600 italic">Optimization & Growth</span>
+                            <div class="flex flex-col gap-1">
+                                <span class="text-[11px] font-bold text-slate-600 italic" x-text="lead.booking_status || 'NotBooked'"></span>
+                                <template x-if="lead.bookings && lead.bookings.length">
+                                    <span class="text-[9px] font-black text-blue-500 uppercase tracking-tighter" x-text="new Date(lead.bookings[0].starts_at).toLocaleString(undefined, {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})"></span>
                                 </template>
                             </div>
                         </td>
@@ -140,7 +150,7 @@
                     </tr>
                     <!-- Expanded Answers Row -->
                     <tr x-show="expandedId === lead.id" x-cloak class="bg-gray-50/50">
-                        <td colspan="7" class="px-8 py-8">
+                        <td colspan="9" class="px-8 py-8">
                             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden anim-fade-in">
                                 <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/30">
                                     <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Detailed Assessment Answers & Evidence</h4>
@@ -237,6 +247,39 @@
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Phone Number</p>
                             <p class="text-sm font-bold text-slate-700" x-text="selectedLead?.phone || 'Not provided'"></p>
                         </div>
+                        <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Risk Priority</p>
+                            <p class="text-sm font-bold text-slate-700" x-text="selectedLead?.priority || 'N/A'"></p>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Lead Status</p>
+                            <p class="text-sm font-bold text-slate-700" x-text="selectedLead?.lead_status || 'Cold'"></p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-4 mb-8">
+                        <template x-if="selectedLead?.bookings && selectedLead.bookings.length">
+                            <div class="p-4 bg-blue-50/50 rounded-2xl border border-blue-100">
+                                <p class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-2">Linked Booking</p>
+                                <p class="text-sm font-bold text-slate-700" x-text="new Date(selectedLead.bookings[0].starts_at).toLocaleString(undefined, {weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'})"></p>
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1" x-text="selectedLead.bookings[0].status"></p>
+                                <template x-if="selectedLead.bookings[0].join_url">
+                                    <a :href="selectedLead.bookings[0].join_url" target="_blank" class="inline-flex mt-3 text-[10px] font-black uppercase tracking-widest text-blue-600 hover:text-blue-800">Join Meeting</a>
+                                </template>
+                            </div>
+                        </template>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Booking Status</label>
+                            <select x-model="selectedLead.booking_status" @change="updateLead(selectedLead, {booking_status: selectedLead.booking_status})" class="w-full rounded-xl border-gray-200 shadow-sm px-4 py-2.5 border text-sm bg-white">
+                                <option value="NotBooked">Not Booked</option>
+                                <option value="BookingRequested">Booking Requested</option>
+                                <option value="Booked">Booked</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">CRM Notes</label>
+                            <textarea x-model="selectedLead.note" @change="updateLead(selectedLead, {note: selectedLead.note})" rows="3" class="w-full rounded-xl border-gray-200 shadow-sm px-4 py-2.5 border text-sm" placeholder="Add follow-up notes for Reda/admin..."></textarea>
+                        </div>
                     </div>
 
                     <div class="mb-8">
@@ -327,6 +370,25 @@ document.addEventListener('alpine:init', () => {
                 if (valA > valB) return this.sortAsc ? 1 : -1;
                 return 0;
             });
+        },
+
+        updateLead(lead, payload) {
+            fetch(`/admin/leads/${lead.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                },
+                body: JSON.stringify(payload),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) return;
+                    const index = this.data.findIndex(item => item.id === data.lead.id);
+                    if (index >= 0) this.data[index] = data.lead;
+                    this.selectedLead = data.lead;
+                });
         }
     }));
 });

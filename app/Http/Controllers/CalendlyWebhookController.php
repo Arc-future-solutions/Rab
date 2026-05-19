@@ -17,12 +17,13 @@ namespace App\Http\Controllers;
 
 use App\Mail\NewBookingNotification;
 use App\Models\Booking;
+use App\Services\InternalCrmService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
 class CalendlyWebhookController extends Controller
 {
-    public function handle(Request $request)
+    public function handle(Request $request, InternalCrmService $internalCrm)
     {
         // ── 1. Verify webhook signing secret ──────────────────────────
         $signature = $request->header('Calendly-Webhook-Signature');
@@ -58,6 +59,7 @@ class CalendlyWebhookController extends Controller
             $joinUrl = $payload['scheduled_event']['location']['join_url']
                 ?? $payload['scheduled_event']['location']['data']['join_url']
                 ?? null;
+            $bookingToken = $payload['tracking']['utm_content'] ?? null;
 
             $booking = Booking::updateOrCreate(
                 ['calendly_event_uuid' => $eventUuid],
@@ -74,6 +76,8 @@ class CalendlyWebhookController extends Controller
                 ]
             );
 
+            $internalCrm->syncLeadForBooking($booking, $bookingToken);
+
             // Send internal notification email (queued, non-blocking)
             try {
                 Mail::to(config('mail.from.address'))
@@ -89,11 +93,16 @@ class CalendlyWebhookController extends Controller
             $eventUri  = $payload['scheduled_event']['uri'] ?? '';
             $eventUuid = basename($eventUri);
 
-            Booking::where('calendly_event_uuid', $eventUuid)
-                ->update([
+            $booking = Booking::where('calendly_event_uuid', $eventUuid)->first();
+
+            if ($booking) {
+                $booking->update([
                     'status'              => 'cancelled',
                     'cancellation_reason' => $payload['cancellation']['reason'] ?? null,
                 ]);
+
+                $internalCrm->syncLeadForCancelledBooking($booking);
+            }
         }
 
         return response()->json(['status' => 'ok']);

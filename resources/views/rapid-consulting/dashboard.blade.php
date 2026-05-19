@@ -180,7 +180,7 @@
                 Gain deep-dive root cause analysis and a structured recovery plan.
             </p>
             <div class="flex justify-center relative">
-                <a href="{{ route('booking.index', ['name' => $results['user']['name'] ?? '', 'email' => $results['user']['email'] ?? '']) }}" 
+                <a href="{{ route('booking.index', ['name' => $results['user']['name'] ?? '', 'email' => $results['user']['email'] ?? '', 'booking_token' => $results['booking_token'] ?? '']) }}" 
                    class="bg-white text-blue-900 px-12 py-6 rounded-full text-lg font-black uppercase tracking-tighter hover:scale-105 transition shadow-2xl active:scale-95">
                     Book a Full Consultant-Led Review
                 </a>

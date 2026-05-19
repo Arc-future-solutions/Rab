@@ -31,7 +31,7 @@
             <!-- Calendly Inline Widget -->
             <div 
                 class="calendly-inline-widget" 
-                data-url="{{ config('services.calendly.url') }}?hide_landing_page_details=1&hide_gdpr_banner=1&name={{ urlencode($name ?? '') }}&email={{ urlencode($email ?? '') }}" 
+                data-url="{{ config('services.calendly.url') }}?hide_landing_page_details=1&hide_gdpr_banner=1&name={{ urlencode($name ?? '') }}&email={{ urlencode($email ?? '') }}&utm_content={{ urlencode($bookingToken ?? '') }}" 
                 style="min-width:320px;height:700px;">
             </div>
         </div>

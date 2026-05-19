@@ -15,6 +15,8 @@ class Lead extends Model
         'index_scores_json' => 'array',
         'answers_json' => 'array',
         'confidence_json' => 'array',
+        'alerts_json' => 'array',
+        'top_three_insight_areas_json' => 'array',
         'converted_to_client' => 'boolean',
         'consent_given' => 'boolean',
         'consent_timestamp' => 'datetime',
@@ -22,6 +24,11 @@ class Lead extends Model
 
     public function client()
     {
-        return $this->belongsTo(Client::class, 'converted_to_client');
+        return $this->belongsTo(Client::class);
+    }
+
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class);
     }
 }

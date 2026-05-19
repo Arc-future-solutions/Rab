@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\SendToCrmWebhook;
 use App\Jobs\SendToN8nWebhook;
 use App\Mail\HighPriorityDiagnosticAlert;
-use App\Models\Lead;
-use App\Services\CrmWebhookPayloadBuilder;
 use App\Services\DiagnosticOutcomeService;
+use App\Services\InternalCrmService;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -530,7 +528,7 @@ class RapidConsultingController extends Controller
     public function processPersonalForm(
         Request $request,
         DiagnosticOutcomeService $outcomeService,
-        CrmWebhookPayloadBuilder $crmWebhookPayloadBuilder
+        InternalCrmService $internalCrm
     )
     {
         $validatedData = $request->validate([
@@ -583,34 +581,26 @@ class RapidConsultingController extends Controller
           'submitted_at' => now()->toDateTimeString(),
         ]);
 
-        $lead = \App\Models\Lead::create([
-            'name' => $validatedData['name'],
-            'company' => $validatedData['company'],
-            'email' => $validatedData['email'],
-            'phone' => $validatedData['phone'] ?? null,
-            'role_title' => $validatedData['job_title'],
-            'industry' => $validatedData['industry'] ?? 'Other',
-            'type' => strtoupper($type),
-            'source' => 'Assessment',
-            'overall_score' => $results['overall_score'],
-            'rag_status' => $results['rag_status'],
-            'priority' => $leadPriority,
-            'lead_status' => 'Warm',
-            'index_scores_json' => $results['index_scores'],
-            'answers_json' => $answers,
-            'confidence_json' => $confidence,
-            'converted_to_client' => false,
-            'consent_given' => true,
-            'consent_timestamp' => $consentTimestamp,
-            'ai_recommendation' => $test->json()['output'] ?? null,
-        ]);
-
         $context = [
             'framework' => strtoupper($type),
             'delivery_stage' => Session::get('rc_delivery_stage'),
             'service_context' => Session::get('rc_service_context'),
             'regulatory_context' => Session::get('rc_regulatory_context'),
         ];
+
+        $lead = $internalCrm->createSnapshotLead(
+            $validatedData,
+            $type,
+            $results,
+            $answers,
+            $confidence,
+            $context,
+            $consentTimestamp,
+            $test->json()['output'] ?? null
+        );
+
+        $results['booking_token'] = $lead->booking_token;
+        Session::put('rc_results', $results);
 
         SendToN8nWebhook::dispatch([
             'lead_id' => $lead->id,
@@ -621,13 +611,9 @@ class RapidConsultingController extends Controller
             'submitted_at' => now()->toDateTimeString(),
         ]);
 
-        SendToCrmWebhook::dispatch(
-            $crmWebhookPayloadBuilder->build($lead, $results, $context, $consentTimestamp)
-        );
-
         if ($leadPriority === 'High') {
             Mail::to(config('services.crm.high_priority_email'))
-                ->queue(new HighPriorityDiagnosticAlert(
+                ->send(new HighPriorityDiagnosticAlert(
                     $validatedData,
                     $results,
                     $context,

@@ -15,6 +15,7 @@ class BookingController extends Controller
         return view('booking.index', [
             'name'  => $request->query('name', ''),
             'email' => $request->query('email', ''),
+            'bookingToken' => $request->query('booking_token', ''),
         ]);
     }
 }

@@ -102,6 +102,9 @@
                             <td class="px-8 py-5">
                                 <div class="font-black text-slate-800 text-sm group-hover:text-blue-600 transition-colors">{{ $booking->client_name ?? 'Anonymous' }}</div>
                                 <div class="text-[10px] font-bold text-slate-400 uppercase mt-0.5 tracking-tighter">{{ $booking->client_email ?? 'No email' }}</div>
+                                @if($booking->lead)
+                                    <a href="{{ route('admin.leads.index') }}?booking_status=Booked" class="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-1 inline-block">CRM Lead #{{ $booking->lead->id }}</a>
+                                @endif
                             </td>
                             <td class="px-8 py-5">
                                 @if($booking->starts_at)

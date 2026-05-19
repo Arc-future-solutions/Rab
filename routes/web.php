@@ -112,6 +112,8 @@
         Route::resource('assessments', \App\Http\Controllers\Admin\AssessmentController::class)->except(['create', 'store']);
         Route::put('/assessments/{assessment}/status', [\App\Http\Controllers\Admin\AssessmentController::class, 'updateStatus'])->name('assessments.updateStatus');
         Route::get('leads', [\App\Http\Controllers\Admin\LeadController::class, 'index'])->name('leads.index');
+        Route::get('leads/export', [\App\Http\Controllers\Admin\LeadController::class, 'export'])->name('leads.export');
+        Route::patch('leads/{lead}', [\App\Http\Controllers\Admin\LeadController::class, 'update'])->name('leads.update');
         Route::post('leads/{lead}/convert', [\App\Http\Controllers\Admin\LeadController::class, 'convert'])->name('leads.convert');
         Route::get('bookings', [AdminBookingsController::class, 'index'])->name('bookings.index');
 

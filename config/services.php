@@ -45,8 +45,6 @@ return [
     ],
 
     'crm' => [
-        'webhook_url' => env('CRM_WEBHOOK_URL'),
-        'webhook_secret' => env('CRM_WEBHOOK_SECRET'),
         'high_priority_email' => env('CRM_HIGH_PRIORITY_EMAIL', 'rboukhiar@rabconsultingservices.com'),
     ],
 

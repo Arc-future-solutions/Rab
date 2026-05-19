@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Booking extends Model
 {
     protected $fillable = [
+        'lead_id',
         'calendly_event_uuid',
         'calendly_invitee_uuid',
         'client_name',
@@ -34,6 +35,11 @@ class Booking extends Model
     public function isCancelled(): bool
     {
         return $this->status === 'cancelled';
+    }
+
+    public function lead()
+    {
+        return $this->belongsTo(Lead::class);
     }
 
     public function scopeActive($query)

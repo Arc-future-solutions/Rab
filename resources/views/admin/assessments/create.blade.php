@@ -34,7 +34,7 @@
             @if($selectedLead)
                 <div class="mt-1 p-3 bg-blue-50 border border-blue-200 rounded-md text-sm font-bold text-blue-800 flex justify-between items-center">
                     <span>{{ $selectedLead->name }} ({{ $selectedLead->company }})</span>
-                    <input type="hidden" name="client_id" value="1"> {{-- Assume a default client or handle lead-only assessments --}}
+                    <input type="hidden" name="snapshot_submission_id" value="{{ $selectedLead->id }}">
                     <span class="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded uppercase font-black">Linked Lead</span>
                 </div>
             @else
@@ -66,6 +66,7 @@
                    placeholder="e.g. Q3 2026 ERP Assessment" required>
         </div>
 
+        @unless($selectedLead)
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700">Start from existing Lead / Snapshot (Optional)</label>
             <select name="snapshot_submission_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
@@ -77,6 +78,7 @@
                 @endforeach
             </select>
         </div>
+        @endunless
 
         <div class="flex justify-end">
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700">

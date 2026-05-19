@@ -33,4 +33,4 @@ Route::get('/teams/users', function () {
 });
 
 
-Route::post('/arrange-teams-meeting', [TeamsMeetingController::class, 'arrangeMeet'])->name('teams.arrange');
+Route::post('/arrange-teams-meeting', [TeamsMeetingController::class, 'arrangeMeet'])->name('teams.arrange.api');

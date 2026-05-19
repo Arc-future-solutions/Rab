@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Assessment;
 use App\Models\Client;
+use App\Models\Lead;
 use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentPillarScore;
 use App\Services\AssessmentAiPayloadBuilder;
 use App\Services\AssessmentIndexCalculator;
+use App\Services\InternalCrmService;
 use App\Services\ReportPdfService;
 use Illuminate\Http\Request;
 
@@ -23,16 +25,25 @@ class AssessmentScoringController extends Controller
         return view('admin.assessments.create', compact('clients', 'leads'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, InternalCrmService $internalCrm)
     {
         $data = $request->validate([
-            'client_id' => 'required|exists:clients,id',
+            'client_id' => 'nullable|exists:clients,id',
             'type' => 'required|in:PIR,SIR',
             'report_tier' => 'required|in:Tier 1 Rapid,Tier 2 Full',
             'name' => 'required|string',
             'target_entity' => 'nullable|string',
             'snapshot_submission_id' => 'nullable|exists:leads,id',
         ]);
+
+        if (empty($data['client_id']) && empty($data['snapshot_submission_id'])) {
+            return back()->withErrors(['client_id' => 'Select a client or start from an existing lead.'])->withInput();
+        }
+
+        if (! empty($data['snapshot_submission_id'])) {
+            $lead = Lead::findOrFail($data['snapshot_submission_id']);
+            $data['client_id'] = $internalCrm->convertLeadToClient($lead)->id;
+        }
 
         $assessment = Assessment::create([
             'client_id' => $data['client_id'],
@@ -296,12 +307,16 @@ class AssessmentScoringController extends Controller
         $dbPillars = \App\Models\AssessmentPillar::where('framework_id', $framework->id)->get()->keyBy('code');
 
         // Calculate Pillar Averages
-        // Responses currently store pillar_name which might be the code or 'Code - Name'
-        // We'll try to find the pillar by checking if the start of the string matches the code
+        // Responses store values like "P1 — Governance..."; extract the exact
+        // code so P1 never accidentally absorbs P10, or D1 absorbs D10-D12.
         $groupedResponses = $responses->groupBy(function($r) use ($dbPillars) {
-            foreach ($dbPillars as $code => $p) {
-                if (str_starts_with($r->pillar_name, $code)) return $code;
+            $pillarName = (string) $r->pillar_name;
+            $candidateCode = trim(explode(' — ', $pillarName, 2)[0]);
+
+            if ($candidateCode !== '' && isset($dbPillars[$candidateCode])) {
+                return $candidateCode;
             }
+
             return $r->pillar_name;
         });
         

@@ -233,7 +233,7 @@
                 “A full Programme Insight Review provides a structured, independent validation of these findings, identifies root causes, and defines clear recovery actions.”
             </p>
             <div class="flex flex-col sm:flex-row justify-center gap-4 relative">
-                <a href="{{ route('booking.index', ['name' => $lead->name, 'email' => $lead->email]) }}" 
+                <a href="{{ route('booking.index', ['name' => $lead->name, 'email' => $lead->email, 'booking_token' => $lead->booking_token]) }}" 
                    class="bg-white text-blue-600 px-10 py-5 rounded-full font-black uppercase tracking-tighter hover:scale-105 transition shadow-xl active:scale-95">
                     Book a Consultation
                 </a>
