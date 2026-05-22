@@ -46,4 +46,38 @@
 
 <!-- Calendly JS -->
 <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
+<script>
+    window.addEventListener('message', function (event) {
+        if (!event.data || event.data.event !== 'calendly.event_scheduled') {
+            return;
+        }
+
+        const payload = event.data.payload || {};
+        const eventUri = payload.event && payload.event.uri;
+        const inviteeUri = payload.invitee && payload.invitee.uri;
+
+        if (!eventUri || !inviteeUri) {
+            return;
+        }
+
+        fetch(@json(route('booking.calendly-scheduled')), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': @json(csrf_token()),
+            },
+            body: JSON.stringify({
+                event_uri: eventUri,
+                invitee_uri: inviteeUri,
+                booking_token: @json($bookingToken ?? ''),
+                name: @json($name ?? ''),
+                email: @json($email ?? ''),
+            }),
+            keepalive: true,
+        }).catch(function () {
+            // Calendly webhook remains the primary fallback if this browser call fails.
+        });
+    });
+</script>
 @endsection

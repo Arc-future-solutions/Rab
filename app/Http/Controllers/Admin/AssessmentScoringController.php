@@ -8,11 +8,15 @@ use App\Models\Client;
 use App\Models\Lead;
 use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentPillarScore;
+use App\Services\AiReportGenerationService;
 use App\Services\AssessmentAiPayloadBuilder;
 use App\Services\AssessmentIndexCalculator;
 use App\Services\InternalCrmService;
 use App\Services\ReportPdfService;
+use Illuminate\Support\Arr;
+use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class AssessmentScoringController extends Controller
 {
@@ -177,7 +181,11 @@ class AssessmentScoringController extends Controller
         return response()->json(['status' => 'ignored']);
     }
 
-    public function generateReport(Assessment $assessment, AssessmentAiPayloadBuilder $payloadBuilder)
+    public function generateReport(
+        Assessment $assessment,
+        AssessmentAiPayloadBuilder $payloadBuilder,
+        AiReportGenerationService $aiReportGeneration
+    )
     {
         $assessment->load(['questionResponses', 'pillarScores', 'client']);
         
@@ -244,32 +252,42 @@ class AssessmentScoringController extends Controller
         $answers = $assessment->questionResponses->pluck('score', 'question')->toArray();
 
         try {
-            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
-                ->withHeaders(['anthropic-beta' => 'zdr-2024-10-23'])
-                ->post('https://n8n.srv1139767.hstgr.cloud/webhook-test/91523c95-9254-40e5-847d-047ae99956bd',[
+            $data = $aiReportGeneration->generate($promptKey, $systemPrompt, $aiPayload, [
                 'type' => strtoupper($assessment->type) . '_FULL',
                 'is_full' => true,
                 'results' => $results,
                 'answers' => $answers,
-                'ai_payload' => $aiPayload,
-                'prompt_key' => $promptKey,
-                'system_prompt' => $systemPrompt,
                 'assessment_id' => $assessment->id,
                 'submitted_at' => now()->toDateTimeString(),
             ]);
-
-            $data = $response->json();
-            $aiRecommendation = $data['output'] ?? ($data['recommendation'] ?? 'AI recommendation could not be generated at this time.');
+            $aiRecommendation = $data['output'] ?? $data['recommendation'] ?? null;
             $aiDraft = $this->normaliseAiDraft($aiRecommendation, $data);
+
+            if ($aiDraft === null && blank($aiRecommendation)) {
+                Log::warning('Full assessment AI response missing usable content', [
+                    'assessment_id' => $assessment->id,
+                    'response_keys' => array_keys($data),
+                ]);
+
+                return redirect()
+                    ->route('admin.assessments.show', $assessment)
+                    ->with('error', 'AI response was received but did not include a usable report payload.');
+            }
+
             $topRisks = $data['top_5_risks'] ?? null;
             
             if ($topRisks && is_array($topRisks)) {
                 $topRisks = json_encode($topRisks);
             }
         } catch (\Exception $e) {
-            $aiRecommendation = 'Error connecting to AI service: ' . $e->getMessage();
-            $aiDraft = null;
-            $topRisks = null;
+            Log::error('Full assessment AI generation failed', [
+                'assessment_id' => $assessment->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()
+                ->route('admin.assessments.show', $assessment)
+                ->with('error', 'AI report generation failed: ' . $e->getMessage());
         }
 
         $assessment->update([
@@ -492,18 +510,68 @@ class AssessmentScoringController extends Controller
 
     private function normaliseAiDraft($aiRecommendation, array $responseData): ?array
     {
-        if (is_array($aiRecommendation)) {
-            return $aiRecommendation;
-        }
+        $structuredKeys = $this->structuredDraftKeys();
 
-        if (is_string($aiRecommendation)) {
-            $decoded = json_decode($aiRecommendation, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                return $decoded;
+        foreach ([
+            $aiRecommendation,
+            $responseData['report'] ?? null,
+            $responseData['snapshot_report_json'] ?? null,
+            $responseData['output'] ?? null,
+            $responseData['recommendation'] ?? null,
+            $responseData['content'] ?? null,
+            $responseData['message'] ?? null,
+            $responseData,
+        ] as $candidate) {
+            $draft = $this->extractStructuredDraft($candidate, $structuredKeys);
+            if ($draft !== null) {
+                return $draft;
             }
         }
 
-        $structuredKeys = [
+        foreach (['data', 'body', 'result', 'response', 'payload'] as $key) {
+            if (! isset($responseData[$key])) {
+                continue;
+            }
+
+            $draft = $this->extractStructuredDraft($responseData[$key], $structuredKeys);
+            if ($draft !== null) {
+                return $draft;
+            }
+        }
+
+        return null;
+    }
+
+    private function normaliseAiHttpResponse(Response $response): array
+    {
+        $json = $response->json();
+        if (is_array($json)) {
+            return $this->normaliseAiResponsePayload($json);
+        }
+
+        $body = trim($response->body());
+        if ($body === '') {
+            return [];
+        }
+
+        $decoded = $this->decodeJsonCandidate($body);
+        if (is_array($decoded)) {
+            return $this->normaliseAiResponsePayload($decoded);
+        }
+
+        $structuredDraft = $this->extractStructuredDraft($body, $this->structuredDraftKeys());
+        if ($structuredDraft !== null) {
+            return $structuredDraft + ['output' => $body];
+        }
+
+        return $this->normaliseAiResponsePayload([
+            'output' => $body,
+        ]);
+    }
+
+    private function structuredDraftKeys(): array
+    {
+        return [
             'cover_letter',
             'executive_position',
             'intelligence_dashboard',
@@ -517,10 +585,123 @@ class AssessmentScoringController extends Controller
             'final_position',
             'tier1_bridge',
         ];
+    }
 
-        $draft = array_intersect_key($responseData, array_flip($structuredKeys));
+    private function extractStructuredDraft(mixed $value, array $structuredKeys): ?array
+    {
+        if (is_string($value)) {
+            $decoded = $this->decodeJsonCandidate($value);
+            if (is_array($decoded)) {
+                return $this->extractStructuredDraft($decoded, $structuredKeys);
+            }
 
-        return $draft !== [] ? $draft : null;
+            return null;
+        }
+
+        if (! is_array($value)) {
+            return null;
+        }
+
+        $draft = array_intersect_key($value, array_flip($structuredKeys));
+        if ($draft !== []) {
+            return $draft;
+        }
+
+        if (array_is_list($value)) {
+            foreach ($value as $item) {
+                $draft = $this->extractStructuredDraft($item, $structuredKeys);
+                if ($draft !== null) {
+                    return $draft;
+                }
+            }
+
+            return null;
+        }
+
+        foreach (['report', 'snapshot_report_json', 'output', 'recommendation', 'content', 'message', 'text'] as $key) {
+            if (! array_key_exists($key, $value)) {
+                continue;
+            }
+
+            $draft = $this->extractStructuredDraft($value[$key], $structuredKeys);
+            if ($draft !== null) {
+                return $draft;
+            }
+        }
+
+        return null;
+    }
+
+    private function decodeJsonCandidate(string $value): ?array
+    {
+        $candidate = trim($value);
+
+        if ($candidate === '') {
+            return null;
+        }
+
+        if (preg_match('/```(?:json)?\s*(\{.*\})\s*```/s', $candidate, $matches)) {
+            $candidate = $matches[1];
+        }
+
+        $decoded = json_decode($candidate, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_string($decoded)) {
+            $decoded = json_decode($decoded, true);
+        }
+
+        return json_last_error() === JSON_ERROR_NONE && is_array($decoded)
+            ? $decoded
+            : null;
+    }
+
+    private function normaliseAiResponsePayload($responseData): array
+    {
+        if (! is_array($responseData)) {
+            return [];
+        }
+
+        $payload = $responseData;
+
+        while (array_is_list($payload) && count($payload) === 1 && is_array($payload[0])) {
+            $payload = $payload[0];
+        }
+
+        foreach (['data', 'body', 'result', 'response', 'payload'] as $key) {
+            if (! isset($payload[$key])) {
+                continue;
+            }
+
+            if (is_array($payload[$key])) {
+                $payload = $payload[$key];
+
+                while (array_is_list($payload) && count($payload) === 1 && is_array($payload[0])) {
+                    $payload = $payload[0];
+                }
+            } elseif (is_string($payload[$key])) {
+                $decoded = $this->decodeJsonCandidate($payload[$key]);
+                if ($decoded !== null) {
+                    $payload = $decoded;
+                }
+            }
+        }
+
+        if (! is_array($payload)) {
+            return [];
+        }
+
+        foreach (['report', 'snapshot_report_json'] as $key) {
+            if (! array_key_exists($key, $payload)) {
+                continue;
+            }
+
+            $draft = $this->extractStructuredDraft($payload[$key], $this->structuredDraftKeys());
+            if ($draft !== null) {
+                $payload = Arr::except($payload, [$key]) + $draft;
+            }
+        }
+
+        return is_array($payload) ? $payload : [];
     }
 
 }

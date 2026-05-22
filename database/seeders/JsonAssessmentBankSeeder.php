@@ -88,6 +88,7 @@ class JsonAssessmentBankSeeder extends Seeder
                     'question_type_label' => $qData['question_type_label'] ?? null,
                     'score_anchors' => isset($qData['score_anchors']) ? json_encode($qData['score_anchors']) : null,
                     'hybrid_context' => $qData['hybrid_context'] ?? null,
+                    'is_compliance' => (bool) ($qData['is_compliance'] ?? false),
                     'is_active' => true,
                     'updated_at' => now(),
                 ];

@@ -2,13 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\SendToN8nWebhook;
 use App\Mail\HighPriorityDiagnosticAlert;
 use App\Models\Lead;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class RapidConsultingSecurityTest extends TestCase
@@ -26,11 +25,32 @@ class RapidConsultingSecurityTest extends TestCase
         $this->assertDatabaseCount('leads', 0);
     }
 
-    public function test_personal_form_persists_internal_crm_lead_dispatches_n8n_and_sends_high_priority_alert(): void
+    public function test_personal_form_persists_internal_crm_lead_generates_internal_ai_report_and_sends_high_priority_alert(): void
     {
-        Queue::fake();
         Mail::fake();
-        Http::fake(['*' => Http::response(['output' => 'AI output'])]);
+        Config::set('services.anthropic.key', 'test-anthropic-key');
+        Config::set('services.anthropic.api_key', 'test-anthropic-key');
+        Config::set('services.anthropic.base_url', 'https://example.test/v1');
+
+        $report = [
+            'intelligence_brief' => "Paragraph one.\n\nParagraph two.",
+            'insight_cards' => [[
+                'pillar_code' => 'P1',
+                'pillar_name' => 'P1 — Governance & Decision-Making',
+                'score' => 2.2,
+                'rag' => 'Red',
+                'finding' => 'Governance decisions are not being closed.',
+                'action' => 'Programme sponsor to reset governance actions this week.',
+            ]],
+        ];
+
+        Http::fake(['*' => Http::response([
+            'id' => 'msg_123',
+            'content' => [[
+                'type' => 'text',
+                'text' => json_encode($report),
+            ]],
+        ])]);
 
         $response = $this->withSession($this->personalFormSession())
             ->post(route('rapid-consulting.process-personal-form'), $this->personalFormData([
@@ -52,20 +72,27 @@ class RapidConsultingSecurityTest extends TestCase
         $this->assertSame('1.0', $lead->scoring_version);
         $this->assertCount(3, $lead->top_three_insight_areas_json);
         $this->assertSame(['P1.F1' => 'high', 'P2.F1' => 'medium', 'P3.F1' => 'low'], $lead->confidence_json);
+        $this->assertIsArray($lead->snapshot_report_json);
+        $this->assertSame('Paragraph one.' . "\n\n" . 'Paragraph two.', $lead->snapshot_report_json['intelligence_brief']);
+        $leadId = $lead->id;
 
-        Http::assertSent(function ($request) {
-            return str_contains($request->url(), 'n8n.srv1139767.hstgr.cloud')
-                && $request->hasHeader('anthropic-beta', 'zdr-2024-10-23');
+        Http::assertSent(function ($request) use ($leadId) {
+            $payload = $request->data();
+            $input = json_decode((string) str($payload['messages'][0]['content'])->after("\n\n"), true);
+
+            return $request->url() === 'https://api.anthropic.com/v1/messages'
+                && $request->hasHeader('x-api-key', 'test-anthropic-key')
+                && $payload['system'] === config('ai.pir_snapshot')
+                && ! isset($payload['output_config'])
+                && ($input['assessment_id'] ?? null) === $leadId
+                && ($input['framework'] ?? null) === 'PIR';
         });
-
-        Queue::assertPushed(SendToN8nWebhook::class);
 
         Mail::assertSent(HighPriorityDiagnosticAlert::class);
     }
 
     public function test_internal_crm_sales_status_is_score_based_for_medium_and_low_priority_leads(): void
     {
-        Queue::fake();
         Mail::fake();
         Http::fake(['*' => Http::response(['output' => 'AI output'])]);
 
@@ -109,7 +136,6 @@ class RapidConsultingSecurityTest extends TestCase
 
     public function test_personal_form_endpoint_is_rate_limited(): void
     {
-        Queue::fake();
         Mail::fake();
         Http::fake(['*' => Http::response(['output' => 'AI output'])]);
 
@@ -142,6 +168,107 @@ class RapidConsultingSecurityTest extends TestCase
         $response->assertOk()
             ->assertJsonMissing(['hidden_risk' => true])
             ->assertJsonMissing(['score_anchors' => true]);
+    }
+
+    public function test_results_dashboard_uses_ai_insight_order_without_legacy_priority_section(): void
+    {
+        $response = $this->withSession($this->personalFormSession([
+            'snapshot_report_json' => [
+                'intelligence_brief' => "Brief paragraph one.\n\nBrief paragraph two.",
+                'insight_cards' => [
+                    [
+                        'pillar_code' => 'P1',
+                        'pillar_name' => 'P1 — Governance & Decision-Making',
+                        'score' => 2.2,
+                        'rag' => 'Red',
+                        'finding' => 'Governance decisions are not being closed.',
+                        'action' => 'Programme sponsor to reset governance actions this week.',
+                    ],
+                    [
+                        'pillar_code' => 'COMPLIANCE',
+                        'pillar_name' => 'Compliance Risk Exposure',
+                        'score' => 2.6,
+                        'rag' => 'Amber',
+                        'finding' => 'Compliance evidence remains incomplete.',
+                        'action' => 'Compliance lead to confirm the evidence owner.',
+                    ],
+                ],
+            ],
+        ]))->get(route('rapid-consulting.dashboard'));
+
+        $response->assertOk()
+            ->assertDontSee('Priority Insights & Actions')
+            ->assertDontSee('jspdf', false)
+            ->assertDontSee('html2canvas', false)
+            ->assertSee('Download Report as PDF')
+            ->assertSee('Compliance', false);
+
+        $html = $response->getContent();
+        $expectedOrder = [
+            'Score / 5.0',
+            'Amber Status',
+            'Pillar Score Heat Map',
+            'Indices & Calculations',
+            'Intelligence Visualisations',
+            'Intelligence Brief',
+            'Insight Cards',
+            'Unlock Full Intelligence',
+            'Book a Full Consultant-Led Review',
+        ];
+
+        $lastPosition = -1;
+        foreach ($expectedOrder as $text) {
+            $position = strpos($html, $text);
+            $this->assertNotFalse($position, "{$text} was not rendered.");
+            $this->assertGreaterThan($lastPosition, $position, "{$text} rendered out of order.");
+            $lastPosition = $position;
+        }
+    }
+
+    public function test_pdf_mode_renders_cover_page_before_report_content(): void
+    {
+        $results = $this->personalFormSession([
+            'snapshot_report_json' => [
+                'intelligence_brief' => "Brief paragraph one.\n\nBrief paragraph two.",
+                'insight_cards' => [],
+            ],
+        ])['rc_results'];
+
+        $results['lead_id'] = 31;
+        $results['booking_token'] = 'test-token';
+        $results['subject_name'] = 'Acme Recovery Programme';
+        $results['assessment_date'] = '2026-05-22';
+        $results['user'] = [
+            'name' => 'Alex Sponsor',
+            'email' => 'alex@example.com',
+            'company' => 'Acme Ltd',
+        ];
+        $results['snapshot_report'] = $results['snapshot_report_json'];
+
+        $html = view('rapid-consulting.dashboard', [
+            'results' => $results,
+            'pdfMode' => true,
+            'hide_nav' => true,
+            'logoDataUri' => 'data:image/png;base64,test',
+        ])->render();
+
+        $expectedOrder = [
+            'Programme Intelligence Snapshot Report',
+            'Acme Ltd',
+            'Acme Recovery Programme',
+            '22 May 2026',
+            'Reda Boukhiar, Director, RAB Consulting Services',
+            'This report is confidential and prepared exclusively for the named client organisation.',
+            'Score / 5.0',
+        ];
+
+        $lastPosition = -1;
+        foreach ($expectedOrder as $text) {
+            $position = strpos($html, $text);
+            $this->assertNotFalse($position, "{$text} was not rendered.");
+            $this->assertGreaterThan($lastPosition, $position, "{$text} rendered out of order.");
+            $lastPosition = $position;
+        }
     }
 
     private function personalFormData(array $overrides = []): array
@@ -197,6 +324,13 @@ class RapidConsultingSecurityTest extends TestCase
                 'P1.F1' => 2,
                 'P2.F1' => 3,
                 'P3.F1' => 4,
+                'P4.F1' => 3,
+                'P5.F1' => 3,
+                'P6.F1' => 3,
+                'P7.F1' => 3,
+                'P8.F1' => 3,
+                'P9.F1' => 3,
+                'P10.F1' => 3,
             ],
             'rc_confidence' => [
                 'P1.F1' => 'high',

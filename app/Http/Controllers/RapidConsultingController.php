@@ -2,24 +2,36 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\SendToN8nWebhook;
 use App\Mail\HighPriorityDiagnosticAlert;
 use App\Models\Lead;
+use App\Services\ReportService;
 use App\Services\DiagnosticOutcomeService;
 use App\Services\InternalCrmService;
+use App\Services\SnapshotAiPayloadBuilder;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
+use Spatie\Browsershot\Browsershot;
+use setasign\Fpdi\Fpdi;
 use Carbon\Carbon;
 use App\Traits\HasAssessmentQuestions;
 use App\Services\AssessmentIndexCalculator;
+use App\Services\SnapshotReportService;
 
 class RapidConsultingController extends Controller
 {
     use HasAssessmentQuestions;
+
+    public function __construct(
+        private SnapshotReportService $snapshotReportService,
+        private SnapshotAiPayloadBuilder $snapshotAiPayloadBuilder
+    )
+    {
+    }
+
     private function getFrameworkDefinitions(string $type)
     {
         $type = strtolower($type);
@@ -278,6 +290,8 @@ class RapidConsultingController extends Controller
         $indexScores = $existingLead->index_scores_json;
 
         $results = [
+            'lead_id' => $existingLead->id,
+            'booking_token' => $existingLead->booking_token,
             'overall_score' => $overallScore,
             'rag_status' => $this->rag($overallScore),
             'pillar_scores' => $pillarScores, 
@@ -286,6 +300,12 @@ class RapidConsultingController extends Controller
             'user' => $userData,
             'recommendation' => $this->generateRecommendation($overallScore, $pillarScores, $type)
         ];
+
+        $results['snapshot_report'] = $this->snapshotReportService->build(
+            $results,
+            $existingLead->ai_recommendation,
+            $existingLead->snapshot_report_json
+        );
         
         Session::put('rc_results', $results);
         Session::put('rc_user', $userData);
@@ -488,6 +508,8 @@ class RapidConsultingController extends Controller
             'regulatory_context' => Session::get('rc_regulatory_context'),
             'recommendation' => $this->generateRecommendation($overallScore, $pillarScores, $type)
         ];
+
+        $results['snapshot_report'] = $this->snapshotReportService->build($results);
         
         Session::put('rc_results', $results);
 
@@ -506,10 +528,10 @@ class RapidConsultingController extends Controller
             }
             $chi = count($cScores) > 0 ? round(array_sum($cScores) / count($cScores), 2) : 0.0;
 
-            return array_filter([
+            return [
                 ...AssessmentIndexCalculator::calculatePir($pillarScores, $answers),
-                'CHI' => $chi
-            ], fn ($value) => $value !== null);
+                'CHI' => $chi,
+            ];
         }
 
         return [
@@ -529,7 +551,8 @@ class RapidConsultingController extends Controller
     public function processPersonalForm(
         Request $request,
         DiagnosticOutcomeService $outcomeService,
-        InternalCrmService $internalCrm
+        InternalCrmService $internalCrm,
+        ReportService $reportService
     )
     {
         $validatedData = $request->validate([
@@ -568,20 +591,6 @@ class RapidConsultingController extends Controller
         );
         $consentTimestamp = now();
 
-        $test = Http::withoutVerifying()
-            ->withHeaders(['anthropic-beta' => 'zdr-2024-10-23'])
-            ->post('https://n8n.srv1139767.hstgr.cloud/webhook-test/91523c95-9254-40e5-847d-047ae99956bd',[
-          'type' => strtoupper($type),
-          'results' => $results,
-          'answers' => $answers,
-          'assessment_context' => [
-              'delivery_stage' => Session::get('rc_delivery_stage'),
-              'service_context' => Session::get('rc_service_context'),
-              'regulatory_context' => Session::get('rc_regulatory_context'),
-          ],
-          'submitted_at' => now()->toDateTimeString(),
-        ]);
-
         $context = [
             'framework' => strtoupper($type),
             'delivery_stage' => Session::get('rc_delivery_stage'),
@@ -597,20 +606,42 @@ class RapidConsultingController extends Controller
             $confidence,
             $context,
             $consentTimestamp,
-            $test->json()['output'] ?? null
+            null
         );
 
-        $results['booking_token'] = $lead->booking_token;
-        Session::put('rc_results', $results);
+        $promptKey = $this->snapshotAiPayloadBuilder->promptKey($context['framework']);
 
-        SendToN8nWebhook::dispatch([
-            'lead_id' => $lead->id,
-            'type' => strtoupper($type),
-            'results' => $results,
-            'answers' => $answers,
-            'assessment_context' => $context,
-            'submitted_at' => now()->toDateTimeString(),
-        ]);
+        try {
+            Log::info('Generating snapshot report synchronously at assessment completion', [
+                'lead_id' => $lead->id,
+                'prompt_key' => $promptKey,
+            ]);
+
+            $aiPayload = $this->snapshotAiPayloadBuilder->buildFromLead($lead);
+            $structuredReport = $reportService->generate($promptKey, $aiPayload);
+
+            $lead->update([
+                'ai_recommendation' => json_encode($structuredReport, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'snapshot_report_json' => $structuredReport,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Snapshot AI generation failed at assessment completion', [
+                'lead_id' => $lead->id,
+                'prompt_key' => $promptKey,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
+        $lead->refresh();
+
+        $results['lead_id'] = $lead->id;
+        $results['booking_token'] = $lead->booking_token;
+        $results['snapshot_report'] = $this->snapshotReportService->build(
+            $results,
+            $lead->ai_recommendation,
+            $lead->snapshot_report_json
+        );
+        Session::put('rc_results', $results);
 
         if ($leadPriority === 'High') {
             Mail::to(config('services.crm.high_priority_email'))
@@ -656,7 +687,14 @@ class RapidConsultingController extends Controller
                 
                 // Add AI recommendation to results for the view
                 if ($results) {
+                    $results['lead_id'] = $latestLead->id;
+                    $results['booking_token'] = $latestLead->booking_token;
                     $results['ai_recommendation'] = $latestLead->ai_recommendation;
+                    $results['snapshot_report'] = $this->snapshotReportService->build(
+                        $results,
+                        $latestLead->ai_recommendation,
+                        $latestLead->snapshot_report_json
+                    );
                     Session::put('rc_results', $results);
                 }
             }
@@ -666,7 +704,254 @@ class RapidConsultingController extends Controller
             return redirect()->route('rapid-consulting.index');
         }
 
+        $results['snapshot_report'] = $this->snapshotReportService->build(
+            $results,
+            $results['ai_recommendation'] ?? null,
+            $results['snapshot_report_json'] ?? null
+        );
+
         return view('rapid-consulting.dashboard', compact('results'));
+    }
+
+    public function downloadSnapshotPdf(Request $request, Lead $lead)
+    {
+        $this->authorizeSnapshotPdfDownload($request, $lead);
+
+        $results = $this->snapshotResultsFromLead($lead);
+        $pdfMode = true;
+        $hide_nav = true;
+        $logoDataUri = $this->logoDataUri();
+        $coverPart = 'cover';
+        $bodyPart = 'body';
+        $coverHtml = view('rapid-consulting.dashboard', [
+            'results' => $results,
+            'pdfMode' => $pdfMode,
+            'pdfPart' => $coverPart,
+            'hide_nav' => $hide_nav,
+            'logoDataUri' => $logoDataUri,
+        ])->render();
+        $bodyHtml = view('rapid-consulting.dashboard', [
+            'results' => $results,
+            'pdfMode' => $pdfMode,
+            'pdfPart' => $bodyPart,
+            'hide_nav' => $hide_nav,
+            'logoDataUri' => $logoDataUri,
+        ])->render();
+
+        $coverPdf = Browsershot::html($coverHtml)
+            ->setNodeBinary($this->browsershotNodeBinary())
+            ->setNpmBinary($this->browsershotNpmBinary())
+            ->setNodeModulePath(base_path('node_modules'))
+            ->format('A4')
+            ->margins(0, 0, 0, 0)
+            ->setOption('preferCSSPageSize', true)
+            ->showBackground()
+            ->emulateMedia('print')
+            ->waitUntilNetworkIdle()
+            ->setDelay(500)
+            ->noSandbox()
+            ->addChromiumArguments(['disable-setuid-sandbox'])
+            ->pdf();
+
+        $bodyPdf = Browsershot::html($bodyHtml)
+            ->setNodeBinary($this->browsershotNodeBinary())
+            ->setNpmBinary($this->browsershotNpmBinary())
+            ->setNodeModulePath(base_path('node_modules'))
+            ->format('A4')
+            ->margins(0, 0, 0, 0)
+            ->setOption('preferCSSPageSize', true)
+            ->showBackground()
+            ->showBrowserHeaderAndFooter()
+            ->headerHtml($this->snapshotPdfHeaderTemplate($results, $logoDataUri))
+            ->footerHtml($this->snapshotPdfFooterTemplate($results))
+            ->initialPageNumber(2)
+            ->emulateMedia('print')
+            ->waitUntilNetworkIdle()
+            ->setDelay(500)
+            ->noSandbox()
+            ->addChromiumArguments(['disable-setuid-sandbox'])
+            ->pdf();
+
+        $pdf = $this->mergePdfParts([$coverPdf, $bodyPdf]);
+
+        $filename = sprintf(
+            '%s-snapshot-report-%s-%s.pdf',
+            strtolower((string) $lead->type),
+            $lead->id,
+            now()->toDateString()
+        );
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    private function mergePdfParts(array $pdfParts): string
+    {
+        $temporaryFiles = [];
+        $merged = new Fpdi();
+
+        try {
+            foreach ($pdfParts as $pdfPart) {
+                $path = tempnam(sys_get_temp_dir(), 'rab-pdf-part-');
+                file_put_contents($path, $pdfPart);
+                $temporaryFiles[] = $path;
+
+                $pageCount = $merged->setSourceFile($path);
+
+                for ($pageNumber = 1; $pageNumber <= $pageCount; $pageNumber++) {
+                    $templateId = $merged->importPage($pageNumber);
+                    $size = $merged->getTemplateSize($templateId);
+                    $orientation = ($size['width'] ?? 0) > ($size['height'] ?? 0) ? 'L' : 'P';
+
+                    $merged->AddPage($orientation, [$size['width'], $size['height']]);
+                    $merged->useTemplate($templateId);
+                }
+            }
+
+            return $merged->Output('S');
+        } finally {
+            foreach ($temporaryFiles as $temporaryFile) {
+                if (is_file($temporaryFile)) {
+                    @unlink($temporaryFile);
+                }
+            }
+        }
+    }
+
+    private function browsershotNodeBinary(): string
+    {
+        return env('BROWSERSHOT_NODE_BINARY', '/home/harakaty6/.nvm/versions/node/v22.22.2/bin/node');
+    }
+
+    private function browsershotNpmBinary(): string
+    {
+        return env('BROWSERSHOT_NPM_BINARY', '/home/harakaty6/.nvm/versions/node/v22.22.2/bin/npm');
+    }
+
+    private function snapshotPdfHeaderTemplate(array $results, string $logoDataUri): string
+    {
+        $title = $this->snapshotReportTitle($results);
+
+        return '<div style="width:100%;height:18mm;padding:0 12mm;font-family:Inter,Arial,Helvetica,sans-serif;color:#0f172a;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #cbd5e1;box-sizing:border-box;">'
+            . '<div style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:9px;letter-spacing:.08em;text-transform:uppercase;">'
+            . '<img src="' . e($logoDataUri) . '" style="height:20px;width:auto;display:block;" />'
+            . '<span>RAB Consulting Services</span>'
+            . '</div>'
+            . '<div style="font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:right;">' . e($title) . '</div>'
+            . '</div>';
+    }
+
+    private function snapshotPdfFooterTemplate(array $results): string
+    {
+        $client = $results['user']['company'] ?? 'Client organisation';
+        $date = isset($results['assessment_date'])
+            ? Carbon::parse($results['assessment_date'])->format('d F Y')
+            : now()->format('d F Y');
+
+        return '<div style="width:100%;height:16mm;padding:0 12mm;font-family:Inter,Arial,Helvetica,sans-serif;color:#475569;display:flex;align-items:center;justify-content:space-between;border-top:1px solid #cbd5e1;box-sizing:border-box;font-size:8px;">'
+            . '<div style="width:32%;font-weight:700;">Confidential &mdash; RAB Consulting Services</div>'
+            . '<div style="width:36%;text-align:center;">' . e($client) . ' &middot; ' . e($date) . '</div>'
+            . '<div style="width:32%;text-align:right;font-weight:700;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>'
+            . '</div>';
+    }
+
+    private function snapshotReportTitle(array $results): string
+    {
+        return strtolower((string) ($results['type'] ?? 'pir')) === 'sir'
+            ? 'Service Intelligence Snapshot Report'
+            : 'Programme Intelligence Snapshot Report';
+    }
+
+    private function logoDataUri(): string
+    {
+        $path = public_path('assets/images/logo-rab.png');
+
+        if (! is_file($path)) {
+            return '';
+        }
+
+        $mime = mime_content_type($path) ?: 'image/png';
+
+        return 'data:' . $mime . ';base64,' . base64_encode((string) file_get_contents($path));
+    }
+
+    private function authorizeSnapshotPdfDownload(Request $request, Lead $lead): void
+    {
+        $sessionResults = Session::get('rc_results', []);
+        $sessionOwnsLead = (int) ($sessionResults['lead_id'] ?? 0) === (int) $lead->id
+            && hash_equals((string) ($sessionResults['booking_token'] ?? ''), (string) $lead->booking_token);
+        $tokenMatches = is_string($request->query('token'))
+            && hash_equals((string) $lead->booking_token, (string) $request->query('token'));
+        $authOwnsLead = auth()->check()
+            && hash_equals(strtolower((string) auth()->user()->email), strtolower((string) $lead->email));
+
+        abort_unless($sessionOwnsLead || $tokenMatches || $authOwnsLead, 403);
+        abort_unless(in_array($lead->assessment_type, ['PIR_SNAPSHOT', 'SIR_SNAPSHOT'], true), 404);
+    }
+
+    private function snapshotResultsFromLead(Lead $lead): array
+    {
+        $payload = $this->snapshotAiPayloadBuilder->buildFromLead($lead);
+        $isSir = strtoupper((string) $lead->type) === 'SIR';
+        $scoreKey = $isSir ? 'domain_scores' : 'pillar_scores';
+        $nameKey = $isSir ? 'domain_names' : 'pillar_names';
+
+        $areaScores = collect($payload[$scoreKey] ?? [])
+            ->mapWithKeys(fn ($score, $code) => [$code => [
+                'name' => $payload[$nameKey][$code] ?? $code,
+                'score' => (float) $score,
+                'rag' => $this->rag((float) $score),
+            ]])
+            ->all();
+
+        $indexScores = $isSir
+            ? [
+                'SSI' => $payload['ssi'] ?? null,
+                'SMI' => $payload['smi'] ?? null,
+                'SIMI' => $payload['simi'] ?? null,
+                'BAURI' => $payload['bau_ri'] ?? null,
+                'CHI' => $payload['chi'] ?? null,
+                'smi_simi_delta' => $payload['smi_simi_delta'] ?? null,
+            ]
+            : [
+                'BRI' => $payload['bri'] ?? null,
+                'VRI' => $payload['vri'] ?? null,
+                'DMI' => $payload['dmi'] ?? null,
+                'RII' => $payload['rii'] ?? null,
+                'CHI' => $payload['chi'] ?? null,
+            ];
+
+        $results = [
+            'lead_id' => $lead->id,
+            'booking_token' => $lead->booking_token,
+            'type' => strtolower((string) $lead->type),
+            'subject_name' => $lead->company,
+            'user' => [
+                'name' => $lead->name,
+                'email' => $lead->email,
+                'company' => $lead->company,
+                'job_title' => $lead->role_title,
+                'industry' => $lead->industry,
+            ],
+            'overall_score' => (float) $lead->overall_score,
+            'rag_status' => $lead->rag_status,
+            'pillar_scores' => $areaScores,
+            'index_scores' => array_filter($indexScores, fn ($value) => $value !== null),
+            'delivery_stage' => $lead->delivery_stage,
+            'service_context' => $lead->service_context,
+            'regulatory_context' => $lead->regulatory_context,
+            'assessment_date' => $lead->created_at?->toDateString(),
+        ];
+
+        $results['snapshot_report'] = $this->snapshotReportService->build(
+            $results,
+            $lead->ai_recommendation,
+            $lead->snapshot_report_json
+        );
+
+        return $results;
     }
 
     public function download()

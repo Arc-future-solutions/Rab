@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\Lead;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -101,6 +102,55 @@ class InternalCrmLifecycleTest extends TestCase
         ]);
         $this->assertSame('Booked', $lead->fresh()->booking_status);
         $this->assertSame('NotBooked', $otherLead->fresh()->booking_status);
+    }
+
+    public function test_calendly_widget_scheduled_callback_creates_admin_booking(): void
+    {
+        Http::fake([
+            'https://api.calendly.com/scheduled_events/event-widget' => Http::response([
+                'resource' => [
+                    'uri' => 'https://api.calendly.com/scheduled_events/event-widget',
+                    'name' => 'Rapid Consulting Call',
+                    'start_time' => now()->addDays(2)->toIso8601String(),
+                    'end_time' => now()->addDays(2)->addMinutes(30)->toIso8601String(),
+                    'location' => ['join_url' => 'https://meet.example.test/widget'],
+                ],
+            ]),
+            'https://api.calendly.com/scheduled_events/event-widget/invitees/invitee-widget' => Http::response([
+                'resource' => [
+                    'uri' => 'https://api.calendly.com/scheduled_events/event-widget/invitees/invitee-widget',
+                    'name' => 'Widget Buyer',
+                    'email' => 'widget@example.com',
+                ],
+            ]),
+        ]);
+
+        $lead = Lead::create($this->leadData([
+            'email' => 'snapshot@example.com',
+            'booking_token' => 'widget-token-123',
+            'booking_status' => 'NotBooked',
+        ]));
+
+        $response = $this->postJson(route('booking.calendly-scheduled'), [
+            'event_uri' => 'https://api.calendly.com/scheduled_events/event-widget',
+            'invitee_uri' => 'https://api.calendly.com/scheduled_events/event-widget/invitees/invitee-widget',
+            'booking_token' => 'widget-token-123',
+            'name' => 'Fallback Name',
+            'email' => 'fallback@example.com',
+        ]);
+
+        $response->assertOk()->assertJson(['status' => 'ok']);
+        $this->assertDatabaseHas('bookings', [
+            'lead_id' => $lead->id,
+            'calendly_event_uuid' => 'event-widget',
+            'calendly_invitee_uuid' => 'invitee-widget',
+            'client_name' => 'Widget Buyer',
+            'client_email' => 'widget@example.com',
+            'join_url' => 'https://meet.example.test/widget',
+            'event_type_name' => 'Rapid Consulting Call',
+            'status' => 'active',
+        ]);
+        $this->assertSame('Booked', $lead->fresh()->booking_status);
     }
 
     public function test_calendly_cancellation_resets_only_when_linked_lead_has_no_active_booking(): void

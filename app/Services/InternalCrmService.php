@@ -39,6 +39,8 @@ class InternalCrmService
             'industry' => $validatedData['industry'] ?? 'Other',
             'regulatory_context' => $context['regulatory_context'] ?? null,
             'scoring_version' => '1.0',
+            'delivery_stage' => $context['delivery_stage'] ?? null,
+            'service_context' => $context['service_context'] ?? null,
             'type' => $framework,
             'assessment_type' => "{$framework}_SNAPSHOT",
             'source' => 'Assessment',

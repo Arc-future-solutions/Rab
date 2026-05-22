@@ -200,4 +200,74 @@ class AssessmentAiPayloadBuilderTest extends TestCase
         $this->assertSame('D11 — Service Tooling, CMDB & Knowledge Management', $payload['domain_names']['D11']);
         $this->assertArrayNotHasKey('pillar_names', $payload);
     }
+
+    public function test_full_payload_keeps_only_report_relevant_question_evidence(): void
+    {
+        $client = Client::create([
+            'company_name' => 'Payload Co',
+            'primary_contact' => 'Pat Sponsor',
+        ]);
+
+        $assessment = Assessment::create([
+            'client_id' => $client->id,
+            'name' => 'Tier 1 Programme',
+            'type' => 'PIR',
+            'report_tier' => 'Tier 1 Rapid',
+            'overall_score' => 3.2,
+            'rag_status' => 'Amber',
+            'status' => 'draft',
+        ]);
+
+        $framework = AssessmentFramework::create([
+            'code' => 'PIR',
+            'name' => 'Programme Integrity Review',
+        ]);
+
+        foreach (['P1', 'P2', 'P3'] as $code) {
+            AssessmentPillar::create([
+                'framework_id' => $framework->id,
+                'code' => $code,
+                'name' => $code,
+                'weight' => 1,
+            ]);
+        }
+
+        foreach ([
+            ['P1.F1', 'P1', false],
+            ['P2.F1', 'P2', false],
+            ['P3.F1', 'P3', true],
+        ] as [$questionCode, $pillarCode, $isCompliance]) {
+            $pillar = AssessmentPillar::where('code', $pillarCode)->first();
+
+            AssessmentQuestionBank::create([
+                'framework_id' => $framework->id,
+                'pillar_id' => $pillar->id,
+                'level' => 'full',
+                'question_code' => $questionCode,
+                'question_text' => 'Question',
+                'is_compliance' => $isCompliance,
+            ]);
+        }
+
+        foreach ([
+            ['P1.F1', 'P1', 2],
+            ['P2.F1', 'P2', 4],
+            ['P3.F1', 'P3', 5],
+        ] as [$questionCode, $pillarCode, $score]) {
+            AssessmentQuestionResponse::create([
+                'assessment_id' => $assessment->id,
+                'pillar_name' => "{$pillarCode} — Test",
+                'question' => "{$questionCode}: Question",
+                'score' => $score,
+                'evidence_note' => "{$questionCode} evidence",
+            ]);
+        }
+
+        $payload = (new AssessmentAiPayloadBuilder())->buildFullPayload($assessment);
+
+        $this->assertSame(['P1.F1', 'P3.F1'], array_column($payload['question_responses'], 'id'));
+        $this->assertArrayHasKey('P1.F1', $payload['evidence_notes']);
+        $this->assertArrayHasKey('P3.F1', $payload['evidence_notes']);
+        $this->assertArrayNotHasKey('P2.F1', $payload['evidence_notes']);
+    }
 }

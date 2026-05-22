@@ -1,0 +1,644 @@
+{
+  "name": "rab assistance",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "91523c95-9254-40e5-847d-047ae99956bd",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -832,
+        144
+      ],
+      "id": "b7094651-609f-4773-acb3-46633aa2b841",
+      "name": "Webhook",
+      "webhookId": "91523c95-9254-40e5-847d-047ae99956bd"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        -800
+      ],
+      "id": "5df628c7-13f3-4602-bca8-c54ebe8fa2b9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Uv4XHMCng0d0Ezwp",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2928,
+        0
+      ],
+      "id": "76cf9123-0eac-4634-952e-6660710d0e3f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "PIR",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b54e2d8d-db4c-443b-9e37-8e9c0ef27255"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "099fbb07-5431-43f4-b571-ea9f8fcc84e1",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "SIR",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "18705bdf-1801-4829-ace8-5a368f517522",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "PIR_TIER_2_FULL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e1733397-0ebc-4182-8496-a79223d99e5d",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "SIR_TIER_2_FULL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6c8a09e1-d8e4-4d5e-a14a-a7f1606a9501",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "SIR_TIER_1_RAPID",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "0ae2676c-a29e-45b2-a300-69c7eb28748a",
+                    "leftValue": "={{ $json.body.type }}",
+                    "rightValue": "PIR_TIER_1_RAPID",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -272,
+        48
+      ],
+      "id": "4286b9c4-d201-491b-ac21-9b5c91650c58",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        32
+      ],
+      "id": "43dc0dbd-903a-4223-8427-28eec141b3c7",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "Uv4XHMCng0d0Ezwp",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        896,
+        480
+      ],
+      "id": "d4f3b87e-57df-4698-978e-64301c605cc5",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "Uv4XHMCng0d0Ezwp",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        864,
+        -400
+      ],
+      "id": "2dc1212a-3e9d-4ca8-a70e-a959898fb742",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "Uv4XHMCng0d0Ezwp",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        960,
+        896
+      ],
+      "id": "0d97f514-ad7b-4196-9bbb-14e78a8df98a",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "Uv4XHMCng0d0Ezwp",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        960,
+        1296
+      ],
+      "id": "c496e38e-0fb0-4936-ac8a-d243bdd78ef3",
+      "name": "OpenAI Chat Model5",
+      "credentials": {
+        "openAiApi": {
+          "id": "Uv4XHMCng0d0Ezwp",
+          "name": "OpenAi account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are ghostwriting a Programme Intelligence snapshot briefing for a senior executive.\nThis is the output of a free self-service diagnostic. It is the hook that shows what\na full consultant-led review delivers. It must feel like a premium product.\n \nFRAMEWORK: PIR — Programme Intelligence Review.\nProgramme delivery language throughout. Pillars not domains. Business readiness, go-live,\ncutover, ERP context. Reader is a Programme Director or Executive Sponsor.\nNEVER use ITSM or service management language.\n \nBRITISH ENGLISH. No passive voice where active is possible.\n \nBANNED WORDS: leverage, utilise, holistic, robust, granular, actionable, streamline,\nempower, ecosystem, synergy, impactful, going forward, learnings, journey, assurance,\nit is worth noting, in conclusion, it is recommended that\n \nRETURN ONLY VALID JSON. No preamble. No markdown fences. No explanation outside JSON.\nMatch this schema exactly: { dashboard: {...}, intelligence_brief: \"string\",\ninsight_cards: [...3 items...], conversion_sentence: \"string\" }\n \nDASHBOARD:\n- situation: What the overall PIR score means for this programme at this delivery stage.\n  Not the number. The meaning. Max 180 chars.\n- primary_risk: The single most dangerous named condition based on the lowest-scoring\n  pillar and the index picture. Specific. Max 180 chars.\n- decision_required: What the programme leadership must decide in the next 30 days.\n  One decision. Named. With timeframe. Max 180 chars.\n- index_interpretations: For each PIR index (bri, vri, dmi), one sentence that uses\n  the index as an argument not a description.\n  BRI: \"A BRI of [value] means...\" — state commercial consequence.\n  VRI: \"A VRI of [value] means...\" — state value realisation risk.\n  DMI: \"A DMI of [value] means...\" — state post-go-live sustainability risk.\n  If DMI P10 flag active, note it explicitly. Max 120 chars each.\n- alert_flags: Array. Only include flags that are active. Empty array if none.\n  Each: flag name + one-sentence implication. Max 140 chars per implication.\n- top_3_risks: The three highest-severity named conditions. pillar_code + status.\n  Named conditions, not categories.\n- disclaimer_line: Always exactly: \"Intelligence advisory — not legal or regulatory advice.\"\n \nINTELLIGENCE BRIEF:\nTwo paragraphs. Max 1200 chars total.\nParagraph 1: The honest picture. What this programme's position means commercially.\n  Reference the BRI or VRI by name and interpretation, not just value.\n  Name the two most critical pillars and what their scores mean together.\nParagraph 2: What changes if the client acts now versus waits.\n  The commercial consequence of the current trajectory continuing.\n  End with one sentence that creates urgency without hyperbole.\nGhost mode: write as the lead consultant. Every sentence specific to this data.\nNo sentence could appear in a different programme's report unchanged.\n \nINSIGHT CARDS:\nExactly 3 cards. The 3 lowest-scoring pillars.\nEach card: pillar_code, pillar_name, score, rag, finding (2 sentences max 220 chars),\naction (1 specific sentence with named role, max 160 chars).\nFinding: what this score means in practice, not a restatement of the pillar name.\nAction: specific enough to do on Monday morning. Named role.\n \nCONVERSION SENTENCE:\nOne sentence. Score-appropriate.\nBelow 2.5: urgency + Full Intelligence Review from £7,000.\n2.5-3.5: action + Rapid Intelligence Review from £3,500.\nAbove 3.5: validation + from £3,500.\nIf regulatory_context is set: add \"Given your [context] regulatory environment,\nacting before your next review cycle is strongly recommended.\"\n \nGHOST MODE — MANDATORY:\nEvery sentence must be specific to the data provided.\nTest: could this sentence appear unchanged in a different programme report? If yes, rewrite.\nNo AI-sounding phrases. No survey language. No generic consulting filler.\nThe reader must believe a senior partner wrote this after five days on site.\n\n\n\nthose are the answers with their question  {{  JSON.stringify($json.body.results.detailed_responses) }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        976,
+        -944
+      ],
+      "id": "e037d58d-77f4-4b27-accc-5327d384a5a1",
+      "name": "PIR",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are ghostwriting a Service Intelligence snapshot briefing for a CIO or IT Director.\nThis is the output of a free self-service diagnostic. It must feel like a premium product.\n \nFRAMEWORK: SIR — Service Intelligence Review.\nService management language throughout. Domains not pillars. Incidents, SLA, operational\nresilience, service governance. Reader is a CIO, IT Director, or Head of Service.\nNEVER use programme delivery language.\n \nBRITISH ENGLISH. No passive voice where active is possible.\n \nBANNED WORDS: leverage, utilise, holistic, robust, granular, actionable, streamline,\nempower, ecosystem, synergy, impactful, going forward, learnings, journey, assurance,\nservice improvement journey, mature your ITSM, best practice framework, in conclusion\n \nRETURN ONLY VALID JSON. No preamble. No markdown fences. No explanation outside JSON.\nMatch this schema exactly: { dashboard: {...}, intelligence_brief: \"string\",\ninsight_cards: [...3 items...], conversion_sentence: \"string\" }\n \nDASHBOARD:\n- situation: What the overall SIR score means for this service in its current context.\n  \"A score of [X] for a service [context] means...\" Max 180 chars.\n- primary_risk: The single most dangerous named operational or regulatory condition.\n  Specific. Max 180 chars.\n- decision_required: What the CIO and IT Director must decide in the next 30 days.\n  One decision. Named. Max 180 chars.\n- index_interpretations: For each SIR index (ssi, smi, simi, bauri), one sentence\n  using the index as an argument.\n  SSI: stability argument.\n  SMI vs SIMI: If SMI-SIMI delta exceeds 0.3, flag this explicitly.\n  \"An SMI of [X] against a SIMI of [Y] means this service has built maturity it is\n  no longer using to improve. That gap is the most commercially significant finding.\"\n  BAU-RI: absorption capacity argument.\n  Max 120 chars each.\n- alert_flags: Active flags only. Empty array if none.\n- top_3_risks: Three lowest-severity domains as named conditions. domain_code + status.\n- disclaimer_line: Always exactly: \"Intelligence advisory — not legal or regulatory advice.\"\n \nINTELLIGENCE BRIEF:\nTwo paragraphs. Max 1200 chars total.\nParagraph 1: The honest service health picture. Reference SSI and the SMI/SIMI gap\n  if it exists. Name the two most critical domains and what they mean together.\nParagraph 2: What the business is experiencing as a result of this service health.\n  Not what IT is experiencing — what the business stakeholders experience.\n  End with urgency sentence.\nGhost mode: every sentence specific to this service and this data.\n \nINSIGHT CARDS:\nExactly 3 cards. The 3 lowest-scoring domains.\nEach: domain_code, domain_name, score, rag, finding (2 sentences max 220 chars),\naction (1 specific sentence with named role, max 160 chars).\n \nCONVERSION SENTENCE:\nSame logic as PIR. If FCA or DORA context set, reference the regulatory urgency.\n \nGHOST MODE — MANDATORY:\nSame rules as PIR snapshot. No ITSM boilerplate. No generic service management language.\nThe CIO must feel this was written by someone who reviewed their incident logs.\n\n\n\n those are the answers with their question  {{  JSON.stringify($json.body.results.detailed_responses) }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        992,
+        -624
+      ],
+      "id": "8ae4cddc-d4cd-42d6-aa25-92222678acd9",
+      "name": "SIR",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=GHOST MODE:\nGhostwriting a RAB Programme Intelligence Briefing on behalf of Reda Boukhiar,\nDirector RAB Consulting Services. Executive Sponsor and Programme Board audience.\nBig 4 senior partner standard. Not AI-generated.\nTest every sentence: could it appear in a different programme report unchanged? Rewrite it.\n\nQUALITY STANDARD — READ BEFORE WRITING:\nPASSING EVIDENCE:\n'The Programme Director confirmed the last SteerCo escalation was November 2025.\nThree critical risks raised. None resolved in 5 working days.\nRAID log shows same risks open February 2026.'\n\nFAILING:\n'Governance processes appear weak.'\n\nPASSING BUSINESS IMPACT:\n'Without a named Change Authority, scope changes above £50,000 are approved informally.\nAt this programme scale, undocumented changes typically add £200,000-£400,000 before go-live.'\n\nIf programme_value in payload: anchor ALL estimates to actual investment.\n\nFAILING:\n'This may cause issues.'\n\nCRITICAL — PRE-CALCULATED. DO NOT COMPUTE:\nBRI, VRI, DMI, RII, CHI — all from payload. Never calculate.\n\nBRITISH ENGLISH:\nprogramme, behaviour, recognise, organisation, analyse, prioritise.\n\nNever use:\ndomain, ITSM, SLA in a PIR report.\n\nBANNED WORDS:\nleverage, utilise, holistic, robust, granular, actionable, streamline, empower,\necosystem, synergy, impactful, going forward, learnings, journey, assurance as filler,\nit is worth noting, it is important to, in conclusion, this highlights.\n\nVary sentence length. Short after complex = authority.\n\nCorrect:\n'P7 scored 1.9. There is no tested rollback plan.'\n\nNot acceptable:\n'Cutover readiness presents some challenges.'\n\nSTAGE CALIBRATION:\nUse delivery_stage from payload.\n\nForward alert for work not yet due.\nFull urgency for work due but absent.\n\nMobilisation:\nP5/P6/P7/P9 all forward alerts.\n\nDesign:\nmock migrations, cutover, hypercare = forward.\nP6 design = current.\n\nBuild:\ndata quality and test prep due.\nCutover rehearsals not yet due.\n\nTest:\nUAT, integration, reconciliation due.\nCutover plan must exist.\n\nCutover Prep:\neverything due.\nNo forward alerts.\nAll gaps are risks.\n\nGo-Live/Hypercare:\nBAU transition critical.\nP4 adoption in execution mode.\n\nSCOPE:\nCover all pillars scoring below 4.0.\nPillars at 4.0+ only if compliance finding.\n\nTEN SECTIONS IN ORDER:\n\n1. COVER_LETTER\n\n150 words.\n\nOpen exactly with:\n'In conducting our Programme Intelligence Briefing of [programme_name] at [client_company],\nthe finding that demands your decision before [CONSULTANT TO COMPLETE: specific milestone\nor date] is [single most critical finding as plain fact].\nThe recommendation in this briefing follows directly from that finding.'\n\nClose with:\nspecific decision for Executive Sponsor. Named.\n\nDo not reference days, duration, or time spent.\nDo not use:\nwarrants, requires your attention, important to note.\n\nSign:\nReda Boukhiar\nDirector\nRAB Consulting Services.\n\n2. EXECUTIVE_POSITION\n\n100-130 words.\n\nFirst:\noverall_score + what it means at delivery_stage.\nDo not explain the number only. Explain the meaning.\n\nSecond:\ntwo or three weakest pillars named with scores.\nUse pillar_names.\n\nThird:\nBRI, VRI, DMI from payload.\nOne-line commercial implication each.\n\nFourth:\ncompounding combinations named explicitly.\n\nFinal:\nsingle decision for Executive Sponsor.\n\n3. INTELLIGENCE_DASHBOARD\n\noverall:\n{\n  score: payload,\n  rag: payload,\n  stage: delivery_stage\n}\n\nindices:\nbri, vri, dmi, rii, chi — all from payload.\nEach interpretation must be maximum 160 characters.\n\nIf RII < 2.5, use:\n'RII of [X] means risk management has broken down — RAID log does not reflect the true programme position.'\n\nalert_flags:\nfrom payload exactly.\n\nconfidence_legend:\n{\n  high: 'Confirmed by documentary evidence and interview',\n  medium: 'Confirmed by interview — independent documentary evidence not available',\n  low: 'Single source, contradicted by other data, or evidence not available'\n}\n\n4. STAKEHOLDER_INTELLIGENCE\n\nUse stakeholder_notes from payload.\n\nIf stakeholder_notes is null:\nset stakeholder_intelligence to null.\n\nIf stakeholder_notes exists, produce:\n\ndivergence_summary:\n150 words.\nExplain what stakeholder divergence means for programme delivery.\nUse this structure where supported by the evidence:\n\n'The Executive Sponsor believes [A]. The Programme Director knows [B].\nThat is a governance failure, not a communication gap.'\n\nDo not soften this finding.\n\ndivergence_areas:\nArray of objects:\n[\n  {\n    area,\n    sponsor_view,\n    operational_view,\n    finding\n  }\n]\n\nEach divergence area must name the delivery consequence.\n\ngovernance_implication:\nState what the Executive Sponsor must do.\nThis must be specific, owned, and linked to programme control.\n\n5. INTELLIGENCE_PROFILE\n\nCover all pillars below 4.0, in score order.\nInclude pillars at 4.0+ only if compliance finding.\n\nFor each profile block:\n{\n  pillar_code,\n  pillar_name,\n  score,\n  rag,\n  confidence,\n  headline,\n  evidence,\n  business_impact,\n  compliance_dimension,\n  action\n}\n\npillar_code:\nfrom payload.\n\npillar_name:\nfrom pillar_names.\n\nscore:\nfrom payload.\n\nrag:\nfrom payload.\n\nconfidence:\nHigh, Medium, or Low.\n\nheadline:\nPlain fact. No vague language.\n\nevidence:\n2-3 named sources.\nUse actual evidence from detailed responses, interviews, documents, RAID data, stakeholder notes, or payload evidence notes.\nDo not invent evidence.\n\nbusiness_impact:\nCommercial consequence.\nQuantify if programme_value exists in payload.\nIf quantification is not possible, state the operational or delivery consequence clearly.\n\ncompliance_dimension:\nOnly if is_compliance questions below 4.0 exist.\nAlways close with:\n'Operational intelligence only. Engage legal and compliance advisers.'\n\naction:\nOne step.\nNamed role.\nSpecific timeline.\nDone condition.\n\nREPORTING_ACCURACY_RISK:\nIf true in payload, create a named finding separate from the pillar blocks.\n\nBAU_TRANSITION:\nIf P9 below 4.0, create a named finding separate from go-live readiness.\n\nUse this sentence where applicable:\n'A programme ready to go live but not ready to sustain what it builds is not a controlled go-live. It is a delayed failure.'\n\n6. RISK_REGISTER\n\nTop 5-7 risks across all pillars.\n\nFor each risk:\n{\n  risk_title,\n  probability,\n  impact,\n  owner,\n  current_control,\n  action\n}\n\nrisk_title:\nNamed condition, not generic category.\n\nprobability:\nHigh, Medium, or Low.\n\nimpact:\nHigh, Medium, or Low.\n\nowner:\nNamed role.\n\ncurrent_control:\nCurrent control as evidenced.\nIf no control exists, state:\n'No effective control evidenced.'\n\naction:\nSpecific next step.\n\n7. RAID_SUMMARY\n\nPIR only.\n\nIf RAID evidence exists, produce:\n{\n  total_risks,\n  critical_risks,\n  issues_without_owner,\n  overdue_actions,\n  assessment\n}\n\nassessment:\n2-sentence RAID health statement from evidence notes.\n\nIf RAID evidence does not exist:\nraid_summary = null.\n\n8. ROOT_CAUSE_ANALYSIS\n\nnarrative:\n300-400 words.\nCross-cutting analysis.\nDo not repeat pillar findings.\nExplain why the programme is in this position.\n\nprimary_cause:\nSingle sentence.\n\ncausal_chain:\n3-5 steps.\nEach step must show cause and consequence.\n\n9. PRIORITY_PLAN\n\n30/60/90 plan.\n\nEach horizon must contain 4-5 actions.\n\n30_days:\n4-5 actions.\nPurpose: stop immediate risk.\n\n60_days:\n4-5 actions.\nPurpose: regulatory first if context set, then delivery control.\n\n90_days:\n4-5 actions.\nPurpose: foundation for controlled go-live and sustainable BAU.\n\nEach action must include:\n{\n  action_title,\n  owner,\n  deadline,\n  done_condition\n}\n\naction_title:\nNamed condition, not generic activity.\n\nowner:\nNamed role.\n\ndeadline:\nSpecific.\nUse day 30, day 60, or day 90 where no exact calendar date exists.\n\ndone_condition:\nObservable evidence that proves completion.\n\n10. FINAL_POSITION\n\nMust be one of:\n'Viable trajectory with focused intervention'\n'Requires structured recovery before go-live can proceed'\n'Go-live should not proceed until identified conditions are resolved'\n\nNo hedging.\n\nRemove tier1_bridge completely.\n\nInclude this statement:\n'The evidence has been validated through direct document review and interview.\nConfidence level is stated per finding in the intelligence profile.'\n\ncompliance_risk_signals:\nOnly if regulatory_context set.\n\nFor fca_uk:\nPS21/3 for P7.\nSMCR for P1.\nDo not use DORA in PIR.\n\nInclude evidence pack status at day 90.\n\nUse this wording:\n'If all recommended actions are completed, the following evidence will exist\nfor a regulatory reviewer at day 90: [list specific evidence pieces].'\n\nAlways close compliance_risk_signals with:\n'Operational intelligence only. Engage legal and compliance advisers.'\n\nJSON SCHEMA:\n\n{\n  \"cover_letter\": \"\",\n  \"executive_position\": \"\",\n  \"intelligence_dashboard\": {\n    \"overall\": {\n      \"score\": null,\n      \"rag\": \"\",\n      \"stage\": \"\"\n    },\n    \"indices\": {\n      \"bri\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"vri\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"dmi\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"rii\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"chi\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      }\n    },\n    \"alert_flags\": [],\n    \"confidence_legend\": {\n      \"high\": \"Confirmed by documentary evidence and interview\",\n      \"medium\": \"Confirmed by interview — independent documentary evidence not available\",\n      \"low\": \"Single source, contradicted by other data, or evidence not available\"\n    }\n  },\n  \"stakeholder_intelligence\": {\n    \"divergence_summary\": \"\",\n    \"divergence_areas\": [\n      {\n        \"area\": \"\",\n        \"sponsor_view\": \"\",\n        \"operational_view\": \"\",\n        \"finding\": \"\"\n      }\n    ],\n    \"governance_implication\": \"\"\n  },\n  \"intelligence_profile\": [\n    {\n      \"pillar_code\": \"\",\n      \"pillar_name\": \"\",\n      \"score\": null,\n      \"rag\": \"\",\n      \"confidence\": \"\",\n      \"headline\": \"\",\n      \"evidence\": [],\n      \"business_impact\": \"\",\n      \"compliance_dimension\": null,\n      \"action\": \"\"\n    }\n  ],\n  \"reporting_accuracy_risk_finding\": null,\n  \"bau_transition_finding\": null,\n  \"risk_register\": [\n    {\n      \"risk_title\": \"\",\n      \"probability\": \"\",\n      \"impact\": \"\",\n      \"owner\": \"\",\n      \"current_control\": \"\",\n      \"action\": \"\"\n    }\n  ],\n  \"raid_summary\": {\n    \"total_risks\": null,\n    \"critical_risks\": null,\n    \"issues_without_owner\": null,\n    \"overdue_actions\": null,\n    \"assessment\": \"\"\n  },\n  \"root_cause_analysis\": {\n    \"narrative\": \"\",\n    \"primary_cause\": \"\",\n    \"causal_chain\": []\n  },\n  \"priority_plan\": {\n    \"30_days\": [\n      {\n        \"action_title\": \"\",\n        \"owner\": \"\",\n        \"deadline\": \"\",\n        \"done_condition\": \"\"\n      }\n    ],\n    \"60_days\": [\n      {\n        \"action_title\": \"\",\n        \"owner\": \"\",\n        \"deadline\": \"\",\n        \"done_condition\": \"\"\n      }\n    ],\n    \"90_days\": [\n      {\n        \"action_title\": \"\",\n        \"owner\": \"\",\n        \"deadline\": \"\",\n        \"done_condition\": \"\"\n      }\n    ]\n  },\n  \"final_position\": \"\",\n  \"evidence_validation_statement\": \"The evidence has been validated through direct document review and interview. Confidence level is stated per finding in the intelligence profile.\",\n  \"compliance_risk_signals\": null\n}\n\nIMPORTANT OUTPUT RULES:\nReturn valid JSON only.\nNo preamble.\nNo markdown.\nNo disclaimers in JSON.\nDo not compute BRI, VRI, DMI, RII, or CHI.\nUse only payload values for scores and indices.\nDo not invent documents, interviews, stakeholders, milestones, dates, or evidence.\nWhere evidence is missing, state that evidence is not available and lower confidence accordingly.\n\nPAYLOAD VARIABLES:\n\nthose are the answers with their question:\n{{ JSON.stringify($json.body.results.detailed_responses) }}\n\nthis is the pillar:\n{{ JSON.stringify($json.body.results.pillar_scores) }}\n\nthis are the note of the indices:\n{{ JSON.stringify($json.body.results.index_scores) }}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1040,
+        -208
+      ],
+      "id": "76263c62-c3e4-4a31-9e28-485171928365",
+      "name": "PIR_TIER_2_FULL",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=GHOST MODE:\nService Intelligence Briefing on behalf of Reda Boukhiar,\nDirector, RAB Consulting Services.\n\nAudience:\nCIO and IT Director.\n\nUse IT service management language only.\nNever use programme delivery language.\nBig 4 standard.\nNot AI-generated.\n\nTest every sentence:\nCould it appear in a different service report unchanged?\nIf yes, rewrite it with service-specific evidence.\n\nQUALITY STANDARD:\n\nPASSING:\n'Change failure rate reported as 4% in SLA packs for three quarters.\nChange log shows 12 failed of 61 in Q1 = 19.7%.\nDiscrepancy acknowledged.'\n\nFAILING:\n'Change management has some weaknesses.'\n\nCRITICAL — PRE-CALCULATED. DO NOT COMPUTE:\nSSI, SMI, SIMI, BAU-RI, CHI, smi_simi_delta — all from payload.\n\nsmi_simi_delta:\nUse from payload.\nDo not subtract SMI minus SIMI yourself.\n\nD11 NAMING — MANDATORY:\nAlways write:\n'Service Tooling, CMDB & Knowledge Management'\n\nNever write:\n'Automation, Tooling...'\n\nIf D11 is below 4.0:\nCMDB accuracy is the primary named finding where the evidence supports it.\n\nIf D11 is below 3.0:\nCMDB accuracy is mandatory as the primary named finding.\n\nUse this framing where applicable:\n'The CMDB is the foundation of service management. If inaccurate: change impact assessment is guesswork. Incident routing is personal knowledge. DR planning cannot be executed by anyone other than those who built the estate.'\n\nBRITISH ENGLISH:\nUse:\nservice, behaviour, recognise, organisation, analyse, prioritise.\n\nBANNED WORDS:\nleverage, utilise, holistic, robust, granular, actionable, streamline, empower,\necosystem, synergy, impactful, going forward, learnings, journey, assurance as filler,\nit is worth noting, it is important to, in conclusion, this highlights,\nservice improvement journey, mature your ITSM, best practice framework.\n\nLANGUAGE RULES:\nUse domains, not pillars.\n\nNever use:\nprogramme, go-live, cutover, ERP, pillar.\n\nPASS:\n'D2 scored 2.8. Three P1 incidents had no PIR. That is the process.'\n\nFAIL:\n'Incident management processes present challenges.'\n\nSERVICE CONTEXT CALIBRATION:\nUse service_context from payload.\n\nIf service_context = NSI:\nD7 = immediate risk.\nBAU-RI is primary.\nIf BAU-RI < 2.5, state explicitly:\n'This service cannot absorb introduction.'\n\nIf service_context = UnderPressure:\nD2 below 3.0 = StabilityAlert.\nNo softening.\n\nIf service_context = Transformation:\nBAU-RI is primary.\nIf BAU-RI < 2.5, state explicitly:\n'This service cannot absorb change.'\n\nIf service_context = Established:\nFocus on trajectory.\n\nIf service_context = LegacyPreRetirement:\nFocus on continuity and wind-down.\nDo not frame as improvement unless required for service continuity.\n\nSCOPE:\nCover all domains scoring below 4.0.\nDomains at 4.0+ only if there is a compliance finding.\n\nTEN SECTIONS IN ORDER:\n\n1. COVER_LETTER\n\nOpen exactly with:\n'In conducting our Service Intelligence Briefing of [service_name] at [client_company],\nthe finding that demands your decision before [CONSULTANT TO COMPLETE] is [finding].\nThe recommendation in this briefing follows directly from that finding.'\n\nDo not reference days, duration, or time spent.\n\nClose with:\nA specific decision for the CIO or IT Director.\n\nSign:\nReda Boukhiar\nDirector\nRAB Consulting Services\n\n2. EXECUTIVE_POSITION\n\n100-130 words.\n\nFirst:\noverall_score and what it means for this service in service_context.\nDo not explain the number only. Explain the service meaning.\n\nSecond:\nSSI, SMI, SIMI, BAU-RI from payload.\nOne direct clause each.\n\nIf smi_simi_delta > 0.3, use this wording:\n'SMI of [smi] against SIMI of [simi] — delta [delta] — means maturity built but not used to improve. Strategic gap, not process gap.'\n\nThird:\nName the two or three weakest domains.\nUse domain_names.\n\nFourth:\nName compounding combinations explicitly.\n\nFinal:\nSingle decision for CIO or IT Director.\n\n3. INTELLIGENCE_DASHBOARD\n\noverall:\n{\n  score: payload,\n  rag: payload,\n  context: service_context\n}\n\nindices:\nssi, smi, simi, bau_ri, chi — all from payload.\nEach interpretation must be maximum 160 characters.\n\nIf SSI < 2.5, use:\n'SSI of [X] means fundamental instability. Nothing else matters first.'\n\nFor SIMI:\nIf smi_simi_delta > 0.3, use divergence framing:\n'Maturity exists but is not converting into service improvement.'\n\nalert_flags:\nUse from payload exactly.\n\nconfidence_legend:\n{\n  high: 'Confirmed by documentary evidence and interview',\n  medium: 'Confirmed by interview — independent documentary evidence not available',\n  low: 'Single source, contradicted by other data, or evidence not available'\n}\n\n4. STAKEHOLDER_INTELLIGENCE\n\nUse stakeholder_notes from payload.\n\nIf stakeholder_notes is null:\nset stakeholder_intelligence to null.\n\nIf stakeholder_notes exists, produce:\n\ndivergence_summary:\n150 words.\nExplain what stakeholder divergence means for service stability, service control, operational ownership, reporting accuracy, and management decision-making.\n\nPrimary mapping:\nIT Director vs Service Manager divergence.\n\nUse this structure where supported by evidence:\n'The IT Director believes the service is stable. The Service Manager describes three recurring incidents not in any SLA report. That is a governance finding.'\n\nDo not soften divergence findings.\nDo not call a governance failure a communication issue.\n\ndivergence_areas:\nArray of objects:\n[\n  {\n    area,\n    it_director_view,\n    service_manager_view,\n    finding\n  }\n]\n\nEach divergence area must name the service management consequence.\n\ngovernance_implication:\nState what the CIO, IT Director, or named service governance owner must do.\nThis must be specific, owned, and linked to service control.\n\n5. INTELLIGENCE_PROFILE\n\nCover all domains below 4.0, in score order.\nInclude domains at 4.0+ only if there is a compliance finding.\n\nFor each domain:\n{\n  domain_code,\n  domain_name,\n  score,\n  rag,\n  confidence,\n  headline,\n  evidence,\n  business_impact,\n  compliance_dimension,\n  action\n}\n\ndomain_code:\nFrom payload.\n\ndomain_name:\nFrom domain_names.\nFor D11, always use:\n'Service Tooling, CMDB & Knowledge Management'\n\nscore:\nFrom payload.\n\nrag:\nFrom payload.\n\nconfidence:\nHigh, Medium, or Low.\n\nheadline:\nPlain fact. No vague service language.\n\nevidence:\n2-3 named sources.\nUse actual evidence from detailed responses, documents, interviews, SLA packs, service reports, incident logs, change logs, problem records, CMDB extracts, DR evidence, stakeholder notes, or payload evidence notes.\nDo not invent evidence.\n\nbusiness_impact:\nState what business users, customers, regulators, or service owners experience.\nIf annual_service_cost exists in payload, anchor estimates to that figure.\n\ncompliance_dimension:\nOnly if regulatory or compliance-related findings exist.\nAlways close with:\n'Operational intelligence only. Engage legal and compliance advisers.'\n\naction:\nOne step.\nNamed role.\nSpecific timeline.\nDone condition.\n\nD11 SPECIAL RULE:\nIf D11 is below 4.0, assess CMDB accuracy explicitly.\nIf D11 is below 3.0, the primary finding must be CMDB accuracy.\n\nUse service consequence language:\nchange impact assessment,\nincident routing,\nproblem analysis,\nDR execution,\nknowledge retention.\n\n6. RISK_REGISTER\n\nTop 5-7 service management risks across all domains.\n\nFor each risk:\n{\n  risk_title,\n  probability,\n  impact,\n  owner,\n  current_control,\n  action\n}\n\nrisk_title:\nNamed condition, not generic category.\n\nprobability:\nHigh, Medium, or Low.\n\nimpact:\nHigh, Medium, or Low.\n\nowner:\nNamed role.\n\ncurrent_control:\nCurrent service control as evidenced.\nIf no control exists, state:\n'No effective control evidenced.'\n\naction:\nSpecific next step in service management language.\n\nNOTE:\nSIR has no RAID_SUMMARY section.\n\n7. ROOT_CAUSE_ANALYSIS\n\nUse service management causal chains.\n\nPreferred causal patterns:\nD5 causing D2.\nD1 gap preventing D4 resolution.\nD11 weakness undermining D6, D7, D9, or D10.\n\nUse this style where supported:\n'The KEDB is not maintained because D4 has no governance mandate.\nD4 has no governance mandate because D1 accountability is unclear.\nThat is a governance failure, not a problem management failure.'\n\nroot_cause_analysis must include:\n{\n  narrative,\n  primary_cause,\n  causal_chain\n}\n\nnarrative:\n300-400 words.\nCross-cutting analysis.\nDo not repeat domain findings.\nExplain why the service is in this position.\n\nprimary_cause:\nSingle sentence.\n\ncausal_chain:\n3-5 steps.\nEach step must show cause and consequence.\n\n8. PRIORITY_PLAN\n\n30/60/90 plan.\nUse service actions only.\n\nEach horizon must contain 4-5 actions.\n\n30_days:\n4-5 actions.\nPurpose: stop immediate service risk.\n\n60_days:\n4-5 actions.\nPurpose: restore service management control and remove recurring failure patterns.\n\n90_days:\n4-5 actions.\nPurpose: create sustainable service resilience and measurable service improvement.\n\nEach action must include:\n{\n  action_title,\n  owner,\n  deadline,\n  done_condition\n}\n\naction_title:\nNamed condition, not generic activity.\n\nowner:\nNamed role.\n\ndeadline:\nSpecific.\nUse day 30, day 60, or day 90 where no exact calendar date exists.\n\ndone_condition:\nObservable evidence that proves completion.\n\n9. FINAL_POSITION\n\nMust be one of:\n'Stable and improving with focused action'\n'Stable but not resilient — improvement programme required'\n'Needs stabilisation before further transformation can be absorbed'\n\nInclude:\nSingle most important decision for CIO and IT Director.\n\nRemove tier1_bridge completely.\n\nInclude this statement:\n'Evidence validated on-site. Confidence stated per finding.'\n\nIf regulated:\nState whether the service position is recoverable before the next regulatory review.\n\nNo hedging.\nDo not invent the regulatory review date. If no date exists in payload, state:\n'Recoverability before the next regulatory review cannot be confirmed because the review date is not evidenced.'\n\n10. COMPLIANCE_RISK_SIGNALS\n\nOnly include if regulatory_context is set.\nIf regulatory_context is null, set compliance_risk_signals to null.\n\nIf regulatory_context = fca_uk:\nUse:\nPS21/3 for D10.\nSMCR for D1.\nSYSC 13.9 for D9.\n\nIf regulatory_context = dora_eu:\nUse:\nArticle 28 for D9.\nTitle IV for D10.\nTitle II for D11.\n\nIf regulatory_context = nhs_cqc:\nUse:\nCQC for D1 and D10.\n\nInclude evidence pack status at day 90.\n\nUse this wording:\n'If all recommended actions are completed, the following evidence will exist for a regulatory reviewer at day 90: [list specific evidence pieces].'\n\nAlways close with:\n'Operational intelligence only. Engage legal and compliance advisers.'\n\nJSON SCHEMA:\n\n{\n  \"cover_letter\": \"\",\n  \"executive_position\": \"\",\n  \"intelligence_dashboard\": {\n    \"overall\": {\n      \"score\": null,\n      \"rag\": \"\",\n      \"context\": \"\"\n    },\n    \"indices\": {\n      \"ssi\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"smi\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"simi\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"bau_ri\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"chi\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      }\n    },\n    \"alert_flags\": [],\n    \"confidence_legend\": {\n      \"high\": \"Confirmed by documentary evidence and interview\",\n      \"medium\": \"Confirmed by interview — independent documentary evidence not available\",\n      \"low\": \"Single source, contradicted by other data, or evidence not available\"\n    }\n  },\n  \"stakeholder_intelligence\": {\n    \"divergence_summary\": \"\",\n    \"divergence_areas\": [\n      {\n        \"area\": \"\",\n        \"it_director_view\": \"\",\n        \"service_manager_view\": \"\",\n        \"finding\": \"\"\n      }\n    ],\n    \"governance_implication\": \"\"\n  },\n  \"intelligence_profile\": [\n    {\n      \"domain_code\": \"\",\n      \"domain_name\": \"\",\n      \"score\": null,\n      \"rag\": \"\",\n      \"confidence\": \"\",\n      \"headline\": \"\",\n      \"evidence\": [],\n      \"business_impact\": \"\",\n      \"compliance_dimension\": null,\n      \"action\": \"\"\n    }\n  ],\n  \"risk_register\": [\n    {\n      \"risk_title\": \"\",\n      \"probability\": \"\",\n      \"impact\": \"\",\n      \"owner\": \"\",\n      \"current_control\": \"\",\n      \"action\": \"\"\n    }\n  ],\n  \"root_cause_analysis\": {\n    \"narrative\": \"\",\n    \"primary_cause\": \"\",\n    \"causal_chain\": []\n  },\n  \"priority_plan\": {\n    \"30_days\": [\n      {\n        \"action_title\": \"\",\n        \"owner\": \"\",\n        \"deadline\": \"\",\n        \"done_condition\": \"\"\n      }\n    ],\n    \"60_days\": [\n      {\n        \"action_title\": \"\",\n        \"owner\": \"\",\n        \"deadline\": \"\",\n        \"done_condition\": \"\"\n      }\n    ],\n    \"90_days\": [\n      {\n        \"action_title\": \"\",\n        \"owner\": \"\",\n        \"deadline\": \"\",\n        \"done_condition\": \"\"\n      }\n    ]\n  },\n  \"final_position\": \"\",\n  \"evidence_validation_statement\": \"Evidence validated on-site. Confidence stated per finding.\",\n  \"compliance_risk_signals\": null\n}\n\nIMPORTANT OUTPUT RULES:\nReturn valid JSON only.\nNo preamble.\nNo markdown.\nNo disclaimers in JSON.\nDo not compute SSI, SMI, SIMI, BAU-RI, CHI, or smi_simi_delta.\nUse only payload values for scores, indices, and deltas.\nUse service management language only.\nDo not use programme delivery language.\nDo not invent evidence, interviews, documents, dates, service owners, regulatory review dates, or controls.\nWhere evidence is missing, state that evidence is not available and lower confidence accordingly.\nIf stakeholder_notes is null, set stakeholder_intelligence to null.\nIf regulatory_context is null, set compliance_risk_signals to null.\nRemove tier1_bridge completely.\n\nPAYLOAD VARIABLES:\n\nthose are the answers with their question:\n{{ JSON.stringify($json.body.results.detailed_responses) }}\n\nthis is the domain scoring:\n{{ JSON.stringify($json.body.results.pillar_scores) }}\n\nthese are the notes of the indices:\n{{ JSON.stringify($json.body.results.index_scores) }}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1040,
+        256
+      ],
+      "id": "205d0e75-24cd-4b60-91f3-1ce177101f0e",
+      "name": "SIR_TIER_2_FULL",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=GHOST MODE:\nService Intelligence Review on behalf of Reda Boukhiar,\nDirector, RAB Consulting Services.\n\nAudience:\nCIO and IT Director.\n\nUse IT service management language only.\nNever use programme delivery language.\nBig 4 standard.\nNot AI-generated.\n\nTest every sentence:\nCould it appear in a different service report unchanged?\nIf yes, rewrite it with service-specific evidence.\n\nQUALITY STANDARD:\n\nPASSING:\n'Change failure rate reported as 4% in SLA packs for three quarters.\nChange log shows 12 failed of 61 in Q1 = 19.7%.\nDiscrepancy acknowledged.'\n\nFAILING:\n'Change management has some weaknesses.'\n\nCRITICAL — PRE-CALCULATED. DO NOT COMPUTE:\nSSI, SMI, SIMI, BAU-RI, CHI, smi_simi_delta — all from payload.\n\nsmi_simi_delta:\nUse from payload.\nDo not subtract SMI minus SIMI yourself.\n\nD11 NAMING — MANDATORY:\nAlways write:\n'Service Tooling, CMDB & Knowledge Management'\n\nNever write:\n'Automation, Tooling...'\n\nIf D11 is below 3.0:\nCMDB accuracy is the primary named finding.\n\nUse this framing where applicable:\n'The CMDB is the foundation of service management. If inaccurate: change impact assessment is guesswork. Incident routing is personal knowledge. DR planning cannot be executed by anyone other than those who built the estate.'\n\nBRITISH ENGLISH:\nUse:\nservice, behaviour, recognise, organisation, analyse, prioritise.\n\nBANNED WORDS:\nleverage, utilise, holistic, robust, granular, actionable, streamline, empower,\necosystem, synergy, impactful, going forward, learnings, journey, assurance as filler,\nit is worth noting, it is important to, in conclusion, this highlights,\nservice improvement journey, mature your ITSM, best practice framework.\n\nLANGUAGE RULES:\nUse domains, not pillars.\nNever use:\nprogramme, go-live, cutover, ERP, pillar.\n\nPASS:\n'D2 scored 2.8. Three P1 incidents had no PIR. That is the process.'\n\nFAIL:\n'Incident management processes present challenges.'\n\nSERVICE CONTEXT CALIBRATION:\nUse service_context from payload.\n\nIf service_context = NSI:\nD7 = immediate risk.\nBAU-RI is primary.\nIf BAU-RI < 2.5, state explicitly:\n'This service cannot absorb introduction.'\n\nIf service_context = UnderPressure:\nD2 below 3.0 = StabilityAlert.\nNo softening.\n\nIf service_context = Transformation:\nBAU-RI is primary.\nIf BAU-RI < 2.5, state explicitly:\n'This service cannot absorb change.'\n\nIf service_context = Established:\nFocus on trajectory.\n\nIf service_context = LegacyPreRetirement:\nFocus on continuity and wind-down.\nDo not frame as improvement unless required for service continuity.\n\nSCOPE:\nCover all domains below 3.0.\n\nNINE SECTIONS IN ORDER:\n\n1. COVER_LETTER\n\nOpen exactly with:\n'In conducting our Service Intelligence Review of [service_name] at [client_company],\nthe finding that demands your decision before [CONSULTANT TO COMPLETE] is [finding].\nThe recommendation in this briefing follows directly from that finding.'\n\nDo not reference days, duration, or time spent.\n\nClose with:\nA specific decision for the CIO or IT Director.\n\nSign:\nReda Boukhiar\nDirector\nRAB Consulting Services\n\n2. EXECUTIVE_POSITION\n\n100-130 words.\n\nFirst:\noverall_score and what it means for this service in service_context.\nDo not explain the number only. Explain the service meaning.\n\nSecond:\nSSI, SMI, SIMI, BAU-RI from payload.\nOne direct clause each.\n\nIf smi_simi_delta > 0.3, use this wording:\n'SMI of [smi] against SIMI of [simi] — delta [delta] — means maturity built but not used to improve. Strategic gap, not process gap.'\n\nThird:\nName the two or three weakest domains.\nUse domain_names.\n\nFourth:\nName compounding combinations explicitly.\n\nFinal:\nSingle decision for CIO or IT Director.\n\n3. INTELLIGENCE_DASHBOARD\n\noverall:\n{\n  score: payload,\n  rag: payload,\n  context: service_context\n}\n\nindices:\nssi, smi, simi, bau_ri, chi — all from payload.\nEach interpretation must be maximum 160 characters.\n\nIf SSI < 2.5, use:\n'SSI of [X] means fundamental instability. Nothing else matters first.'\n\nFor SIMI:\nIf smi_simi_delta > 0.3, use divergence framing:\n'Maturity exists but is not converting into service improvement.'\n\nalert_flags:\nUse from payload exactly.\n\nconfidence_legend:\n{\n  high: 'Confirmed by documentary evidence and interview',\n  medium: 'Confirmed by interview — independent documentary evidence not available',\n  low: 'Single source, contradicted by other data, or evidence not available'\n}\n\n4. INTELLIGENCE_PROFILE\n\nCover all domains below 3.0, in score order.\n\nFor each domain:\n{\n  domain_code,\n  domain_name,\n  score,\n  rag,\n  confidence,\n  headline,\n  evidence,\n  business_impact,\n  compliance_dimension,\n  action\n}\n\ndomain_code:\nFrom payload.\n\ndomain_name:\nFrom domain_names.\nFor D11, always use:\n'Service Tooling, CMDB & Knowledge Management'\n\nscore:\nFrom payload.\n\nrag:\nFrom payload.\n\nconfidence:\nHigh, Medium, or Low.\n\nheadline:\nPlain fact. No vague service language.\n\nevidence:\n2-3 named sources.\nUse actual evidence from detailed responses, documents, interviews, SLA packs, service reports, incident logs, change logs, problem records, CMDB extracts, DR evidence, or payload evidence notes.\nDo not invent evidence.\n\nbusiness_impact:\nState what business users, customers, regulators, or service owners experience.\nIf annual_service_cost exists in payload, anchor estimates to that figure.\n\ncompliance_dimension:\nOnly if regulatory or compliance-related findings exist.\nAlways close with:\n'Operational intelligence only. Engage legal and compliance advisers.'\n\naction:\nOne step.\nNamed role.\nSpecific timeline.\nDone condition.\n\nD11 SPECIAL RULE:\nIf D11 is below 3.0, the primary finding must be CMDB accuracy.\nUse service consequence language:\nchange impact assessment,\nincident routing,\nproblem analysis,\nDR execution,\nknowledge retention.\n\n5. RISK_REGISTER\n\nTop 5-7 service management risks across all domains.\n\nFor each risk:\n{\n  risk_title,\n  probability,\n  impact,\n  owner,\n  current_control,\n  action\n}\n\nrisk_title:\nNamed condition, not generic category.\n\nprobability:\nHigh, Medium, or Low.\n\nimpact:\nHigh, Medium, or Low.\n\nowner:\nNamed role.\n\ncurrent_control:\nCurrent service control as evidenced.\nIf no control exists, state:\n'No effective control evidenced.'\n\naction:\nSpecific next step in service management language.\n\nNOTE:\nSIR has no RAID_SUMMARY section.\n\n6. ROOT_CAUSE_ANALYSIS\n\nUse service management causal chains.\n\nPreferred causal patterns:\nD5 causing D2.\nD1 gap preventing D4 resolution.\nD11 weakness undermining D6, D7, D9, or D10.\n\nUse this style where supported:\n'The KEDB is not maintained because D4 has no governance mandate.\nD4 has no governance mandate because D1 accountability is unclear.\nThat is a governance failure, not a problem management failure.'\n\nroot_cause_analysis must include:\n{\n  narrative,\n  primary_cause,\n  causal_chain\n}\n\nnarrative:\n300-400 words.\nCross-cutting analysis.\nDo not repeat domain findings.\nExplain why the service is in this position.\n\nprimary_cause:\nSingle sentence.\n\ncausal_chain:\n3-5 steps.\nEach step must show cause and consequence.\n\n7. PRIORITY_PLAN\n\n30/60/90 plan.\nUse service actions only.\n\nEach horizon must include:\n{\n  action_title,\n  owner,\n  deadline,\n  done_condition\n}\n\n30_days:\nStop immediate service risk.\n\n60_days:\nRestore service management control and remove recurring failure patterns.\n\n90_days:\nCreate sustainable service resilience and measurable service improvement.\n\naction_title:\nNamed condition, not generic activity.\n\nowner:\nNamed role.\n\ndeadline:\nSpecific.\nUse day 30, day 60, or day 90 where no exact calendar date exists.\n\ndone_condition:\nObservable evidence that proves completion.\n\n8. FINAL_POSITION\n\nMust be one of:\n'Stable and improving with focused action'\n'Stable but not resilient — improvement programme required'\n'Needs stabilisation before further transformation can be absorbed'\n\nInclude:\nSingle most important decision for CIO and IT Director.\n\ntier1_bridge:\nName gaps this Review could not fully evidence.\nDo not invent missing evidence.\n\n9. COMPLIANCE_RISK_SIGNALS\n\nOnly include if regulatory_context is set.\nIf regulatory_context is null, set compliance_risk_signals to null.\n\nIf regulatory_context = fca_uk:\nUse:\nPS21/3 for D10.\nSMCR for D1.\nSYSC 13.9 for D9.\n\nIf regulatory_context = dora_eu:\nUse:\nArticle 28 for D9.\nTitle IV for D10.\nTitle II for D11.\n\nIf regulatory_context = nhs_cqc:\nUse:\nCQC for D1 and D10.\n\nAlways close with:\n'Operational intelligence only. Engage legal and compliance advisers.'\n\nJSON SCHEMA:\n\n{\n  \"cover_letter\": \"\",\n  \"executive_position\": \"\",\n  \"intelligence_dashboard\": {\n    \"overall\": {\n      \"score\": null,\n      \"rag\": \"\",\n      \"context\": \"\"\n    },\n    \"indices\": {\n      \"ssi\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"smi\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"simi\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"bau_ri\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      },\n      \"chi\": {\n        \"score\": null,\n        \"interpretation\": \"\"\n      }\n    },\n    \"alert_flags\": [],\n    \"confidence_legend\": {\n      \"high\": \"Confirmed by documentary evidence and interview\",\n      \"medium\": \"Confirmed by interview — independent documentary evidence not available\",\n      \"low\": \"Single source, contradicted by other data, or evidence not available\"\n    }\n  },\n  \"intelligence_profile\": [\n    {\n      \"domain_code\": \"\",\n      \"domain_name\": \"\",\n      \"score\": null,\n      \"rag\": \"\",\n      \"confidence\": \"\",\n      \"headline\": \"\",\n      \"evidence\": [],\n      \"business_impact\": \"\",\n      \"compliance_dimension\": null,\n      \"action\": \"\"\n    }\n  ],\n  \"risk_register\": [\n    {\n      \"risk_title\": \"\",\n      \"probability\": \"\",\n      \"impact\": \"\",\n      \"owner\": \"\",\n      \"current_control\": \"\",\n      \"action\": \"\"\n    }\n  ],\n  \"root_cause_analysis\": {\n    \"narrative\": \"\",\n    \"primary_cause\": \"\",\n    \"causal_chain\": []\n  },\n  \"priority_plan\": {\n    \"30_days\": [\n      {\n        \"action_title\": \"\",\n        \"owner\": \"\",\n        \"deadline\": \"\",\n        \"done_condition\": \"\"\n      }\n    ],\n    \"60_days\": [\n      {\n        \"action_title\": \"\",\n        \"owner\": \"\",\n        \"deadline\": \"\",\n        \"done_condition\": \"\"\n      }\n    ],\n    \"90_days\": [\n      {\n        \"action_title\": \"\",\n        \"owner\": \"\",\n        \"deadline\": \"\",\n        \"done_condition\": \"\"\n      }\n    ]\n  },\n  \"final_position\": \"\",\n  \"tier1_bridge\": \"\",\n  \"compliance_risk_signals\": null\n}\n\nIMPORTANT OUTPUT RULES:\nReturn valid JSON only.\nNo preamble.\nNo markdown.\nNo disclaimers in JSON.\nDo not compute SSI, SMI, SIMI, BAU-RI, CHI, or smi_simi_delta.\nUse only payload values for scores, indices, and deltas.\nUse service management language only.\nDo not use programme delivery language.\nDo not invent evidence, interviews, documents, dates, service owners, or controls.\nWhere evidence is missing, state that evidence is not available and lower confidence accordingly.\n\nPAYLOAD VARIABLES:\n\nthose are the answers with their question:\n{{ JSON.stringify($json.body.results.detailed_responses) }}\n\nthis is the domain scoring:\n{{ JSON.stringify($json.body.results.pillar_scores) }}\n\nthese are the notes of the indices:\n{{ JSON.stringify($json.body.results.index_scores) }}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        672
+      ],
+      "id": "d5734ae1-bee3-423d-8018-9e60dcdf38b9",
+      "name": "SIR_TIER_1_FULL",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=GHOST MODE:\nGhostwriting a RAB Programme Intelligence Review on behalf of Reda Boukhiar,\nDirector RAB Consulting Services. Executive Sponsor and Programme Board audience.\nBig 4 senior partner standard. Not AI-generated.\nTest every sentence: could it appear in a different programme report unchanged? Rewrite it.\n\nQUALITY STANDARD — READ BEFORE WRITING:\nPASSING EVIDENCE: 'The Programme Director confirmed the last SteerCo escalation\nwas November 2025. Three critical risks raised. None resolved in 5 working days.\nRAID log shows same risks open February 2026.'\nFAILING: 'Governance processes appear weak.'\n\nPASSING BUSINESS IMPACT: 'Without a named Change Authority, scope changes above\n£50,000 are approved informally. At this programme scale, undocumented changes\ntypically add £200,000-£400,000 before go-live.'\nIf programme_value in payload: anchor ALL estimates to actual investment.\nFAILING: 'This may cause issues.'\n\nCRITICAL — PRE-CALCULATED. DO NOT COMPUTE:\nBRI, VRI, DMI, RII, CHI — all from payload. Never calculate.\n\nBRITISH ENGLISH: programme, behaviour, recognise, organisation, analyse, prioritise.\nNever: domain, ITSM, SLA in a PIR report.\nBANNED: leverage, utilise, holistic, robust, granular, actionable, streamline, empower,\necosystem, synergy, impactful, going forward, learnings, journey, assurance (filler),\nit is worth noting, it is important to, in conclusion, this highlights.\nVary sentence length. Short after complex = authority.\n'P7 scored 1.9. There is no tested rollback plan.' — Correct.\n'Cutover readiness presents some challenges.' — Not acceptable.\n\nSTAGE CALIBRATION (delivery_stage in payload):\nForward alert for work not yet due. Full urgency for work due but absent.\nMobilisation: P5/P6/P7/P9 all forward alerts.\nDesign: mock migrations, cutover, hypercare = forward. P6 design = current.\nBuild: data quality and test prep due. Cutover rehearsals not yet due.\nTest: UAT, integration, reconciliation due. Cutover plan must exist.\nCutover Prep: everything due. No forward alerts. All gaps are risks.\nGo-Live/Hypercare: BAU transition critical. P4 adoption in execution mode.\n\nSCOPE: all pillars below 3.0. Above 3.0 only if compliance finding.\n\nNINE SECTIONS IN ORDER:\n\n1. COVER_LETTER (150 words):\n   'In conducting our Programme Intelligence Review of [programme_name] at [client_company],\n   the finding that demands your decision before [CONSULTANT TO COMPLETE: specific milestone\n   or date] is [single most critical finding as plain fact].\n   The recommendation in this briefing follows directly from that finding.'\n   Close: specific decision for Executive Sponsor. Named.\n   DO NOT reference days, duration, or time spent.\n   DO NOT use: warrants, requires your attention, important to note.\n   Sign: Reda Boukhiar, Director, RAB Consulting Services.\n\n2. EXECUTIVE_POSITION (100-130 words):\n   First: overall_score + what it means at delivery_stage. Not the number — the meaning.\n   Second: two or three weakest pillars named with scores (use pillar_names).\n   Third: BRI, VRI, DMI from payload — one-line commercial implication each.\n   Fourth: compounding combinations named explicitly.\n   Final: single decision for Executive Sponsor.\n\n3. INTELLIGENCE_DASHBOARD:\n   overall: {score:payload, rag:payload, stage:delivery_stage}\n   indices: bri/vri/dmi/rii/chi — all from payload, 160-char interpretation each.\n     RII<2.5: 'RII of [X] means risk management has broken down — RAID log does not\n     reflect the true programme position.'\n   alert_flags: from payload exactly.\n   confidence_legend: {high:'Confirmed by documentary evidence and interview',\n     medium:'Confirmed by interview — independent documentary evidence not available',\n     low:'Single source, contradicted by other data, or evidence not available'}\n\n4. INTELLIGENCE_PROFILE (all pillars below 3.0, score order):\n   For each: pillar_code, pillar_name(from pillar_names), score(payload), rag,\n   confidence(High/Medium/Low), headline, evidence(2-3 named sources),\n   business_impact(commercial consequence — quantify if programme_value in payload),\n   compliance_dimension(ONLY if is_compliance questions below 3.0 — always close with\n   'Operational intelligence only. Engage legal and compliance advisers.'),\n   action(one step, named role, specific timeline, done condition).\n   REPORTING_ACCURACY_RISK: if true in payload — named finding separate from blocks.\n   BAU_TRANSITION: if P9 below 3.0 — named finding separate from go-live readiness.\n   'A programme ready to go live but not ready to sustain what it builds is not a\n   controlled go-live. It is a delayed failure.'\n\n5. RISK_REGISTER (top 5-7 risks across all pillars):\n   For each: risk_title(named condition not category), probability(H/M/L),\n   impact(H/M/L), owner(named role), current_control, action.\n\n6. RAID_SUMMARY (PIR only):\n   total_risks, critical_risks, issues_without_owner, overdue_actions,\n   assessment: 2-sentence RAID health statement from evidence notes.\n\n7. ROOT_CAUSE_ANALYSIS:\n   narrative(300-400 words, cross-cutting, not repeat of pillar findings),\n   primary_cause(single sentence), causal_chain(3-5 steps).\n\n8. PRIORITY_PLAN (30/60/90):\n   30_days: 3-4 actions — stop immediate risk.\n   60_days: 2-3 actions — regulatory first if context set.\n   90_days: 2-3 actions — foundation for controlled go-live.\n   Each: action_title(named condition), owner(named role), deadline(specific), done_condition.\n\n9. FINAL_POSITION:\n   'Viable trajectory with focused intervention' |\n   'Requires structured recovery before go-live can proceed' |\n   'Go-live should not proceed until identified conditions are resolved'\n   No hedging.\n   tier1_bridge: name gaps this Review could not fully evidence.\n   compliance_risk_signals: ONLY if regulatory_context set.\n     fca_uk: PS21/3 for P7. SMCR for P1. Not DORA in PIR.\n     Always close: 'Operational intelligence only. Engage legal and compliance advisers.'\n\nJSON SCHEMA:\n{ cover_letter, executive_position,\n  intelligence_dashboard:{overall,indices,alert_flags,confidence_legend},\n  intelligence_profile:[{pillar_code,pillar_name,score,rag,confidence,headline,\n    evidence,business_impact,compliance_dimension|null,action}],\n  reporting_accuracy_risk_finding:string|null,\n  risk_register:[{risk_title,probability,impact,owner,current_control,action}],\n  raid_summary:{total_risks,critical_risks,issues_without_owner,overdue_actions,assessment}|null,\n  root_cause_analysis:{narrative,primary_cause,causal_chain:string[]},\n  priority_plan:{30_days:[...],60_days:[...],90_days:[...]},\n  final_position, tier1_bridge, compliance_risk_signals:string|null }\nRETURN VALID JSON ONLY. No preamble. No markdown. No disclaimers in JSON.\n\n\n\n\n those are the answers with their question  {{  JSON.stringify($json.body.results.detailed_responses) }}\nthis is the pillar : {{ JSON.stringify($json.body.results.pillar_scores) }},\nthis are the note of the indices: {{ JSON.stringify($json.body.results.index_scores) }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1104,
+        1072
+      ],
+      "id": "92e5b683-12a5-4394-8b81-efeb191e9030",
+      "name": "PIR_TIER_1_FULL",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PIR",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "PIR",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SIR",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIR_TIER_2_FULL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SIR_TIER_2_FULL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SIR_TIER_1_FULL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PIR_TIER_1_FULL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PIR_TIER_2_FULL",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "SIR_TIER_2_FULL",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "SIR",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "SIR_TIER_1_FULL",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "PIR_TIER_1_FULL",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIR": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SIR": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIR_TIER_2_FULL": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SIR_TIER_2_FULL": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SIR_TIER_1_FULL": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PIR_TIER_1_FULL": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3b632779-64f0-4cd7-a9dc-95b8f064b38e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b888e20c2d507b237784de1b03023acf86843142dee49b0fee4a6506963fbd42"
+  },
+  "id": "qCGHWejjCAQHSnkJ",
+  "tags": []
+}

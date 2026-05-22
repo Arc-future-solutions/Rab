@@ -15,6 +15,7 @@ class Lead extends Model
         'index_scores_json' => 'array',
         'answers_json' => 'array',
         'confidence_json' => 'array',
+        'snapshot_report_json' => 'array',
         'alerts_json' => 'array',
         'top_three_insight_areas_json' => 'array',
         'converted_to_client' => 'boolean',

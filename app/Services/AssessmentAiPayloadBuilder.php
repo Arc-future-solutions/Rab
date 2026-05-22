@@ -128,15 +128,22 @@ class AssessmentAiPayloadBuilder
         $assessment->loadMissing(['assessor']);
 
         $framework = strtoupper($assessment->type);
+        $snapshotPayload = $this->buildSnapshotPayload($assessment);
+        $questionResponses = $this->fullReportQuestionResponses(
+            $snapshotPayload['question_responses'] ?? [],
+            $assessment->report_tier
+        );
+
         $payload = [
-            ...$this->buildSnapshotPayload($assessment),
+            ...$snapshotPayload,
+            'question_responses' => $questionResponses,
             'tier' => $assessment->report_tier === 'Tier 2 Full' ? 'Briefing' : 'Review',
             'consultant_name' => $assessment->assessor->name ?? 'Reda Boukhiar',
             'sponsor_name' => $assessment->sponsor_name,
             'interview_count' => $assessment->interview_count,
             'documents_reviewed' => $this->stringList($assessment->documents_reviewed),
             'confidence_level' => $this->overallConfidence($assessment),
-            'evidence_notes' => $this->evidenceNotes($assessment),
+            'evidence_notes' => $this->evidenceNotes($assessment, array_column($questionResponses, 'id')),
             'emerging_issues' => $this->stringList($assessment->top_5_risks),
             'stakeholder_notes' => $assessment->report_tier === 'Tier 2 Full' ? [
                 'sponsor_position' => $assessment->sponsor_position,
@@ -192,6 +199,16 @@ class AssessmentAiPayloadBuilder
         })->values()->toArray();
     }
 
+    private function fullReportQuestionResponses(array $questionResponses, string $tier): array
+    {
+        $threshold = $tier === 'Tier 2 Full' ? 4.0 : 3.0;
+
+        return collect($questionResponses)
+            ->filter(fn (array $response) => (float) ($response['score'] ?? 0) < $threshold || (bool) ($response['is_compliance'] ?? false))
+            ->values()
+            ->all();
+    }
+
     private function complianceQuestionScores(Assessment $assessment): array
     {
         $questionBank = $this->questionBank($assessment);
@@ -207,9 +224,18 @@ class AssessmentAiPayloadBuilder
         return $scores;
     }
 
-    private function evidenceNotes(Assessment $assessment): array
+    private function evidenceNotes(Assessment $assessment, ?array $questionIds = null): array
     {
+        $allowedQuestionIds = $questionIds === null ? null : array_flip($questionIds);
+
         return $assessment->questionResponses
+            ->filter(function ($response) use ($allowedQuestionIds) {
+                if ($allowedQuestionIds === null) {
+                    return true;
+                }
+
+                return array_key_exists($this->questionCode($response->question), $allowedQuestionIds);
+            })
             ->mapWithKeys(fn ($response) => [
                 $this->questionCode($response->question) => [
                     'note' => $response->evidence_note,

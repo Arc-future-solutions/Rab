@@ -1,4 +1,4 @@
-    <?php
+<?php
 
     use Illuminate\Support\Facades\Route;
     use App\Http\Controllers\TeamsMeetingController;
@@ -11,6 +11,7 @@
 
     // Public Calendly booking page
     Route::get('/booking', [BookingController::class, 'index'])->name('booking.index');
+    Route::post('/booking/calendly-scheduled', [BookingController::class, 'calendlyScheduled'])->name('booking.calendly-scheduled');
 
     // Calendly webhook — no auth, no CSRF (excluded in bootstrap/app.php)
     Route::post('/webhooks/calendly', [CalendlyWebhookController::class, 'handle'])->name('webhooks.calendly');
@@ -79,9 +80,10 @@
     Route::post('/contact/submit', [\App\Http\Controllers\ServiceLeadController::class, 'submitContact'])->name('contact.submit');
 
     Route::get('/rapid-consulting/dashboard', [RapidConsultingController::class, 'dashboard'])->name('rapid-consulting.dashboard');
+    Route::get('/rapid-consulting/leads/{lead}/snapshot-report.pdf', [RapidConsultingController::class, 'downloadSnapshotPdf'])->name('rapid-consulting.snapshot-report.pdf');
     Route::get('/rapid-consulting/download', [RapidConsultingController::class, 'download'])->name('rapid-consulting.download');
 
-    // Webhook from n8n — no auth, no CSRF
+    // Legacy n8n callback endpoint — no auth, no CSRF
     Route::post('/webhooks/n8n/receive', [N8nWebhookController::class, 'receive'])
         ->name('rapid-consulting.webhook.receive');
 
@@ -107,6 +109,7 @@
         Route::put('assessments/{assessment}/auto-save', [\App\Http\Controllers\Admin\AssessmentScoringController::class, 'autoSave'])->name('assessments.autosave');
         Route::post('assessments/{assessment}/generate-report', [\App\Http\Controllers\Admin\AssessmentScoringController::class, 'generateReport'])->name('assessments.generateReport');
         Route::post('assessments/{assessment}/export-pdf', [\App\Http\Controllers\Admin\AssessmentScoringController::class, 'exportPdf'])->name('assessments.exportPdf');
+        Route::post('assessments/{id}/regenerate-snapshot-ai', [\App\Http\Controllers\Admin\AssessmentController::class, 'regenerateSnapshotAi'])->name('assessments.regenerateSnapshotAi');
         
         Route::resource('clients', \App\Http\Controllers\Admin\ClientController::class);
         Route::resource('assessments', \App\Http\Controllers\Admin\AssessmentController::class)->except(['create', 'store']);

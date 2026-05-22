@@ -14,12 +14,23 @@ class AdminGenerateReportPromptTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_generate_report_sends_active_prompt_key_and_system_prompt(): void
+    public function test_generate_report_sends_active_prompt_key_and_system_prompt_to_anthropic(): void
     {
+        $this->configureAnthropic();
+
+        $draft = [
+            'cover_letter' => 'Formal transmittal',
+            'executive_position' => 'Recoverable with intervention',
+            'final_position' => 'Proceed with controlled recovery',
+        ];
+
         Http::fake([
-            'n8n.srv1139767.hstgr.cloud/*' => Http::response([
-                'output' => 'Generated report text',
-                'top_5_risks' => ['Risk one'],
+            'example.test/*' => Http::response([
+                'id' => 'msg_123',
+                'content' => [[
+                    'type' => 'text',
+                    'text' => json_encode($draft),
+                ]],
             ]),
         ]);
 
@@ -31,11 +42,17 @@ class AdminGenerateReportPromptTest extends TestCase
 
         Http::assertSent(function ($request) {
             $payload = $request->data();
+            $input = json_decode($payload['messages'][0]['content'][0]['text'], true);
 
-            return $payload['prompt_key'] === 'pir_full_tier2'
-                && $payload['system_prompt'] === config('ai.prompts.pir_full_tier2')
-                && $payload['ai_payload']['tier'] === 'Briefing'
-                && $request->hasHeader('anthropic-beta', 'zdr-2024-10-23');
+            return $request->url() === 'https://example.test/v1/messages'
+                && $request->hasHeader('x-api-key', 'test-anthropic-key')
+                && $request->hasHeader('anthropic-version', '2023-06-01')
+                && $payload['model'] === 'claude-sonnet-4-5'
+                && $payload['system'] === config('ai.prompts.pir_full_tier2')
+                && ! isset($payload['output_config'])
+                && $input['prompt_key'] === 'pir_full_tier2'
+                && $input['ai_payload']['tier'] === 'Briefing'
+                && $input['metadata']['assessment_id'] === 1;
         });
     }
 
@@ -55,6 +72,8 @@ class AdminGenerateReportPromptTest extends TestCase
 
     public function test_generate_report_stores_structured_ai_output_as_draft_json(): void
     {
+        $this->configureAnthropic();
+
         $draft = [
             'cover_letter' => 'Formal transmittal',
             'executive_position' => 'Recoverable with intervention',
@@ -62,9 +81,11 @@ class AdminGenerateReportPromptTest extends TestCase
         ];
 
         Http::fake([
-            'n8n.srv1139767.hstgr.cloud/*' => Http::response([
-                'output' => json_encode($draft),
-                'top_5_risks' => ['Risk one'],
+            'example.test/*' => Http::response([
+                'content' => [[
+                    'type' => 'text',
+                    'text' => json_encode($draft),
+                ]],
             ]),
         ]);
 
@@ -72,12 +93,66 @@ class AdminGenerateReportPromptTest extends TestCase
 
         $this->actingAs($this->admin())
             ->post(route('admin.assessments.generateReport', $assessment))
-            ->assertRedirect(route('admin.assessments.show', $assessment));
+            ->assertRedirect(route('admin.assessments.show', $assessment))
+            ->assertSessionHas('success', 'AI Report generated successfully.');
 
         $assessment->refresh();
 
         $this->assertSame($draft, $assessment->ai_draft_json);
-        $this->assertSame('["Risk one"]', $assessment->top_5_risks);
+        $this->assertSame(json_encode($draft), $assessment->ai_recommendation);
+        $this->assertSame('completed', $assessment->status);
+    }
+
+    public function test_generate_report_rejects_empty_anthropic_output(): void
+    {
+        $this->configureAnthropic();
+
+        Http::fake([
+            'example.test/*' => Http::response(['id' => 'msg_empty', 'content' => [['type' => 'text', 'text' => '']]]),
+        ]);
+
+        $assessment = $this->assessment('PIR', 'Tier 2 Full');
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.assessments.generateReport', $assessment))
+            ->assertRedirect(route('admin.assessments.show', $assessment))
+            ->assertSessionHas('error', 'AI report generation failed: Anthropic response did not include output text.');
+
+        $assessment->refresh();
+
+        $this->assertNull($assessment->ai_draft_json);
+        $this->assertNull($assessment->ai_recommendation);
+        $this->assertSame('draft', $assessment->status);
+    }
+
+    public function test_generate_report_does_not_store_fallback_text_when_ai_response_is_invalid(): void
+    {
+        $this->configureAnthropic();
+
+        Http::fake([
+            'example.test/*' => Http::response(['message' => 'Upstream validation failed'], 500),
+        ]);
+
+        $assessment = $this->assessment('PIR', 'Tier 2 Full');
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.assessments.generateReport', $assessment))
+            ->assertRedirect(route('admin.assessments.show', $assessment))
+            ->assertSessionHas('error', 'AI report generation failed: Anthropic returned HTTP 500: {"message":"Upstream validation failed"}');
+
+        $assessment->refresh();
+
+        $this->assertNull($assessment->ai_draft_json);
+        $this->assertNull($assessment->ai_recommendation);
+        $this->assertSame('draft', $assessment->status);
+    }
+
+    private function configureAnthropic(): void
+    {
+        Config::set('services.anthropic.api_key', 'test-anthropic-key');
+        Config::set('services.anthropic.base_url', 'https://example.test/v1');
+        Config::set('services.anthropic.model', 'claude-sonnet-4-5');
+        Config::set('services.anthropic.version', '2023-06-01');
     }
 
     private function admin(): User

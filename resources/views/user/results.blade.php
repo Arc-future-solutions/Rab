@@ -28,21 +28,8 @@
         </div>
 
         @php
-            // Robust AI Parsing
-            $aiText = $lead->ai_recommendation ?? '';
-            $parts = preg_split('/\*\*(.*?)\*\*/', $aiText, -1, PREG_SPLIT_DELIM_CAPTURE);
-            $segments = [];
-            for ($i = 1; $i < count($parts); $i += 2) {
-                $segments[strtolower(trim($parts[$i]))] = trim($parts[$i+1] ?? '');
-            }
-
-            // Map segments to the required sections
-            $execSummary = $segments['executive summary'] ?? $segments['programme health overview'] ?? null;
-            $insights = $segments['key insights'] ?? $segments['what this indicates'] ?? null;
-            $risks = $segments['top risks'] ?? $segments['emerging risk signals'] ?? null;
-            $whatItMeans = $segments['what this means'] ?? $segments['what this means for your programme'] ?? null;
-            
-            // Map pillar scores from lead
+            $briefParagraphs = preg_split('/\n\s*\n/', trim((string) ($snapshotReport['intelligence_brief'] ?? $lead->ai_recommendation ?? '')), -1, PREG_SPLIT_NO_EMPTY);
+            $insightCards = collect($snapshotReport['insight_cards'] ?? []);
             $pillarScores = [];
             $indexScores = $lead->index_scores_json ?? [];
             foreach($indexScores as $code => $data) {
@@ -55,21 +42,15 @@
                     ];
                 }
             }
-
-            // Generate fallback summary if AI is missing
-            if (!$execSummary) {
-                $exposedPillars = collect($pillarScores)->filter(fn($p) => $p['rag'] !== 'Green')->pluck('name')->toArray();
-                $exposedText = !empty($exposedPillars) ? " but exposed risk in: " . implode(', ', array_slice($exposedPillars, 0, 4)) : ".";
-                $statusMsg = $lead->overall_score >= 3.8 ? "shows strong delivery control" : ($lead->overall_score >= 3.2 ? "shows partial control" : "shows significant delivery exposure");
-                $execSummary = "Your overall score of " . number_format($lead->overall_score, 1) . " " . $statusMsg . $exposedText . " We recommend a focused consultant review to address these gaps and prevent escalation. Your critical control domains are broadly stable. Focus on continuous improvement and addressing the specific gaps identified above.";
-            }
         @endphp
 
         <!-- 3. EXECUTIVE SNAPSHOT -->
         <div class="mb-16">
             <h2 class="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-6">{{ $lead->type === 'SIR' ? 'Service' : 'Programme' }} Health Overview</h2>
-            <div class="text-base md:text-lg text-slate-600 leading-[1.8] font-medium italic">
-                {{ $execSummary }}
+            <div class="space-y-6 text-base md:text-lg text-slate-600 leading-[1.8] font-medium italic">
+                @foreach($briefParagraphs as $paragraph)
+                    <p>{{ $paragraph }}</p>
+                @endforeach
             </div>
         </div>
 
@@ -141,23 +122,22 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-16 mb-20">
             <!-- 7. KEY INSIGHTS -->
+            <div>
                 <h2 class="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-8">What This Indicates</h2>
                 
                 <!-- Part 1: Strategic Interpretation (General) -->
                 <div class="mb-12 pb-12 border-b border-slate-100">
                     <h3 class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-6">Strategic Interpretation</h3>
                     <div class="space-y-6">
-                        @if($insights)
-                            @php
-                                $insightList = preg_split('/^- /m', $insights, -1, PREG_SPLIT_NO_EMPTY);
-                            @endphp
-                            @foreach(collect($insightList)->take(3) as $item)
+                        @foreach($insightCards->take(3) as $card)
+                            @if(filled($card['finding'] ?? null))
                                 <div class="flex gap-4">
                                     <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"></div>
-                                    <p class="text-[13px] font-medium text-slate-600 leading-relaxed">{{ trim($item) }}</p>
+                                    <p class="text-[13px] font-medium text-slate-600 leading-relaxed">{{ $card['finding'] }}</p>
                                 </div>
-                            @endforeach
-                        @else
+                            @endif
+                        @endforeach
+                        @if($insightCards->isEmpty())
                             <p class="text-[13px] text-slate-400 italic">Evaluating cross-domain patterns and delivery control...</p>
                         @endif
                     </div>
@@ -187,14 +167,11 @@
         <div class="mb-20">
             <h2 class="text-[10px] font-black text-red-600 uppercase tracking-[0.3em] mb-8">Emerging Risk Signals</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                @if($risks)
-                    @php
-                        $riskList = preg_split('/^- /m', $risks, -1, PREG_SPLIT_NO_EMPTY);
-                    @endphp
-                    @foreach(collect($riskList)->take(5) as $item)
+                @if($insightCards->isNotEmpty())
+                    @foreach($insightCards->take(5) as $card)
                         <div class="bg-red-50/30 p-6 rounded-2xl border border-red-100/50 flex gap-4">
                             <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            <p class="text-[13px] font-bold text-red-900 leading-relaxed">{{ trim($item) }}</p>
+                            <p class="text-[13px] font-bold text-red-900 leading-relaxed">{{ $card['finding'] }}</p>
                         </div>
                     @endforeach
                 @else
@@ -207,14 +184,10 @@
         <div class="mb-20">
             <h2 class="text-[10px] font-black text-slate-900 uppercase tracking-[0.3em] mb-8">What This Means for Your {{ $lead->type === 'SIR' ? 'Service' : 'Programme' }}</h2>
             <div class="space-y-8">
-                @if($whatItMeans)
-                    @php
-                        $meansList = preg_split('/^- /m', $whatItMeans, -1, PREG_SPLIT_NO_EMPTY);
-                        if(count($meansList) < 2) $meansList = explode("\n", $whatItMeans);
-                    @endphp
-                    @foreach(collect($meansList)->take(3) as $item)
+                @if($insightCards->isNotEmpty())
+                    @foreach($insightCards->take(3) as $card)
                         <div class="border-l-4 border-slate-900 pl-8">
-                            <p class="text-base md:text-lg font-black text-slate-800 leading-relaxed">{{ trim($item) }}</p>
+                            <p class="text-base md:text-lg font-black text-slate-800 leading-relaxed">{{ $card['action'] }}</p>
                         </div>
                     @endforeach
                 @else

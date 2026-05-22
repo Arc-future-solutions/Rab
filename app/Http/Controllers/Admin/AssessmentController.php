@@ -4,10 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Assessment;
+use App\Models\Lead;
+use App\Services\ReportService;
+use App\Services\SnapshotAiPayloadBuilder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Services\AssessmentIndexCalculator;
 
 use App\Traits\HasAssessmentQuestions;
+use Throwable;
 
 class AssessmentController extends Controller
 {
@@ -53,8 +58,9 @@ class AssessmentController extends Controller
     public function show($id)
     { 
         $assessment = Assessment::with(['client', 'assessor', 'pillarScores', 'questionResponses'])->find($id);
-        // $lead = null;
-        $lead = \App\Models\Lead::find($id);
+        $lead = $assessment && $assessment->snapshot_submission_id
+            ? Lead::find($assessment->snapshot_submission_id)
+            : Lead::find($id);
    
         if (!$assessment) {
 
@@ -258,6 +264,45 @@ class AssessmentController extends Controller
             // dd($lead);
         
         return view('admin.assessments.show', compact('assessment', 'lead', 'frameworkQuestions'));
+    }
+
+    public function regenerateSnapshotAi(
+        Request $request,
+        int $id,
+        ReportService $reportService,
+        SnapshotAiPayloadBuilder $snapshotAiPayloadBuilder
+    ) {
+        $assessment = Assessment::find($id);
+        $lead = $assessment && $assessment->snapshot_submission_id
+            ? Lead::find($assessment->snapshot_submission_id)
+            : Lead::find($id);
+
+        if (! $lead || ! in_array($lead->assessment_type, ['PIR_SNAPSHOT', 'SIR_SNAPSHOT'], true)) {
+            return redirect()->back()->with('error', 'AI insights can only be regenerated for PIR or SIR snapshot leads.');
+        }
+
+        $promptKey = $snapshotAiPayloadBuilder->promptKey($lead->type);
+
+        try {
+            $payload = $snapshotAiPayloadBuilder->buildFromLead($lead);
+            $structuredReport = $reportService->generate($promptKey, $payload);
+
+            $lead->update([
+                'ai_recommendation' => json_encode($structuredReport, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+                'snapshot_report_json' => $structuredReport,
+            ]);
+
+            return redirect()->back()->with('success', 'AI insights regenerated successfully.');
+        } catch (Throwable $e) {
+            Log::error('Admin snapshot AI regeneration failed', [
+                'lead_id' => $lead->id,
+                'assessment_id' => $assessment?->id,
+                'prompt_key' => $promptKey,
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', 'AI regeneration failed: ' . $e->getMessage());
+        }
     }
 
     private function calculateRag($score)

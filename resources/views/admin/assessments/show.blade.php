@@ -10,7 +10,15 @@
 @section('content')
 @php
     $reportConfig = $assessment->reportConfig();
-    $aiText = $lead->ai_recommendation ?? $assessment->ai_recommendation ?? null;
+    $snapshotLead = $lead ?? null;
+    $snapshotReport = is_array($snapshotLead?->snapshot_report_json ?? null)
+        ? $snapshotLead->snapshot_report_json
+        : null;
+    $briefParagraphs = collect(preg_split('/\n\s*\n/', trim((string) ($snapshotReport['intelligence_brief'] ?? '')), -1, PREG_SPLIT_NO_EMPTY))
+        ->map(fn ($paragraph) => trim($paragraph))
+        ->filter()
+        ->values();
+    $insightCards = collect($snapshotReport['insight_cards'] ?? [])->take(3)->values();
     $hasStructuredDraft = !empty($assessment->ai_draft_json);
     $needsStructuredDraft = !$hasStructuredDraft;
 @endphp
@@ -43,44 +51,62 @@
                 {{ number_format($assessment->overall_score, 1) }} ({{ $assessment->rag_status }})
             </span>
             <div class="mt-4 flex flex-wrap gap-3">
-                <form action="{{ route('admin.assessments.exportPdf', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
-                    @csrf
-                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm flex items-center justify-center gap-2 transition-all active:scale-95">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        <span>Export Report</span>
-                    </button>
-                </form>
-                @if($needsStructuredDraft)
-                    <form action="{{ route('admin.assessments.generateReport', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
+                @if($snapshotLead)
+                    <form action="{{ route('admin.assessments.regenerateSnapshotAi', $assessment->id) }}" method="POST" class="flex-1 sm:flex-none" x-data="{ loading: false }" @submit="loading = true">
                         @csrf
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95">
+                        <button type="submit" :disabled="loading" class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            <span>{{ $assessment->status === 'completed' ? 'Rebuild AI Insights' : 'Generate AI Insights' }}</span>
+                            <span x-show="!loading">Regenerate AI Insights</span>
+                            <span x-show="loading" x-cloak>Regenerating...</span>
                         </button>
                     </form>
-                @endif
-                @if($assessment->status !== 'approved')
-                    <a href="{{ in_array($assessment->type, ['PHI', 'PIR']) ? route('admin.assessments.score.phi', $assessment->id) : route('admin.assessments.score.itsm', $assessment->id) }}" 
-                       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 flex-1 sm:flex-none">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        <span>Continue Scoring</span>
+                    <a href="{{ route('rapid-consulting.snapshot-report.pdf', ['lead' => $snapshotLead->id, 'token' => $snapshotLead->booking_token]) }}"
+                       class="flex-1 sm:flex-none bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm flex items-center justify-center gap-2 transition-all active:scale-95">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <span>Download PDF Report</span>
                     </a>
-                @endif
-
-                @if($assessment->status === 'draft')
-                    <form action="{{ route('admin.assessments.updateStatus', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
-                        @csrf @method('PUT')
-                        <input type="hidden" name="status" value="in_progress">
-                        <button type="submit" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded shadow text-sm border border-slate-200">Mark In Review</button>
-                    </form>
-                @elseif($assessment->status === 'in_progress')
-                    <form action="{{ route('admin.assessments.updateStatus', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
-                        @csrf @method('PUT')
-                        <input type="hidden" name="status" value="approved">
-                        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2.5 rounded shadow text-sm">Approve Report</button>
-                    </form>
                 @else
-                    <span class="bg-gray-100 text-gray-800 px-4 py-2.5 rounded font-medium border border-gray-200 flex items-center justify-center">Approved</span>
+                    <form action="{{ route('admin.assessments.exportPdf', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
+                        @csrf
+                        <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm flex items-center justify-center gap-2 transition-all active:scale-95">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <span>Export Report</span>
+                        </button>
+                    </form>
+                    @if($needsStructuredDraft)
+                        <form action="{{ route('admin.assessments.generateReport', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
+                            @csrf
+                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                <span>{{ $assessment->status === 'completed' ? 'Rebuild AI Insights' : 'Generate AI Insights' }}</span>
+                            </button>
+                        </form>
+                    @endif
+                @endif
+                @if(! $snapshotLead)
+                    @if($assessment->status !== 'approved')
+                        <a href="{{ in_array($assessment->type, ['PHI', 'PIR']) ? route('admin.assessments.score.phi', $assessment->id) : route('admin.assessments.score.itsm', $assessment->id) }}" 
+                           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 flex-1 sm:flex-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            <span>Continue Scoring</span>
+                        </a>
+                    @endif
+
+                    @if($assessment->status === 'draft')
+                        <form action="{{ route('admin.assessments.updateStatus', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
+                            @csrf @method('PUT')
+                            <input type="hidden" name="status" value="in_progress">
+                            <button type="submit" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded shadow text-sm border border-slate-200">Mark In Review</button>
+                        </form>
+                    @elseif($assessment->status === 'in_progress')
+                        <form action="{{ route('admin.assessments.updateStatus', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
+                            @csrf @method('PUT')
+                            <input type="hidden" name="status" value="approved">
+                            <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold px-4 py-2.5 rounded shadow text-sm">Approve Report</button>
+                        </form>
+                    @else
+                        <span class="bg-gray-100 text-gray-800 px-4 py-2.5 rounded font-medium border border-gray-200 flex items-center justify-center">Approved</span>
+                    @endif
                 @endif
             </div>
         </div>
@@ -419,137 +445,71 @@
     </div>
 </div>
 
-<!-- AI Agent Recommendations -->
+<!-- AI Consulting Insights -->
 <div class="mt-8">
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg flex items-center justify-center">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl shadow-lg flex items-center justify-center">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             </div>
             <div>
                 <h3 class="text-xl font-black text-slate-800 tracking-tight">AI Consulting Insights</h3>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Agentic Intelligence & Strategy Recommendations</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stored snapshot report JSON</p>
             </div>
         </div>
     </div>
-     @if($aiText)
-     @php
-            $text = $aiText;
-            
-            // Split by **Title**
-            $parts = preg_split('/\*\*(.*?)\*\*/', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
-            
-            $intro = trim($parts[0] ?? '');
-            $segments = [];
-            
-            for ($i = 1; $i < count($parts); $i += 2) {
-                $title = trim($parts[$i]);
-                $content = isset($parts[$i+1]) ? trim($parts[$i+1]) : '';
-                
-                // If this is the last segment and it's very long, check if there's a sign-off
-                if ($i + 2 >= count($parts)) {
-                    // Simple heuristic for sign-off: text after last double newline if it's small
-                    // But for now, let's keep it simple as requested.
-                }
-                
-                $segments[] = [
-                    'title' => $title,
-                    'content' => $content
-                ];
-            }
-            
-            $coreSegments = collect($segments);
-            $outro = null; // AI responses usually don't have a clear sign-off in this format yet
-
-            $icons = [
-                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>',
-                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>',
-                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>',
-                '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>'
-            ];
-        @endphp
-
-        <div class="space-y-8">
-            @if($intro)
-                <div class="bg-blue-50/50 rounded-3xl p-8 border border-blue-100/50 shadow-sm relative overflow-hidden">
-                    <div class="absolute -right-4 -top-4 text-blue-100 opacity-20">
-                        <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C20.1216 16 21.017 16.8954 21.017 18V21M14.017 21H21.017M14.017 21C12.9124 21 12.017 20.1046 12.017 19V11C12.017 9.89543 12.9124 9 14.017 9H21.017C22.1216 9 23.017 9.89543 23.017 11V19C23.017 20.1046 22.1216 21 21.017 21M3.017 21L3.017 18C3.017 16.8954 3.91243 16 5.017 16H8.017C9.12157 16 10.017 16.8954 10.017 18V21M3.017 21H10.017M3.017 21C1.91243 21 1.017 20.1046 1.017 19V11C1.017 9.89543 1.91243 9 3.017 9H10.017C11.1216 9 12.017 9.89543 12.017 11V19C12.017 20.1046 11.1216 21 10.017 21"></path></svg>
-                    </div>
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="p-1 px-2 rounded-md bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest">Consulting Context</span>
-                    </div>
-                    <div class="text-sm font-bold text-slate-700 leading-relaxed italic">
-                        {{ $intro }}
-                    </div>
+    @if($snapshotReport)
+        <div class="space-y-6">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Intelligence Brief</h4>
+                <div class="space-y-4 text-sm text-slate-700 leading-7">
+                    @foreach($briefParagraphs as $paragraph)
+                        <p>{{ $paragraph }}</p>
+                    @endforeach
                 </div>
-            @endif
-
-            <div class="grid grid-cols-1 gap-10">
-                @foreach($coreSegments as $index => $segment)
-                    @php
-                        // Special styling for different segment types
-                        $title = strtolower($segment['title']);
-                        $isRisks = Str::contains($title, 'risk');
-                        $isRecs = Str::contains($title, 'recommendation');
-                        $isStrengths = Str::contains($title, 'strength');
-                        
-                        $bgClass = 'bg-white';
-                        $textClass = 'text-slate-600';
-                        $titleColor = 'text-blue-600';
-                        $accentBg = 'bg-blue-600';
-                        $iconColor = 'text-white';
-                        
-                        if ($isRisks) {
-                            $bgClass = 'bg-slate-900';
-                            $textClass = 'text-slate-300';
-                            $titleColor = 'text-red-400';
-                            $accentBg = 'bg-red-500/20';
-                            $iconColor = 'text-red-400';
-                        } elseif ($isRecs) {
-                            $bgClass = 'bg-blue-600';
-                            $textClass = 'text-blue-50';
-                            $titleColor = 'text-white';
-                            $accentBg = 'bg-white/20';
-                            $iconColor = 'text-white';
-                        }
-                    @endphp
-
-                    <div class="{{ $bgClass }} rounded-[2.5rem] p-10 border border-slate-100 shadow-xl shadow-slate-200/50 relative overflow-hidden transition-all duration-500 hover:-translate-y-2 group">
-                        <div class="absolute top-0 right-0 p-12 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-                            {!! $icons[$index] ?? '' !!}
-                        </div>
-                        
-                        <div class="flex items-center gap-5 mb-8">
-                            <div class="w-14 h-14 flex items-center justify-center rounded-2xl {{ $accentBg }} {{ $iconColor }} shadow-xl">
-                                {!! $icons[$index] ?? '' !!}
-                            </div>
-                            <h4 class="text-xs font-black {{ $titleColor }} uppercase tracking-[0.4em]">
-                                {{ $segment['title'] }}
-                            </h4>
-                        </div>
-
-                        <div class="text-[16px] md:text-[18px] leading-[1.8] whitespace-pre-wrap {{ $textClass }} font-medium 
-                        [&_strong]:{{ $isRisks || $isRecs ? 'text-white' : 'text-slate-900' }} [&_strong]:font-black">
-                            @php
-                                // Enhance bullet points
-                                $formattedContent = preg_replace('/^- (.*)/m', '<div class="flex gap-4 mb-4 items-start"><span class="mt-2.5 w-2 h-2 rounded-full bg-current opacity-50 shrink-0"></span><span>$1</span></div>', trim($segment['content']));
-                            @endphp
-                            {!! $formattedContent !!}
-                        </div>
-                    </div>
-                @endforeach
             </div>
 
-            @if($outro)
-                <div class="bg-slate-50 rounded-3xl p-8 border border-slate-200 text-center relative group">
-                    <div class="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-3">Strategic Momentum Sign-off</h4>
-                    <div class="text-xs font-bold text-slate-500 leading-relaxed max-w-2xl mx-auto italic">
-                        "{{ $outro }}"
-                    </div>
+            <div>
+                <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Insight Cards</h4>
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                    @foreach($insightCards as $card)
+                        @php
+                            $cardCode = strtoupper((string) ($card['pillar_code'] ?? $card['domain_code'] ?? ''));
+                            $cardName = $card['pillar_name'] ?? $card['domain_name'] ?? $card['name'] ?? 'Insight area';
+                            $cardRag = $card['rag'] ?? 'Amber';
+                            $isComplianceCard = $cardCode === 'COMPLIANCE' || \Illuminate\Support\Str::contains(strtolower($cardName), 'compliance');
+                            $badgeClass = match($cardRag) {
+                                'Green' => 'bg-green-100 text-green-800 border-green-200',
+                                'Red' => 'bg-red-100 text-red-800 border-red-200',
+                                default => 'bg-amber-100 text-amber-800 border-amber-200',
+                            };
+                        @endphp
+                        <article class="bg-white rounded-xl border {{ $isComplianceCard ? 'border-blue-400 ring-1 ring-blue-100' : 'border-slate-200' }} shadow-sm p-5">
+                            <div class="flex items-start justify-between gap-3 mb-4">
+                                <h5 class="text-sm font-black text-slate-900 leading-snug">{{ $cardName }}</h5>
+                                <span class="shrink-0 px-2 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest {{ $badgeClass }}">
+                                    {{ $cardRag }}
+                                </span>
+                            </div>
+                            <div class="text-3xl font-black text-slate-900 mb-4">{{ number_format((float) ($card['score'] ?? 0), 1) }}</div>
+                            <div class="space-y-4 text-sm leading-6 text-slate-700">
+                                <div>
+                                    <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Finding</div>
+                                    <p>{{ $card['finding'] ?? 'No finding provided.' }}</p>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Action</div>
+                                    <p>{{ $card['action'] ?? 'No action provided.' }}</p>
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
                 </div>
-            @endif
-        </div>
+                <p class="mt-4 text-xs font-semibold text-slate-500">
+                    AI insights last generated:
+                    {{ $snapshotLead?->updated_at ? $snapshotLead->updated_at->format('d M Y H:i') : 'Not available' }}
+                </p>
+            </div>
         </div>
     @else
     <div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center">
@@ -564,7 +524,15 @@
                 Complete the assessment and click "Generate AI Insights" to receive AI-powered strategic consulting insights.
             @endif
         </p>
-        @if($assessment->overall_score > 0 && ($assessment->status !== 'approved' || $needsStructuredDraft))
+        @if($snapshotLead && $assessment->overall_score > 0)
+            <form action="{{ route('admin.assessments.regenerateSnapshotAi', $assessment->id) }}" method="POST">
+                @csrf
+                <button type="submit" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    <span>Regenerate AI Insights</span>
+                </button>
+            </form>
+        @elseif($assessment->overall_score > 0 && ($assessment->status !== 'approved' || $needsStructuredDraft))
             <form action="{{ route('admin.assessments.generateReport', $assessment) }}" method="POST">
                 @csrf
                 <button type="submit" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95">

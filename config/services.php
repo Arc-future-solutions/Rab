@@ -43,8 +43,14 @@ return [
         'webhook_secret' => env('CALENDLY_WEBHOOK_SECRET', ''),
     ],
 
-    'n8n' => [
-        'webhook_url' => env('N8N_WEBHOOK_URL'),
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY', env('CLAUDE_API_KEY')),
+        'api_key' => env('ANTHROPIC_API_KEY', env('CLAUDE_API_KEY')),
+        'base_url' => env('ANTHROPIC_BASE_URL', 'https://api.anthropic.com/v1'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-4-5'),
+        'version' => env('ANTHROPIC_VERSION', '2023-06-01'),
+        'max_tokens' => env('ANTHROPIC_MAX_TOKENS', 8192),
+        'timeout' => env('ANTHROPIC_TIMEOUT', 120),
     ],
 
     'crm' => [
