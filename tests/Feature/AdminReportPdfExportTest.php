@@ -12,6 +12,9 @@ use App\Models\Client;
 use App\Models\User;
 use App\Services\ReportPdfService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
+use ReflectionMethod;
+use Spatie\Browsershot\Browsershot;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tests\TestCase;
 
@@ -69,6 +72,24 @@ class AdminReportPdfExportTest extends TestCase
             ->assertDownload('fake-rab-report.pdf');
 
         $this->assertSame($assessment->id, $fakeService->assessmentId);
+    }
+
+    public function test_metadata_only_ai_draft_json_does_not_enable_pdf_export(): void
+    {
+        $assessment = $this->assessment([
+            'ai_draft_json' => [
+                'pir_full_tier1_generation' => [
+                    'status' => 'generation_prepared',
+                    'prompt_key' => 'pir_full_tier1',
+                ],
+            ],
+            'ai_recommendation' => null,
+        ]);
+
+        $this->actingAs($this->admin())
+            ->post(route('admin.assessments.exportPdf', $assessment))
+            ->assertRedirect(route('admin.assessments.show', $assessment))
+            ->assertSessionHas('error', 'Generate AI report first before exporting the PDF.');
     }
 
     public function test_export_uses_legacy_ai_recommendation_when_structured_draft_is_missing(): void
@@ -188,6 +209,7 @@ class AdminReportPdfExportTest extends TestCase
         $this->assertStringContainsString('Stakeholder Intelligence', $html);
         $this->assertStringContainsString('RAID Summary', $html);
         $this->assertStringContainsString('Risk Register + Risk Heat Map', $html);
+        $this->assertStringContainsString('Risk Heat Map — Probability × Impact', $html);
         $this->assertStringContainsString('risk-matrix-grid', $html);
         $this->assertStringContainsString('Compliance Risk Signals', $html);
         $this->assertStringContainsString('Appendix — Database Extract', $html);
@@ -206,6 +228,162 @@ class AdminReportPdfExportTest extends TestCase
         $this->assertStringContainsString('RAB Proprietary Methodology™', $html);
         $this->assertStringNotContainsString('jspdf', strtolower($html));
         $this->assertStringNotContainsString('html2canvas', strtolower($html));
+    }
+
+    public function test_pir_tier1_report_html_renders_reporting_accuracy_risk_finding_when_null(): void
+    {
+        $assessment = $this->assessment([
+            'ai_draft_json' => array_merge($this->draft(), [
+                'reporting_accuracy_risk_finding' => null,
+                'intelligence_dashboard' => [
+                    'indices' => [
+                        'bri' => ['value' => 3.93, 'interpretation' => 'BRI of 3.93 confirms readiness evidence is usable.'],
+                    ],
+                    'confidence_legend' => [
+                        'high' => 'Confirmed by documentary evidence and interview',
+                        'medium' => 'Confirmed by interview only',
+                        'low' => 'Single source or contradicted evidence',
+                    ],
+                ],
+                'tier1_bridge' => 'Tier 1 bridge narrative.',
+                'stakeholder_intelligence' => null,
+            ]),
+            'report_tier' => 'Tier 1 Rapid',
+            'type' => 'PIR',
+        ]);
+
+        $html = app(ReportPdfService::class)->renderHtml($assessment->fresh());
+
+        $this->assertStringContainsString('Reporting Accuracy Risk Finding', $html);
+        $this->assertStringContainsString('No reporting accuracy risk finding recorded.', $html);
+        $this->assertStringContainsString('BRI of 3.93 confirms readiness evidence is usable.', $html);
+        $this->assertStringContainsString('Confirmed by documentary evidence and interview', $html);
+    }
+
+    public function test_pdf_risk_heat_map_renders_readable_axes_markers_and_legend(): void
+    {
+        $assessment = $this->assessment([
+            'ai_draft_json' => array_merge($this->draft(), [
+                'risk_register' => [
+                    [
+                        'risk_title' => 'Benefits slippage',
+                        'probability' => 'H',
+                        'impact' => 'H',
+                        'owner' => 'Sponsor',
+                        'current_control' => 'Weekly reporting',
+                        'action' => 'Rebaseline benefits.',
+                    ],
+                    [
+                        'risk_title' => 'Supplier dependency',
+                        'probability' => 'M',
+                        'impact' => 'L',
+                        'owner' => 'Commercial Lead',
+                        'current_control' => 'Supplier checkpoint',
+                        'action' => 'Confirm dependency plan.',
+                    ],
+                    [
+                        'risk_title' => 'Data migration readiness',
+                        'probability' => 'High',
+                        'impact' => 'High',
+                        'owner' => 'Technology Lead',
+                        'current_control' => 'Cutover review',
+                        'action' => 'Validate migration rehearsal.',
+                    ],
+                ],
+            ]),
+        ]);
+
+        $html = app(ReportPdfService::class)->renderHtml($assessment->fresh());
+
+        $this->assertStringContainsString('Risk Heat Map — Probability × Impact', $html);
+        $this->assertStringContainsString('Risks are positioned by probability and impact.', $html);
+        $this->assertStringContainsString('Impact: Low', $html);
+        $this->assertStringContainsString('Impact: Medium', $html);
+        $this->assertStringContainsString('Impact: High', $html);
+        $this->assertStringContainsString('Probability: Low', $html);
+        $this->assertStringContainsString('Probability: Medium', $html);
+        $this->assertStringContainsString('Probability: High', $html);
+        $this->assertStringContainsString('<td>High</td><td>High</td>', $html);
+        $this->assertStringContainsString('<td>Medium</td><td>Low</td>', $html);
+        $this->assertStringContainsString('<span class="risk-cell-point">1</span>', $html);
+        $this->assertStringContainsString('<span class="risk-cell-point">3</span>', $html);
+        $this->assertStringContainsString('1 — Benefits slippage', $html);
+        $this->assertStringContainsString('2 — Supplier dependency', $html);
+        $this->assertStringContainsString('3 — Data migration readiness', $html);
+        $this->assertStringNotContainsString('Impact H', $html);
+        $this->assertStringNotContainsString('Probability H', $html);
+    }
+
+    public function test_pdf_risk_heat_map_shows_empty_message_without_grid_when_no_risks_exist(): void
+    {
+        $assessment = $this->assessment([
+            'ai_draft_json' => array_merge($this->draft(), [
+                'risk_register' => [],
+            ]),
+        ]);
+
+        $html = app(ReportPdfService::class)->renderHtml($assessment->fresh());
+
+        $this->assertStringContainsString('Risk Heat Map — Probability × Impact', $html);
+        $this->assertStringContainsString('No risks available for heat map rendering.', $html);
+        $this->assertStringNotContainsString('<div class="risk-matrix-grid">', $html);
+    }
+
+    public function test_report_pdf_service_uses_configured_browsershot_chrome_path_when_executable(): void
+    {
+        Config::set('services.browsershot.chrome_path', PHP_BINARY);
+
+        $method = new ReflectionMethod(ReportPdfService::class, 'chromePath');
+        $method->setAccessible(true);
+
+        $this->assertSame(PHP_BINARY, $method->invoke(app(ReportPdfService::class)));
+    }
+
+    public function test_report_pdf_service_does_not_apply_missing_browsershot_chrome_path(): void
+    {
+        Config::set('services.browsershot.chrome_path', '/missing/google-chrome');
+
+        $method = new ReflectionMethod(ReportPdfService::class, 'chromePath');
+        $method->setAccessible(true);
+
+        $this->assertNull($method->invoke(app(ReportPdfService::class)));
+    }
+
+    public function test_real_browsershot_pdf_export_smoke_when_environment_enabled(): void
+    {
+        if (! env('RUN_REAL_BROWSERHOT_PDF_TEST')) {
+            $this->markTestSkipped('Set RUN_REAL_BROWSERHOT_PDF_TEST=1 and BROWSERSHOT_CHROME_PATH to run the real Browsershot smoke test.');
+        }
+
+        $chromePath = env('BROWSERSHOT_CHROME_PATH');
+        if (! $chromePath || ! is_executable($chromePath)) {
+            $this->markTestSkipped('BROWSERSHOT_CHROME_PATH is not configured to an executable Chrome/Chromium binary.');
+        }
+
+        $assessment = $this->assessment([
+            'ai_draft_json' => array_merge($this->draft(), [
+                'reporting_accuracy_risk_finding' => null,
+                'tier1_bridge' => 'Tier 1 bridge narrative.',
+                'stakeholder_intelligence' => null,
+            ]),
+            'report_tier' => 'Tier 1 Rapid',
+            'type' => 'PIR',
+        ]);
+
+        $path = storage_path('framework/testing/real-browsershot-smoke.pdf');
+        if (! is_dir(dirname($path))) {
+            mkdir(dirname($path), 0755, true);
+        }
+
+        Browsershot::html(app(ReportPdfService::class)->renderHtml($assessment->fresh()))
+            ->setChromePath($chromePath)
+            ->setNodeModulePath(base_path('node_modules'))
+            ->noSandbox()
+            ->format('A4')
+            ->save($path);
+
+        $this->assertFileExists($path);
+        $this->assertGreaterThan(0, filesize($path));
     }
 
     private function admin(): User

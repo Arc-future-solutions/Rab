@@ -22,11 +22,42 @@
         return ['label' => 'Critical Failure', 'color' => '#7B0000', 'bg' => '#FEE2E2'];
     };
     $dialTone = $scoreTone($scoreValue);
-    $confidenceLegend = $dashboard['confidence_legend'] ?? [
+    $confidenceLegendRaw = $dashboard['confidence_legend'] ?? [
         ['label' => 'High', 'color' => '#166534', 'bg' => '#DCFCE7', 'definition' => 'Confirmed by documentary evidence and interview.'],
         ['label' => 'Medium', 'color' => '#B45309', 'bg' => '#FEF3C7', 'definition' => 'Supported by interview or partial evidence.'],
         ['label' => 'Low', 'color' => '#B91C1C', 'bg' => '#FEE2E2', 'definition' => 'Single-source, contradictory, or weakly evidenced.'],
     ];
+    $confidenceLegend = [];
+    $confidenceTone = [
+        'high' => ['label' => 'High', 'color' => '#166534', 'bg' => '#DCFCE7'],
+        'medium' => ['label' => 'Medium', 'color' => '#B45309', 'bg' => '#FEF3C7'],
+        'low' => ['label' => 'Low', 'color' => '#B91C1C', 'bg' => '#FEE2E2'],
+    ];
+
+    if (is_array($confidenceLegendRaw)) {
+        foreach ($confidenceTone as $key => $tone) {
+            if (isset($confidenceLegendRaw[$key]) && is_string($confidenceLegendRaw[$key])) {
+                $confidenceLegend[] = $tone + ['definition' => $confidenceLegendRaw[$key]];
+            }
+        }
+
+        if ($confidenceLegend === []) {
+            foreach ($confidenceLegendRaw as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+
+                $label = (string) ($row['label'] ?? 'Confidence');
+                $tone = $confidenceTone[strtolower($label)] ?? ['label' => $label, 'color' => '#475569', 'bg' => '#F1F5F9'];
+                $confidenceLegend[] = [
+                    'label' => $label,
+                    'color' => $row['color'] ?? $tone['color'],
+                    'bg' => $row['bg'] ?? $tone['bg'],
+                    'definition' => (string) ($row['definition'] ?? ''),
+                ];
+            }
+        }
+    }
     $radarEntries = $scores->map(function ($score) use ($scoreTone) {
         $parts = explode(' — ', $score->name);
         $code = $parts[0] ?? $score->name;
@@ -39,10 +70,20 @@
         ];
     })->values()->all();
     $barEntries = collect($radarEntries)->sortBy('score')->values()->all();
+    $riskScaleLabel = function ($value): string {
+        $normalised = strtolower(trim((string) $value));
+
+        return match (true) {
+            $normalised === 'h', str_starts_with($normalised, 'high') => 'High',
+            $normalised === 'l', str_starts_with($normalised, 'low') => 'Low',
+            default => 'Medium',
+        };
+    };
+    $riskScaleCode = fn ($value): string => strtoupper(substr($riskScaleLabel($value), 0, 1));
     $riskMatrixBuckets = [];
     foreach ($riskRegister as $index => $risk) {
-        $probability = strtoupper(substr((string) ($risk['probability'] ?? 'M'), 0, 1));
-        $impact = strtoupper(substr((string) ($risk['impact'] ?? 'M'), 0, 1));
+        $probability = $riskScaleCode($risk['probability'] ?? 'Medium');
+        $impact = $riskScaleCode($risk['impact'] ?? 'Medium');
         $riskMatrixBuckets["{$probability}|{$impact}"][] = $index + 1;
     }
     $riskMatrixTone = function (string $probability, string $impact): string {
@@ -288,17 +329,23 @@
 
         /* ── Risk matrix ── */
         .risk-matrix { margin-top: 12px; page-break-inside: avoid; }
-        .risk-matrix-grid { display: grid; grid-template-columns: 70px repeat(3, 1fr); grid-template-rows: 28px repeat(3, minmax(54px, auto)); gap: 4px; align-items: stretch; }
-        .risk-matrix-axis { display: flex; align-items: center; justify-content: center; font-size: 8pt; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: .5px; }
-        .risk-matrix-row-label { display: flex; align-items: center; justify-content: center; font-size: 8pt; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: .5px; }
-        .risk-cell { position: relative; min-height: 54px; border: 1px solid #CBD5E1; padding: 6px; font-size: 8pt; font-weight: 800; overflow: hidden; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 2px; }
+        .risk-matrix h2 { font-size: 12pt; color: #1E3A8A; margin: 0 0 6px; }
+        .risk-matrix-helper { font-size: 9pt; color: #475569; margin-bottom: 10px; }
+        .risk-matrix-axis-title { font-size: 8pt; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px; text-align: center; }
+        .risk-matrix-grid { display: grid; grid-template-columns: 92px repeat(3, 1fr); grid-template-rows: 30px repeat(3, minmax(62px, auto)); gap: 4px; align-items: stretch; }
+        .risk-matrix-axis { display: flex; align-items: center; justify-content: center; font-size: 8pt; font-weight: 800; color: #334155; background: #F1F5F9; border: 1px solid #CBD5E1; text-align: center; }
+        .risk-matrix-row-label { display: flex; align-items: center; justify-content: center; font-size: 8pt; font-weight: 800; color: #334155; background: #F1F5F9; border: 1px solid #CBD5E1; text-align: center; }
+        .risk-cell { position: relative; min-height: 62px; border: 1px solid #CBD5E1; padding: 8px; font-size: 8pt; font-weight: 800; overflow: hidden; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; }
         .risk-cell-low { background: #DCFCE7; color: #166534; }
         .risk-cell-medium { background: #FEF3C7; color: #B45309; }
         .risk-cell-high { background: #FEE2E2; color: #B91C1C; }
         .risk-cell-critical { background: #7B0000; color: #fff; }
-        .risk-cell-point { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,0.9); color: #0F172A; font-size: 8pt; font-weight: 800; }
-        .risk-cell-empty { opacity: .35; }
+        .risk-cell-point { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; border-radius: 999px; background: rgba(255,255,255,0.95); color: #0F172A; border: 1px solid rgba(15,23,42,0.18); font-size: 8pt; font-weight: 800; padding: 0 6px; }
+        .risk-cell-empty { color: rgba(15,23,42,0.35); font-weight: 700; }
         .risk-grid-caption { margin-top: 8px; font-size: 7pt; color: #64748B; }
+        .risk-legend { margin-top: 10px; border-top: 1px solid #E2E8F0; padding-top: 8px; }
+        .risk-legend-row { font-size: 9pt; margin-bottom: 4px; }
+        .risk-legend-marker { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; border-radius: 999px; background: #0F172A; color: #fff; text-align: center; font-size: 8pt; font-weight: 800; margin-right: 6px; }
 
         /* ── Tables ── */
         .compliance-table td:first-child { font-weight: 700; }
@@ -387,11 +434,16 @@
 
 @php
     $dashboardHtml = '<div class="index-grid">';
-    foreach (array_slice($indices, 0, 5, true) as $name => $item) {
+    foreach (['bri' => 'BRI', 'vri' => 'VRI', 'dmi' => 'DMI', 'rii' => 'RII', 'chi' => 'CHI'] as $storedName => $displayName) {
+        $item = $indices[$storedName] ?? $indices[$displayName] ?? null;
+        if ($item === null) {
+            continue;
+        }
+
         $value = is_array($item) ? ($item['score'] ?? $item['value'] ?? '') : $item;
         $interpretation = is_array($item) ? ($item['interpretation'] ?? '') : '';
         $tone = is_numeric($value) ? $scoreTone((float) $value) : $scoreTone((float) ($assessment->overall_score ?? 0));
-        $dashboardHtml .= '<div class="index-card"><div class="index-name">' . e($name) . '</div><div class="index-value">' . e($value) . '</div><div class="index-rag" style="color:' . e($tone['color']) . '; background:' . e($tone['bg']) . ';">' . e($tone['label']) . '</div><div class="evidence" style="font-style: normal; margin-top: 6px;">' . e($interpretation) . '</div><div class="methodology-stamp">RAB Proprietary Methodology™</div></div>';
+        $dashboardHtml .= '<div class="index-card"><div class="index-name">' . e($displayName) . '</div><div class="index-value">' . e($value) . '</div><div class="index-rag" style="color:' . e($tone['color']) . '; background:' . e($tone['bg']) . ';">' . e($tone['label']) . '</div><div class="evidence" style="font-style: normal; margin-top: 6px;">' . e($interpretation) . '</div><div class="methodology-stamp">RAB Proprietary Methodology™</div></div>';
     }
     $dashboardHtml .= '</div>';
     $dashboardHtml .= '<div class="confidence-legend">';
@@ -412,6 +464,16 @@
     $dashboardHtml .= '</table></div>';
 @endphp
 {!! $pageTemplate('Intelligence Dashboard', $dashboardHtml) !!}
+
+@if($isPir && !$isBriefing)
+    @php
+        $reportingAccuracy = $report['reporting_accuracy_risk_finding'] ?? null;
+        $reportingAccuracyHtml = '<div class="panel"><p>'
+            . e($asText($reportingAccuracy) ?: 'No reporting accuracy risk finding recorded.')
+            . '</p></div>';
+    @endphp
+    {!! $pageTemplate('Reporting Accuracy Risk Finding', $reportingAccuracyHtml) !!}
+@endif
 
 @if($isBriefing)
     @php
@@ -449,29 +511,41 @@
 @php
     $riskHtml = '<table><tr><th>#</th><th>Risk</th><th>Probability</th><th>Impact</th><th>Owner</th><th>Current Control</th><th>Action</th></tr>';
     foreach ($riskRegister as $index => $risk) {
-        $riskHtml .= '<tr><td>' . ($index + 1) . '</td><td>' . e($risk['risk_title'] ?? '-') . '</td><td>' . e($risk['probability'] ?? '-') . '</td><td>' . e($risk['impact'] ?? '-') . '</td><td>' . e($risk['owner'] ?? '-') . '</td><td>' . e($risk['current_control'] ?? '-') . '</td><td>' . e($risk['action'] ?? '-') . '</td></tr>';
+        $riskHtml .= '<tr><td>' . ($index + 1) . '</td><td>' . e($risk['risk_title'] ?? '-') . '</td><td>' . e($riskScaleLabel($risk['probability'] ?? 'Medium')) . '</td><td>' . e($riskScaleLabel($risk['impact'] ?? 'Medium')) . '</td><td>' . e($risk['owner'] ?? '-') . '</td><td>' . e($risk['current_control'] ?? '-') . '</td><td>' . e($risk['action'] ?? '-') . '</td></tr>';
     }
     $riskHtml .= '</table>';
     $riskHtml .= '<div class="risk-matrix">';
-    $riskHtml .= '<div class="risk-matrix-grid">';
-    $riskHtml .= '<div></div><div class="risk-matrix-axis">Impact L</div><div class="risk-matrix-axis">Impact M</div><div class="risk-matrix-axis">Impact H</div>';
-    foreach (['H', 'M', 'L'] as $probability) {
-        $riskHtml .= '<div class="risk-matrix-row-label">Probability ' . $probability . '</div>';
-        foreach (['L', 'M', 'H'] as $impact) {
-            $bucket = $riskMatrixBuckets["{$probability}|{$impact}"] ?? [];
-            $classes = $riskMatrixTone($probability, $impact);
-            $riskHtml .= '<div class="' . $classes . '">';
-            if ($bucket === []) {
-                $riskHtml .= '<div class="risk-cell-empty">' . e($probability . '/' . $impact) . '</div>';
+    $riskHtml .= '<h2>Risk Heat Map — Probability × Impact</h2>';
+    $riskHtml .= '<p class="risk-matrix-helper">Risks are positioned by probability and impact. Higher probability and higher impact risks require earlier management attention.</p>';
+    if ($riskRegister === []) {
+        $riskHtml .= '<div class="panel">No risks available for heat map rendering.</div>';
+    } else {
+        $riskHtml .= '<div class="risk-matrix-axis-title">Impact — Low / Medium / High</div>';
+        $riskHtml .= '<div class="risk-matrix-grid">';
+        $riskHtml .= '<div class="risk-matrix-axis">Probability — Low / Medium / High</div><div class="risk-matrix-axis">Impact: Low</div><div class="risk-matrix-axis">Impact: Medium</div><div class="risk-matrix-axis">Impact: High</div>';
+        foreach (['H' => 'High', 'M' => 'Medium', 'L' => 'Low'] as $probability => $probabilityLabel) {
+            $riskHtml .= '<div class="risk-matrix-row-label">Probability: ' . e($probabilityLabel) . '</div>';
+            foreach (['L' => 'Low', 'M' => 'Medium', 'H' => 'High'] as $impact => $impactLabel) {
+                $bucket = $riskMatrixBuckets["{$probability}|{$impact}"] ?? [];
+                $classes = $riskMatrixTone($probability, $impact);
+                $riskHtml .= '<div class="' . $classes . '">';
+                if ($bucket === []) {
+                    $riskHtml .= '<div class="risk-cell-empty">' . e($probabilityLabel . ' probability / ' . $impactLabel . ' impact') . '</div>';
+                }
+                foreach ($bucket as $number) {
+                    $riskHtml .= '<span class="risk-cell-point">' . e($number) . '</span>';
+                }
+                $riskHtml .= '</div>';
             }
-            foreach ($bucket as $number) {
-                $riskHtml .= '<span class="risk-cell-point">' . e($number) . '</span>';
-            }
-            $riskHtml .= '</div>';
         }
+        $riskHtml .= '</div>';
+        $riskHtml .= '<div class="risk-legend">';
+        foreach ($riskRegister as $index => $risk) {
+            $riskHtml .= '<div class="risk-legend-row"><span class="risk-legend-marker">' . e($index + 1) . '</span>' . e($index + 1) . ' — ' . e($risk['risk_title'] ?? 'Untitled risk') . '</div>';
+        }
+        $riskHtml .= '</div>';
+        $riskHtml .= '<div class="risk-grid-caption">Numbered points correspond to the risk register rows above. Green = lower exposure, amber = medium exposure, red = higher exposure.</div>';
     }
-    $riskHtml .= '</div>';
-    $riskHtml .= '<div class="risk-grid-caption">Numbered points correspond to table rows above. Green = lower exposure, amber = medium exposure, red = higher exposure.</div>';
     $riskHtml .= '<div class="chart-attribution">© RAB Consulting Services Ltd. Proprietary methodology.</div>';
 @endphp
 {!! $pageTemplate('Risk Register + Risk Heat Map', $riskHtml) !!}

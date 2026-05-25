@@ -53,6 +53,12 @@ return [
         'timeout' => env('ANTHROPIC_TIMEOUT', 120),
     ],
 
+    'browsershot' => [
+        'node_binary' => env('BROWSERSHOT_NODE_BINARY'),
+        'npm_binary' => env('BROWSERSHOT_NPM_BINARY'),
+        'chrome_path' => env('BROWSERSHOT_CHROME_PATH'),
+    ],
+
     'crm' => [
         'high_priority_email' => env('CRM_HIGH_PRIORITY_EMAIL', 'rboukhiar@rabconsultingservices.com'),
     ],

@@ -10,7 +10,8 @@
 @section('content')
 @php
     $reportConfig = $assessment->reportConfig();
-    $snapshotLead = $lead ?? null;
+    $isPublicSnapshotAssessment = (bool) ($assessment->is_public_lead ?? false);
+    $snapshotLead = $isPublicSnapshotAssessment ? ($lead ?? null) : null;
     $snapshotReport = is_array($snapshotLead?->snapshot_report_json ?? null)
         ? $snapshotLead->snapshot_report_json
         : null;
@@ -19,8 +20,15 @@
         ->filter()
         ->values();
     $insightCards = collect($snapshotReport['insight_cards'] ?? [])->take(3)->values();
-    $hasStructuredDraft = !empty($assessment->ai_draft_json);
+    $structuredReportDetector = app(\App\Services\StructuredReportDetector::class);
+    $fullReportDraft = $structuredReportDetector->hasReportContent($assessment->ai_draft_json)
+        ? $assessment->ai_draft_json
+        : null;
+    $hasStructuredDraft = $fullReportDraft !== null;
     $needsStructuredDraft = !$hasStructuredDraft;
+    $hasConsultantNotes = $assessment->pillarScores->contains(function ($pillar) {
+        return filled($pillar->commentary) || filled($pillar->key_risks) || filled($pillar->immediate_actions);
+    });
 @endphp
 <!-- Header Summary -->
 <div id="pdf-header" class="bg-white shadow rounded-lg mb-6 p-6">
@@ -112,6 +120,36 @@
         </div>
     </div>
 </div>
+
+@if($assessment->ai_generation_status && $assessment->ai_generation_status !== 'idle')
+    <div class="bg-white shadow rounded-lg mb-6 p-4 border-l-4 {{ $assessment->ai_generation_status === 'failed' ? 'border-red-500' : ($assessment->ai_generation_status === 'completed' ? 'border-green-500' : 'border-blue-500') }}">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <div>
+                <p class="text-xs font-black text-slate-400 uppercase tracking-widest">AI Generation Status</p>
+                <p class="text-sm font-bold text-slate-800">{{ ucfirst($assessment->ai_generation_status) }}</p>
+            </div>
+            @if($assessment->ai_generation_started_at || $assessment->ai_generation_completed_at)
+                <p class="text-xs text-slate-500">
+                    @if($assessment->ai_generation_started_at)
+                        Started {{ $assessment->ai_generation_started_at->format('d M Y H:i') }}
+                    @endif
+                    @if($assessment->ai_generation_completed_at)
+                        &middot; Completed {{ $assessment->ai_generation_completed_at->format('d M Y H:i') }}
+                    @endif
+                </p>
+            @endif
+        </div>
+        @if($assessment->ai_generation_error)
+            <p class="mt-3 text-sm text-red-700 bg-red-50 border border-red-100 rounded p-3">{{ $assessment->ai_generation_error }}</p>
+        @endif
+    </div>
+@endif
+
+<section class="mt-8">
+    <div class="mb-6">
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Source assessment data</p>
+        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Assessment Scores &amp; Evidence</h2>
+    </div>
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
     <!-- Left Column: Charts -->
@@ -253,7 +291,7 @@
     </div>
 </div>
 
-@if($reportConfig['show_risk_matrix'])
+@if($reportConfig['show_risk_matrix'] && ! $hasStructuredDraft)
     <!-- Risk Matrix Section -->
     <div id="pdf-risk-matrix" class="bg-white shadow rounded-lg mb-6 p-6">
         <h3 class="text-lg font-bold text-slate-800 mb-4">Risk Matrix (Top {{ $reportConfig['risk_matrix_top_n'] }} Critical Exposures)</h3>
@@ -278,7 +316,7 @@
     </div>
 @endif
 
-@if($reportConfig['show_intelligence_profile'])
+@if($reportConfig['show_intelligence_profile'] && ! $hasStructuredDraft)
     <!-- Intelligence Profile Section -->
     <div id="pdf-intelligence-profile" class="bg-white shadow rounded-lg mb-6 p-6">
         <h3 class="text-lg font-bold text-slate-800 mb-4">Intelligence Profile (Deep Dive)</h3>
@@ -333,7 +371,7 @@
     </div>
 @endif
 
-@if($reportConfig['show_action_register'])
+@if($reportConfig['show_action_register'] && ! $hasStructuredDraft)
     <!-- Priority Action Register -->
     <div id="pdf-action-register" class="bg-white shadow rounded-lg mb-6 p-6">
         <h3 class="text-lg font-bold text-slate-800 mb-4">Priority Action Register</h3>
@@ -360,7 +398,7 @@
     </div>
 @endif
 
-@if($reportConfig['show_final_position'])
+@if($reportConfig['show_final_position'] && ! $hasStructuredDraft)
     <!-- Final Position Statement -->
     <div id="pdf-final-position" class="bg-white shadow rounded-lg mb-6 p-6 border-l-8 border-slate-900">
         <h3 class="text-lg font-bold text-slate-800 mb-3">Final Position Statement</h3>
@@ -376,6 +414,30 @@
         <h3 class="text-lg font-bold text-slate-800 mb-4">Appendix: Full Response Data & Evidence</h3>
         <p class="text-sm text-slate-500 mb-6 italic">This section provides the exhaustive data set used for the Tier 2 Full Intelligence Report, including respondent-level scores and consultant evidence notes.</p>
         <!-- The main question responses table will be moved here or kept as is but styled as appendix -->
+    </div>
+@endif
+
+@if($hasConsultantNotes)
+    <div id="consultant-notes" class="bg-white shadow rounded-lg mb-6 p-6">
+        <h3 class="text-lg font-bold text-slate-800 mb-4">Consultant Notes</h3>
+        <div class="space-y-4">
+            @foreach($assessment->pillarScores as $pillar)
+                @if(filled($pillar->commentary) || filled($pillar->key_risks) || filled($pillar->immediate_actions))
+                    <div class="border border-slate-100 rounded-lg p-4">
+                        <h4 class="text-sm font-black text-slate-900 mb-3">{{ $pillar->name }}</h4>
+                        @if(filled($pillar->commentary))
+                            <p class="text-sm text-slate-700 leading-6 mb-2"><strong>Commentary:</strong> {{ $pillar->commentary }}</p>
+                        @endif
+                        @if(filled($pillar->key_risks))
+                            <p class="text-sm text-slate-700 leading-6 mb-2"><strong>Key risks:</strong> {{ $pillar->key_risks }}</p>
+                        @endif
+                        @if(filled($pillar->immediate_actions))
+                            <p class="text-sm text-slate-700 leading-6"><strong>Immediate actions:</strong> {{ $pillar->immediate_actions }}</p>
+                        @endif
+                    </div>
+                @endif
+            @endforeach
+        </div>
     </div>
 @endif
 
@@ -444,21 +506,24 @@
         </table>
     </div>
 </div>
+</section>
 
 <!-- AI Consulting Insights -->
-<div class="mt-8">
+<section class="mt-8">
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 bg-blue-600 rounded-xl shadow-lg flex items-center justify-center">
                 <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             </div>
             <div>
-                <h3 class="text-xl font-black text-slate-800 tracking-tight">AI Consulting Insights</h3>
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stored snapshot report JSON</p>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">AI-generated client narrative</p>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight">Generated PIR Tier 1 Report Preview</h2>
             </div>
         </div>
     </div>
-    @if($snapshotReport)
+    @if($fullReportDraft)
+        @include('admin.assessments.partials.structured-report-preview', ['fullReportDraft' => $fullReportDraft, 'assessment' => $assessment])
+    @elseif($snapshotReport)
         <div class="space-y-6">
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
                 <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Intelligence Brief</h4>
@@ -543,7 +608,7 @@
         @endif
     </div>
     @endif
-</div>
+</section>
 
 @endsection
 

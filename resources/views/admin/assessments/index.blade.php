@@ -106,7 +106,7 @@
         <div class="px-8 py-6 border-b bg-amber-50/50 flex justify-between items-center">
             <div>
                 <h2 class="text-sm font-black text-amber-900 uppercase tracking-widest">Incoming Website Health-Checks</h2>
-                <p class="text-xs text-amber-700 font-bold mt-1 tracking-tighter italic">These are warm leads from the public health checks.</p>
+                <p class="text-xs text-amber-700 font-bold mt-1 tracking-tighter italic">These are snapshot submissions from the public health checks.</p>
             </div>
             <div class="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-200">
                 {{ count($publicAssessments) }} Total
@@ -143,8 +143,10 @@
                             <td class="px-8 py-5 text-center">
                                 @if($lead->priority === 'High')
                                     <span class="bg-red-500 text-white px-2 py-0.5 rounded text-[10px] font-black uppercase animate-pulse shadow-lg shadow-red-500/20 tracking-tighter">High Risk</span>
+                                @elseif($lead->priority === 'Medium')
+                                    <span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter">Medium Risk</span>
                                 @else
-                                    <span class="text-slate-300 text-[10px] font-black uppercase tracking-widest">Normal</span>
+                                    <span class="text-slate-300 text-[10px] font-black uppercase tracking-widest">{{ $lead->priority ?: 'Normal' }}</span>
                                 @endif
                             </td>
                             <td class="px-8 py-5">

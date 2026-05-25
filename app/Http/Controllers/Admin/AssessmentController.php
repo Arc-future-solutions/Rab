@@ -46,8 +46,13 @@ class AssessmentController extends Controller
        
         $assessments = $query->orderBy('created_at', 'desc')->get();
 
-        // Also fetch Warm Leads (Public Assessments)
-        $publicAssessments = \App\Models\Lead::where('lead_status', 'Warm')
+        // Public website snapshot submissions should appear regardless of CRM sales status.
+        $publicAssessments = \App\Models\Lead::whereIn('assessment_type', [
+                'PHI_SNAPSHOT',
+                'ITSM_SNAPSHOT',
+                'PIR_SNAPSHOT',
+                'SIR_SNAPSHOT',
+            ])
             ->whereIn('type', ['PHI', 'ITSM', 'PIR', 'SIR'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -64,8 +69,8 @@ class AssessmentController extends Controller
    
         if (!$assessment) {
 
-            // Fallback: Check if it's a Public Website Assessment (Warm Lead)
-            if ($lead && $lead->lead_status === 'Warm') {
+            // Fallback: Check if it's a public website snapshot submission.
+            if ($lead && in_array($lead->assessment_type, ['PHI_SNAPSHOT', 'ITSM_SNAPSHOT', 'PIR_SNAPSHOT', 'SIR_SNAPSHOT'], true)) {
                 //  dd($lead->ai_recommendation);
                 // Map Lead to an Assessment-like object for the view
                 $assessment = new Assessment([
@@ -272,12 +277,11 @@ class AssessmentController extends Controller
         ReportService $reportService,
         SnapshotAiPayloadBuilder $snapshotAiPayloadBuilder
     ) {
-        $assessment = Assessment::find($id);
-        $lead = $assessment && $assessment->snapshot_submission_id
-            ? Lead::find($assessment->snapshot_submission_id)
-            : Lead::find($id);
+        $lead = Lead::whereKey($id)
+            ->whereIn('assessment_type', ['PIR_SNAPSHOT', 'SIR_SNAPSHOT'])
+            ->first();
 
-        if (! $lead || ! in_array($lead->assessment_type, ['PIR_SNAPSHOT', 'SIR_SNAPSHOT'], true)) {
+        if (! $lead) {
             return redirect()->back()->with('error', 'AI insights can only be regenerated for PIR or SIR snapshot leads.');
         }
 
@@ -296,7 +300,6 @@ class AssessmentController extends Controller
         } catch (Throwable $e) {
             Log::error('Admin snapshot AI regeneration failed', [
                 'lead_id' => $lead->id,
-                'assessment_id' => $assessment?->id,
                 'prompt_key' => $promptKey,
                 'message' => $e->getMessage(),
             ]);

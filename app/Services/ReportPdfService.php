@@ -34,7 +34,7 @@ class ReportPdfService
         $filename = $this->filename($assessment);
         $path = $directory . '/' . $filename;
 
-        Browsershot::html($this->renderHtml($assessment))
+        $browsershot = Browsershot::html($this->renderHtml($assessment))
             ->setNodeBinary($this->nodeBinary())
             ->setNpmBinary($this->npmBinary())
             ->setNodeModulePath(base_path('node_modules'))
@@ -45,8 +45,14 @@ class ReportPdfService
             ->margins(10, 10, 24, 10)
             ->showBrowserHeaderAndFooter()
             ->headerTemplate('<span></span>')
-            ->footerTemplate($this->footerTemplate($assessment))
-            ->save($path);
+            ->footerTemplate($this->footerTemplate($assessment));
+
+        $chromePath = $this->chromePath();
+        if ($chromePath !== null) {
+            $browsershot->setChromePath($chromePath);
+        }
+
+        $browsershot->save($path);
 
         return response()->download($path, $filename)->deleteFileAfterSend(true);
     }
@@ -285,12 +291,36 @@ class ReportPdfService
 
     private function nodeBinary(): string
     {
-        return env('BROWSERSHOT_NODE_BINARY', '/home/harakaty6/.nvm/versions/node/v22.22.2/bin/node');
+        return $this->executablePath(config('services.browsershot.node_binary'), 'node', '/usr/bin/node');
     }
 
     private function npmBinary(): string
     {
-        return env('BROWSERSHOT_NPM_BINARY', '/home/harakaty6/.nvm/versions/node/v22.22.2/bin/npm');
+        return $this->executablePath(config('services.browsershot.npm_binary'), 'npm', '/usr/bin/npm');
+    }
+
+    private function chromePath(): ?string
+    {
+        $configuredPath = config('services.browsershot.chrome_path');
+
+        return $configuredPath && is_executable($configuredPath)
+            ? $configuredPath
+            : null;
+    }
+
+    private function executablePath(?string $configuredPath, string $binary, string $fallback): string
+    {
+        if ($configuredPath && is_executable($configuredPath)) {
+            return $configuredPath;
+        }
+
+        if (is_executable($fallback)) {
+            return $fallback;
+        }
+
+        $resolved = trim((string) shell_exec('command -v ' . escapeshellarg($binary)));
+
+        return $resolved !== '' ? $resolved : $binary;
     }
 
     private function logoDataUri(): string

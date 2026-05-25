@@ -17,6 +17,8 @@ class Assessment extends Model
         'documents_reviewed' => 'array',
         'divergence_areas' => 'array',
         'reporting_accuracy_risk' => 'boolean',
+        'ai_generation_started_at' => 'datetime',
+        'ai_generation_completed_at' => 'datetime',
     ];
 
     public function client()

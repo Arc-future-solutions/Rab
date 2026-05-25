@@ -741,6 +741,7 @@ class RapidConsultingController extends Controller
         $coverPdf = Browsershot::html($coverHtml)
             ->setNodeBinary($this->browsershotNodeBinary())
             ->setNpmBinary($this->browsershotNpmBinary())
+            ->setChromePath($this->browsershotChromePath())
             ->setNodeModulePath(base_path('node_modules'))
             ->format('A4')
             ->margins(0, 0, 0, 0)
@@ -756,6 +757,7 @@ class RapidConsultingController extends Controller
         $bodyPdf = Browsershot::html($bodyHtml)
             ->setNodeBinary($this->browsershotNodeBinary())
             ->setNpmBinary($this->browsershotNpmBinary())
+            ->setChromePath($this->browsershotChromePath())
             ->setNodeModulePath(base_path('node_modules'))
             ->format('A4')
             ->margins(0, 0, 0, 0)
@@ -822,12 +824,32 @@ class RapidConsultingController extends Controller
 
     private function browsershotNodeBinary(): string
     {
-        return env('BROWSERSHOT_NODE_BINARY', '/home/harakaty6/.nvm/versions/node/v22.22.2/bin/node');
+        return $this->executablePath(env('BROWSERSHOT_NODE_BINARY'), 'node', '/usr/bin/node');
     }
 
     private function browsershotNpmBinary(): string
     {
-        return env('BROWSERSHOT_NPM_BINARY', '/home/harakaty6/.nvm/versions/node/v22.22.2/bin/npm');
+        return $this->executablePath(env('BROWSERSHOT_NPM_BINARY'), 'npm', '/usr/bin/npm');
+    }
+
+    private function browsershotChromePath(): string
+    {
+        return $this->executablePath(env('BROWSERSHOT_CHROME_PATH'), 'google-chrome', '/usr/bin/google-chrome');
+    }
+
+    private function executablePath(?string $configuredPath, string $binary, string $fallback): string
+    {
+        if ($configuredPath && is_executable($configuredPath)) {
+            return $configuredPath;
+        }
+
+        if (is_executable($fallback)) {
+            return $fallback;
+        }
+
+        $resolved = trim((string) shell_exec('command -v ' . escapeshellarg($binary)));
+
+        return $resolved !== '' ? $resolved : $binary;
     }
 
     private function snapshotPdfHeaderTemplate(array $results, string $logoDataUri): string

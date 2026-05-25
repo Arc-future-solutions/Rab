@@ -3,16 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\GenerateAdminFullReport;
 use App\Models\Assessment;
 use App\Models\Client;
 use App\Models\Lead;
 use App\Models\AssessmentQuestionResponse;
 use App\Models\AssessmentPillarScore;
-use App\Services\AiReportGenerationService;
+use App\Services\AdminFullReportGenerationService;
 use App\Services\AssessmentAiPayloadBuilder;
 use App\Services\AssessmentIndexCalculator;
 use App\Services\InternalCrmService;
 use App\Services\ReportPdfService;
+use App\Services\StructuredReportDetector;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
@@ -184,25 +186,11 @@ class AssessmentScoringController extends Controller
     public function generateReport(
         Assessment $assessment,
         AssessmentAiPayloadBuilder $payloadBuilder,
-        AiReportGenerationService $aiReportGeneration
+        AdminFullReportGenerationService $fullReportGeneration
     )
     {
         $assessment->load(['questionResponses', 'pillarScores', 'client']);
-        
-        $framework = \App\Models\AssessmentFramework::where('code', $assessment->type)->with('pillars.questions')->first();
-        $questionMap = [];
-        if ($framework) {
-            foreach ($framework->pillars as $pillar) {
-                foreach ($pillar->questions as $q) {
-                    $questionMap[$q->question_code] = $q->question_text;
-                }
-            }
-        }
 
-        $pillarScores = $assessment->pillarScores
-            ->mapWithKeys(fn ($score) => [$score->name => (float) $score->score])
-            ->toArray();
-        $aiPayload = $payloadBuilder->buildFullPayload($assessment);
         $promptKey = $payloadBuilder->promptKey($assessment);
         $systemPrompt = config("ai.prompts.{$promptKey}");
 
@@ -210,99 +198,34 @@ class AssessmentScoringController extends Controller
             throw new \Exception("Prompt not found: {$promptKey}");
         }
 
-        $results = [
-            'overall_score' => $assessment->overall_score,
-            'rag_status' => $assessment->rag_status,
-            'pillar_scores' => $pillarScores,
-            'index_scores' => [
-                'BRI' => $assessment->bri,
-                'VRI' => $assessment->vri,
-                'DMI' => $assessment->dmi,
-                'RII' => $assessment->rii,
-                'CHI' => $assessment->chi,
-                'SSI' => $assessment->ssi,
-                'SMI' => $assessment->smi,
-                'SIMI' => $assessment->simi,
-                'BAURI' => $assessment->bau_readiness,
-                'smi_simi_delta' => $assessment->smi !== null && $assessment->simi !== null
-                    ? round($assessment->smi - $assessment->simi, 2)
-                    : null,
-            ],
-            'type' => $assessment->type,
-            'user' => [
-                'name' => $assessment->client->company_name ?? 'Client',
-                'company' => $assessment->client->company_name ?? 'Client',
-            ],
-            'detailed_responses' => $assessment->questionResponses->map(function($resp) use ($questionMap) {
-                $qCode = explode(':', $resp->question)[0];
-                return [
-                    'pillar_name' => $resp->pillar_name,
-                    'question_code' => $qCode,
-                    'question_text' => $questionMap[$qCode] ?? $resp->question,
-                    'score' => $resp->score,
-                    'evidence_note' => $resp->evidence_note,
-                    'respondent_role' => $resp->respondent_role,
-                    'document_source' => $resp->document_source,
-                    'stakeholder_divergence_note' => $resp->stakeholder_divergence_note,
-                    'confidence' => $resp->confidence,
-                ];
-            })->toArray(),
-        ];
-
-        $answers = $assessment->questionResponses->pluck('score', 'question')->toArray();
-
-        try {
-            $data = $aiReportGeneration->generate($promptKey, $systemPrompt, $aiPayload, [
-                'type' => strtoupper($assessment->type) . '_FULL',
-                'is_full' => true,
-                'results' => $results,
-                'answers' => $answers,
-                'assessment_id' => $assessment->id,
-                'submitted_at' => now()->toDateTimeString(),
-            ]);
-            $aiRecommendation = $data['output'] ?? $data['recommendation'] ?? null;
-            $aiDraft = $this->normaliseAiDraft($aiRecommendation, $data);
-
-            if ($aiDraft === null && blank($aiRecommendation)) {
-                Log::warning('Full assessment AI response missing usable content', [
-                    'assessment_id' => $assessment->id,
-                    'response_keys' => array_keys($data),
-                ]);
-
-                return redirect()
-                    ->route('admin.assessments.show', $assessment)
-                    ->with('error', 'AI response was received but did not include a usable report payload.');
-            }
-
-            $topRisks = $data['top_5_risks'] ?? null;
-            
-            if ($topRisks && is_array($topRisks)) {
-                $topRisks = json_encode($topRisks);
-            }
-        } catch (\Exception $e) {
-            Log::error('Full assessment AI generation failed', [
-                'assessment_id' => $assessment->id,
-                'message' => $e->getMessage(),
-            ]);
+        if ($assessment->type === 'PIR' && $assessment->report_tier === 'Tier 1 Rapid') {
+            $fullReportGeneration->markGenerating($assessment);
+            GenerateAdminFullReport::dispatch($assessment->id);
 
             return redirect()
                 ->route('admin.assessments.show', $assessment)
-                ->with('error', 'AI report generation failed: ' . $e->getMessage());
+                ->with('success', 'AI report generation started. Refresh this page in a moment.');
         }
 
-        $assessment->update([
-            'ai_recommendation' => $aiRecommendation,
-            'ai_draft_json' => $aiDraft,
-            'top_5_risks' => $topRisks,
-            'status' => 'completed'
-        ]);
+        $success = $fullReportGeneration->generate($assessment);
 
-        return redirect()->route('admin.assessments.show', $assessment)->with('success', 'AI Report generated successfully.');
+        return redirect()
+            ->route('admin.assessments.show', $assessment)
+            ->with(
+                $success ? 'success' : 'error',
+                $success
+                    ? 'AI Report generated successfully.'
+                    : 'AI report generation failed: ' . $assessment->fresh()->ai_generation_error
+            );
     }
 
-    public function exportPdf(Assessment $assessment, ReportPdfService $reportPdfService)
+    public function exportPdf(
+        Assessment $assessment,
+        ReportPdfService $reportPdfService,
+        StructuredReportDetector $structuredReportDetector
+    )
     {
-        if (!$assessment->ai_draft_json && blank($assessment->ai_recommendation)) {
+        if (! $structuredReportDetector->hasReportContent($assessment->ai_draft_json) && blank($assessment->ai_recommendation)) {
             return redirect()
                 ->route('admin.assessments.show', $assessment)
                 ->with('error', 'Generate AI report first before exporting the PDF.');
@@ -577,6 +500,7 @@ class AssessmentScoringController extends Controller
             'intelligence_dashboard',
             'stakeholder_intelligence',
             'intelligence_profile',
+            'reporting_accuracy_risk_finding',
             'risk_register',
             'raid_summary',
             'root_cause_analysis',
