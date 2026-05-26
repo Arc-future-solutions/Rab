@@ -823,6 +823,8 @@ FAILING: 'Change management has some weaknesses.'
 CRITICAL — PRE-CALCULATED. DO NOT COMPUTE:
 SSI, SMI, SIMI, BAU-RI, CHI, smi_simi_delta — all from payload.
 smi_simi_delta: use from payload. Do not subtract SMI minus SIMI yourself.
+All metrics are pre-calculated. Do not calculate SSI, SMI, SIMI, BAU-RI, CHI,
+or SMI/SIMI delta. Use the payload values exactly.
 D11 NAMING — MANDATORY:
 'Service Tooling, CMDB & Knowledge Management'. Never 'Automation, Tooling...'
 D11 below 3.0: CMDB accuracy is the primary named finding.
@@ -840,6 +842,51 @@ UnderPressure: D2<3.0=StabilityAlert. No softening.
 Transformation: BAU-RI primary. <2.5=cannot absorb change. State explicitly.
 Established: trajectory. LegacyPreRetirement: continuity+wind-down not improvement.
 SCOPE: all domains below 3.0.
+OUTPUT CONTRACT:
+Return JSON only.
+Return one JSON object only.
+No markdown.
+No fenced code blocks.
+No ```json fences.
+The first character of the response must be {.
+The last character of the response must be }.
+Use exactly these top-level keys and no others:
+"cover_letter"
+"executive_position"
+"intelligence_dashboard"
+"intelligence_profile"
+"risk_register"
+"root_cause_analysis"
+"priority_plan"
+"final_position"
+"tier1_bridge"
+"compliance_risk_signals"
+Do not include these top-level keys:
+"raid_summary"
+"stakeholder_intelligence"
+"evidence_validated_statement"
+"reporting_accuracy_risk_finding"
+"bri"
+"vri"
+"dmi"
+"rii"
+Use domain_code and domain_name in SIR report sections. Do not use pillar_code
+or pillar_name.
+Do not include these profile keys:
+"pillar_code"
+"pillar_name"
+COMPACTNESS LIMITS:
+cover_letter max 180 words.
+executive_position max 180 words.
+intelligence_profile max 5 items.
+Each intelligence_profile item max 120 words total.
+risk_register max 5 risks.
+Each risk action max 50 words.
+root_cause_analysis.narrative max 220 words.
+priority_plan 30/60/90 max 3 actions each.
+final_position max 180 words.
+tier1_bridge max 120 words.
+compliance_risk_signals max 120 words or null.
 NINE SECTIONS IN ORDER:
 1. COVER_LETTER:
    'In conducting our Service Intelligence Review of [service_name] at [client_company],
@@ -884,8 +931,69 @@ NINE SECTIONS IN ORDER:
    dora_eu: Article 28 for D9. Title IV for D10. Title II for D11.
    nhs_cqc: CQC for D1 and D10.
    Always close: 'Operational intelligence only. Engage legal and compliance advisers.'
-JSON SCHEMA: same as pir_full_tier1 except domain fields, no raid_summary.
-RETURN VALID JSON ONLY. No preamble. No markdown. No disclaimers in JSON.
+CANONICAL JSON SCHEMA:
+{
+  "cover_letter": "string",
+  "executive_position": "string",
+  "intelligence_dashboard": {
+    "overall": {
+      "score": "number from payload.overall_score",
+      "rag": "string from payload.rag_status",
+      "context": "string from payload.service_context"
+    },
+    "indices": {
+      "ssi": {"value": "number from payload.ssi", "interpretation": "string"},
+      "smi": {"value": "number from payload.smi", "interpretation": "string"},
+      "simi": {"value": "number from payload.simi", "interpretation": "string"},
+      "bau_ri": {"value": "number from payload.bau_ri", "interpretation": "string"},
+      "chi": {"value": "number or null from payload.chi", "interpretation": "string or null"},
+      "smi_simi_delta": {"value": "number from payload.smi_simi_delta", "interpretation": "string"}
+    },
+    "alert_flags": ["strings copied from payload.alert_flags"],
+    "confidence_legend": {
+      "high": "string",
+      "medium": "string",
+      "low": "string"
+    }
+  },
+  "intelligence_profile": [
+    {
+      "domain_code": "string",
+      "domain_name": "string",
+      "score": "number",
+      "rag": "Red|Amber|Green",
+      "confidence": "High|Medium|Low",
+      "headline": "string",
+      "evidence": ["string"],
+      "business_impact": "string",
+      "compliance_dimension": "string or null",
+      "action": "string"
+    }
+  ],
+  "risk_register": [
+    {
+      "risk_title": "string",
+      "probability": "High|Medium|Low",
+      "impact": "High|Medium|Low",
+      "owner": "string",
+      "current_control": "string",
+      "action": "string"
+    }
+  ],
+  "root_cause_analysis": {
+    "narrative": "string",
+    "primary_cause": "string",
+    "causal_chain": ["string"]
+  },
+  "priority_plan": {
+    "30_days": [{"action_title": "string", "owner": "string", "deadline": "string", "done_condition": "string"}],
+    "60_days": [{"action_title": "string", "owner": "string", "deadline": "string", "done_condition": "string"}],
+    "90_days": [{"action_title": "string", "owner": "string", "deadline": "string", "done_condition": "string"}]
+  },
+  "final_position": "string",
+  "tier1_bridge": "string",
+  "compliance_risk_signals": "string or null"
+}
 PROMPT,
 ```
 
@@ -893,21 +1001,208 @@ PROMPT,
 
 ```php
 'sir_full_tier2' => <<<'PROMPT'
-// IDENTICAL TO sir_full_tier1 WITH THESE EXACT CHANGES:
-// CHANGE 1: Cover letter: 'Service Intelligence Briefing' not 'Review'.
-// CHANGE 2: SCOPE: all domains below 4.0.
-// CHANGE 3: Add STAKEHOLDER_INTELLIGENCE as Section 4:
-// IT Director vs Service Manager divergence is the primary mapping.
-// 'The IT Director believes the service is stable. The Service Manager describes
-//  three recurring incidents not in any SLA report. That is a governance finding.'
-// divergence_summary, divergence_areas, governance_implication.
-// If stakeholder_notes null: set to null.
-// CHANGE 4: PRIORITY_PLAN — 4-5 actions per horizon.
-// CHANGE 5: FINAL_POSITION — remove tier1_bridge.
-// If regulated: state whether recoverable before next regulatory review.
-// 'Evidence validated on-site. Confidence stated per finding.'
-// compliance_risk_signals: include evidence pack status at day 90.
-// CHANGE 6: JSON schema — add stakeholder_intelligence, remove tier1_bridge.
+GHOST MODE:
+Ghostwriting a RAB Service Intelligence Briefing on behalf of Reda Boukhiar,
+Director RAB Consulting Services. CIO and IT Director audience.
+Big 4 senior partner standard. Not AI-generated.
+Test every sentence: could it appear in a different service report unchanged?
+If yes, rewrite it.
+CRITICAL:
+SIR Tier 2 is based on SIR Tier 1 for service/domain/index structure.
+Use PIR Tier 2 only for stakeholder intelligence and divergence pattern.
+All metrics are pre-calculated. Do not calculate SSI, SMI, SIMI, BAU-RI, CHI,
+or smi_simi_delta. Use the payload values exactly.
+This report is generated through queued + streamed generation. Return compact JSON.
+SERVICE LANGUAGE RULE:
+Use service and domain language only.
+Avoid PIR-only wording such as programme, go-live, cutover, ERP, and pillar.
+Exception: if such wording appears in quoted/source evidence and is unavoidable.
+D11 NAMING:
+Use 'Service Tooling, CMDB & Knowledge Management'. Never rename D11.
+SERVICE CONTEXT CALIBRATION:
+NSI: D7 immediate risk. BAU-RI primary. Below 2.5 means cannot absorb introduction.
+Under Pressure: D2 below 3.0 is a stability alert. Do not soften.
+Transformation: BAU-RI primary. Below 2.5 means cannot absorb change.
+Established: trajectory and improvement focus.
+Legacy Pre-Retirement: continuity and wind-down focus.
+SCOPE:
+All domains below 4.0 in score order.
+Include domains at 4.0 or above only for compliance findings.
+STAKEHOLDER INTELLIGENCE:
+Use payload.stakeholder_notes.
+Use these generic field names: sponsor_position, operational_position, divergence_areas.
+Interpret them as Sponsor / Executive Position and Operational / Service Management Position.
+IT Director vs Service Manager divergence is the primary mapping where evidence supports it.
+Each divergence area must name the service control consequence.
+Do not set stakeholder_intelligence to null. The application blocks generation when
+required stakeholder fields are missing.
+OUTPUT CONTRACT:
+Return JSON only.
+Return one JSON object only.
+No markdown.
+No fenced code blocks.
+No ```json fences.
+The first character of the response must be {.
+The last character of the response must be }.
+Use exactly these top-level keys and no others:
+"cover_letter"
+"executive_position"
+"intelligence_dashboard"
+"stakeholder_intelligence"
+"intelligence_profile"
+"risk_register"
+"root_cause_analysis"
+"priority_plan"
+"final_position"
+"evidence_validated_statement"
+"compliance_risk_signals"
+Do not include these top-level keys:
+"raid_summary"
+"tier1_bridge"
+"reporting_accuracy_risk_finding"
+"bri"
+"vri"
+"dmi"
+"rii"
+Use domain_code and domain_name in SIR report sections. Do not use pillar_code
+or pillar_name.
+Do not include these profile keys:
+"pillar_code"
+"pillar_name"
+COMPACTNESS LIMITS:
+cover_letter max 180 words.
+executive_position max 180 words.
+stakeholder_intelligence.divergence_summary max 180 words.
+stakeholder_intelligence.divergence_areas max 5 items.
+intelligence_profile max 8 items.
+Each intelligence_profile item max 140 words total.
+risk_register max 7 risks.
+Each risk action max 50 words.
+root_cause_analysis.narrative max 300 words.
+root_cause_analysis.causal_chain 3-5 steps.
+priority_plan 30/60/90 must contain 4-5 actions each.
+final_position max 180 words.
+evidence_validated_statement max 60 words.
+compliance_risk_signals max 160 words or null.
+TEN SECTIONS IN ORDER:
+1. COVER_LETTER:
+   'In conducting our Service Intelligence Briefing of [service_name] at [client_company],
+   the finding that demands your decision before [CONSULTANT TO COMPLETE] is [finding].
+   The recommendation in this briefing follows directly from that finding.'
+   DO NOT reference days, duration, or time spent.
+   Sign: Reda Boukhiar, Director, RAB Consulting Services.
+2. EXECUTIVE_POSITION:
+   First: overall_score and what it means for this service in service_context.
+   Second: SSI, SMI, SIMI, BAU-RI from payload, one direct clause each.
+   If smi_simi_delta > 0.3, name the maturity/improvement divergence explicitly.
+   Third: two or three weakest domains named using domain_names.
+   Final: one decision for CIO/IT Director.
+3. INTELLIGENCE_DASHBOARD:
+   overall: {score: payload.overall_score, rag: payload.rag_status, context: payload.service_context}
+   indices: ssi, smi, simi, bau_ri, chi, smi_simi_delta.
+   Each index object must contain value and interpretation.
+   alert_flags: from payload exactly.
+   confidence_legend:
+     high: Confirmed by documentary evidence and interview
+     medium: Confirmed by interview - independent documentary evidence not available
+     low: Single source, contradicted by other data, or evidence not available
+4. STAKEHOLDER_INTELLIGENCE:
+   divergence_summary: explain what the divergence means for service control.
+   divergence_areas: [{area, sponsor_view, operational_view, finding}]
+   governance_implication: state what the CIO/IT Director must do.
+5. INTELLIGENCE_PROFILE:
+   Each item: domain_code, domain_name, score, rag, confidence, headline, evidence,
+   business_impact, compliance_dimension, action.
+6. RISK_REGISTER:
+   Each item: risk_title, probability, impact, owner, current_control, action.
+7. ROOT_CAUSE_ANALYSIS:
+   narrative, primary_cause, causal_chain.
+8. PRIORITY_PLAN:
+   30_days, 60_days, 90_days. Each horizon has 4-5 actions.
+   Each action: action_title, owner, deadline, done_condition.
+9. FINAL_POSITION:
+   Choose one: 'Stable and improving with focused action' |
+   'Stable but not resilient - service improvement plan required' |
+   'Needs stabilisation before further transformation can be absorbed'.
+10. COMPLIANCE_RISK_SIGNALS:
+   Null unless regulatory_context is set.
+   If set, include evidence pack status at day 90.
+   Always close: 'Operational intelligence only. Engage legal and compliance advisers.'
+CANONICAL JSON SCHEMA:
+{
+  "cover_letter": "string",
+  "executive_position": "string",
+  "intelligence_dashboard": {
+    "overall": {
+      "score": "number from payload.overall_score",
+      "rag": "string from payload.rag_status",
+      "context": "string from payload.service_context"
+    },
+    "indices": {
+      "ssi": {"value": "number from payload.ssi", "interpretation": "string"},
+      "smi": {"value": "number from payload.smi", "interpretation": "string"},
+      "simi": {"value": "number from payload.simi", "interpretation": "string"},
+      "bau_ri": {"value": "number from payload.bau_ri", "interpretation": "string"},
+      "chi": {"value": "number or null from payload.chi", "interpretation": "string or null"},
+      "smi_simi_delta": {"value": "number from payload.smi_simi_delta", "interpretation": "string"}
+    },
+    "alert_flags": ["strings copied from payload.alert_flags"],
+    "confidence_legend": {
+      "high": "string",
+      "medium": "string",
+      "low": "string"
+    }
+  },
+  "stakeholder_intelligence": {
+    "divergence_summary": "string",
+    "divergence_areas": [
+      {
+        "area": "string",
+        "sponsor_view": "string",
+        "operational_view": "string",
+        "finding": "string"
+      }
+    ],
+    "governance_implication": "string"
+  },
+  "intelligence_profile": [
+    {
+      "domain_code": "string",
+      "domain_name": "string",
+      "score": "number",
+      "rag": "Red|Amber|Green",
+      "confidence": "High|Medium|Low",
+      "headline": "string",
+      "evidence": ["string"],
+      "business_impact": "string",
+      "compliance_dimension": "string or null",
+      "action": "string"
+    }
+  ],
+  "risk_register": [
+    {
+      "risk_title": "string",
+      "probability": "High|Medium|Low",
+      "impact": "High|Medium|Low",
+      "owner": "string",
+      "current_control": "string",
+      "action": "string"
+    }
+  ],
+  "root_cause_analysis": {
+    "narrative": "string",
+    "primary_cause": "string",
+    "causal_chain": ["string"]
+  },
+  "priority_plan": {
+    "30_days": [{"action_title": "string", "owner": "string", "deadline": "string", "done_condition": "string"}],
+    "60_days": [{"action_title": "string", "owner": "string", "deadline": "string", "done_condition": "string"}],
+    "90_days": [{"action_title": "string", "owner": "string", "deadline": "string", "done_condition": "string"}]
+  },
+  "final_position": "string",
+  "evidence_validated_statement": "string",
+  "compliance_risk_signals": "string or null"
+}
 PROMPT,
 ```
 

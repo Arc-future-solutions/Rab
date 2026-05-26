@@ -259,6 +259,7 @@ class AdminPirTier2BriefingWorkflowTest extends TestCase
             ->assertSee('Delivery leads report unresolved blockers.')
             ->assertSee('Sponsor must reset decision rights and evidence standards.')
             ->assertSee('The evidence has been validated through direct document review and interview.')
+            ->assertDontSee('Tier 1 Bridge')
             ->assertDontSee('Evidence Gaps / Recommended Deep-Dive');
 
         $fakeService = new class extends ReportPdfService {

@@ -155,7 +155,7 @@ class AdminReportPdfExportTest extends TestCase
         $this->actingAs($this->admin())
             ->get(route('admin.assessments.show', $assessment))
             ->assertOk()
-            ->assertSee('Rebuild AI Insights')
+            ->assertSee('Generate AI Report')
             ->assertSee(route('admin.assessments.generateReport', $assessment), false);
     }
 
@@ -264,9 +264,145 @@ class AdminReportPdfExportTest extends TestCase
 
         $this->assertStringContainsString('Reporting Accuracy Risk Finding', $html);
         $this->assertStringContainsString('No reporting accuracy risk finding recorded.', $html);
+        $this->assertStringContainsString('Tier 1 Bridge:', $html);
+        $this->assertStringContainsString('Tier 1 bridge narrative.', $html);
         $this->assertStringContainsString('BRI of 3.93 confirms readiness evidence is usable.', $html);
         $this->assertStringContainsString('Confirmed by documentary evidence and interview', $html);
     }
+
+    public function test_sir_tier1_report_html_renders_sir_indices_and_omits_pir_only_sections(): void
+    {
+        $assessment = $this->assessment([
+            'ai_draft_json' => $this->sirTier1Draft(),
+            'report_tier' => 'Tier 1 Rapid',
+            'type' => 'SIR',
+            'name' => 'Service Stability Review',
+            'target_entity' => 'Payments Platform',
+            'delivery_stage' => null,
+            'service_context' => 'Transformation',
+            'bri' => null,
+            'vri' => null,
+            'dmi' => null,
+            'rii' => null,
+            'ssi' => 2.4,
+            'smi' => 2.8,
+            'simi' => 2.3,
+            'bau_readiness' => 2.5,
+            'chi' => 2.6,
+        ]);
+
+        $html = app(ReportPdfService::class)->renderHtml($assessment->fresh());
+
+        $this->assertStringContainsString('RAB SERVICE INTELLIGENCE REVIEW', $html);
+        $this->assertStringContainsString('SSI', $html);
+        $this->assertStringContainsString('SMI', $html);
+        $this->assertStringContainsString('SIMI', $html);
+        $this->assertStringContainsString('BAU-RI', $html);
+        $this->assertStringContainsString('CHI', $html);
+        $this->assertStringContainsString('SMI/SIMI Delta', $html);
+        $this->assertStringContainsString('Service Intelligence Profile', $html);
+        $this->assertStringContainsString('D1 — Service Governance &amp; Ownership', $html);
+        $this->assertStringNotContainsString('>BRI<', $html);
+        $this->assertStringNotContainsString('>VRI<', $html);
+        $this->assertStringNotContainsString('>DMI<', $html);
+        $this->assertStringNotContainsString('>RII<', $html);
+        $this->assertStringNotContainsString('RAID Summary', $html);
+        $this->assertStringNotContainsString('Stakeholder Intelligence', $html);
+        $this->assertStringNotContainsString('Reporting Accuracy Risk Finding', $html);
+        $this->assertStringNotContainsString('Evidence Validated Statement', $html);
+    }
+
+    public function test_sir_tier2_report_html_renders_stakeholder_briefing_and_omits_pir_only_sections(): void
+    {
+        $assessment = $this->assessment([
+            'ai_draft_json' => $this->sirTier2Draft(),
+            'report_tier' => 'Tier 2 Full',
+            'type' => 'SIR',
+            'name' => 'Service Stability Briefing',
+            'target_entity' => 'Payments Platform',
+            'delivery_stage' => null,
+            'service_context' => 'Transformation',
+            'sponsor_position' => 'Sponsor sees service reporting as controlled.',
+            'operational_position' => 'Service management reports unresolved incidents.',
+            'divergence_areas' => ['service reporting'],
+            'bri' => null,
+            'vri' => null,
+            'dmi' => null,
+            'rii' => null,
+            'ssi' => 2.4,
+            'smi' => 2.8,
+            'simi' => 2.3,
+            'bau_readiness' => 2.5,
+            'chi' => 2.6,
+        ]);
+        $this->seedQuestionBank('SIR');
+
+        AssessmentPillarScore::create([
+            'assessment_id' => $assessment->id,
+            'name' => 'D1 — Service Governance & Ownership',
+            'score' => 2.4,
+            'rag_status' => 'Amber',
+        ]);
+
+        AssessmentQuestionResponse::create([
+            'assessment_id' => $assessment->id,
+            'pillar_name' => 'D1 — Service Governance & Ownership',
+            'question' => 'D1.F1: Is decision ownership clear?',
+            'score' => 2,
+            'evidence_note' => 'Ownership evidence gap.',
+            'confidence' => 'High',
+            'confidence_level' => 'High',
+            'respondent_role' => 'Service Manager',
+            'document_source' => 'Service governance pack',
+            'stakeholder_divergence_note' => 'Sponsor sees stability; service management reports recurring incidents.',
+        ]);
+
+        $html = app(ReportPdfService::class)->renderHtml($assessment->fresh());
+
+        $this->assertStringContainsString('RAB SERVICE INTELLIGENCE BRIEFING', $html);
+        $this->assertStringContainsString('Stakeholder Intelligence', $html);
+        $this->assertStringContainsString('Sponsor / Executive Position', $html);
+        $this->assertStringContainsString('Operational / Service Management Position', $html);
+        $this->assertStringContainsString('Service reporting divergence', $html);
+        $this->assertStringContainsString('Evidence Validated Statement', $html);
+        $this->assertStringContainsString('Evidence validated on-site. Confidence stated per finding.', $html);
+        $this->assertStringContainsString('Stakeholder Divergence', $html);
+        $this->assertStringContainsString('Sponsor sees stability; service management reports recurring incidents.', $html);
+        $this->assertStringContainsString('SSI', $html);
+        $this->assertStringContainsString('SMI/SIMI Delta', $html);
+        $this->assertStringContainsString('D1 — Service Governance &amp; Ownership', $html);
+        $this->assertStringNotContainsString('RAID Summary', $html);
+        $this->assertStringNotContainsString('Tier 1 Bridge:', $html);
+        $this->assertStringNotContainsString('Reporting Accuracy Risk Finding', $html);
+        $this->assertStringNotContainsString('>BRI<', $html);
+        $this->assertStringNotContainsString('>VRI<', $html);
+        $this->assertStringNotContainsString('>DMI<', $html);
+        $this->assertStringNotContainsString('>RII<', $html);
+    }
+
+    public function test_tier2_pdf_does_not_render_tier1_bridge_for_pir_or_sir(): void
+    {
+        foreach (['PIR', 'SIR'] as $framework) {
+            $assessment = $this->assessment([
+                'ai_draft_json' => array_merge(
+                    $framework === 'SIR' ? $this->sirTier1Draft() : $this->draft(),
+                    ['tier1_bridge' => 'This Tier 1 bridge should not render for Tier 2.']
+                ),
+                'report_tier' => 'Tier 2 Full',
+                'type' => $framework,
+                'delivery_stage' => $framework === 'PIR' ? 'Delivery Recovery' : null,
+                'service_context' => $framework === 'SIR' ? 'Transformation' : null,
+            ]);
+
+            $html = app(ReportPdfService::class)->renderHtml($assessment->fresh());
+
+            $this->assertStringNotContainsString('Tier 1 Bridge:', $html);
+            $this->assertStringNotContainsString('This Tier 1 bridge should not render for Tier 2.', $html);
+            $this->assertStringNotContainsString('Evidence Gaps / Recommended Deep-Dive', $html);
+        }
+    }
+
+
 
     public function test_pdf_risk_heat_map_renders_readable_axes_markers_and_legend(): void
     {
@@ -498,6 +634,106 @@ class AdminReportPdfExportTest extends TestCase
             'compliance_risk_signals' => 'Regulatory evidence trail is incomplete.',
             'final_position' => 'Proceed with controlled recovery.',
             'evidence_validated_statement' => 'Evidence has been validated through direct document review and interview.',
+        ];
+    }
+
+    private function sirTier1Draft(): array
+    {
+        return [
+            'cover_letter' => 'Dear Sponsor, this is the formal service transmittal.',
+            'executive_position' => 'The service needs stabilisation before further transformation can be absorbed.',
+            'intelligence_dashboard' => [
+                'overall' => ['score' => 2.8, 'rag' => 'Amber', 'context' => 'Transformation'],
+                'indices' => [
+                    'ssi' => ['value' => 2.4, 'interpretation' => 'SSI interpretation.'],
+                    'smi' => ['value' => 2.8, 'interpretation' => 'SMI interpretation.'],
+                    'simi' => ['value' => 2.3, 'interpretation' => 'SIMI interpretation.'],
+                    'bau_ri' => ['value' => 2.5, 'interpretation' => 'BAU readiness interpretation.'],
+                    'chi' => ['value' => 2.6, 'interpretation' => 'CHI interpretation.'],
+                    'smi_simi_delta' => ['value' => 0.5, 'interpretation' => 'Delta interpretation.'],
+                ],
+                'alert_flags' => ['D1 below 3.0'],
+            ],
+            'intelligence_profile' => [
+                [
+                    'domain_code' => 'D1',
+                    'domain_name' => 'D1 — Service Governance & Ownership',
+                    'score' => 2.4,
+                    'confidence' => 'High',
+                    'evidence' => 'Ownership evidence gap.',
+                    'business_impact' => 'Incident decisions are slow.',
+                    'action' => 'Reset ownership.',
+                ],
+            ],
+            'risk_register' => [],
+            'root_cause_analysis' => [
+                'narrative' => 'The root cause is weak service ownership.',
+                'primary_cause' => 'Ownership ambiguity',
+                'causal_chain' => ['Unclear accountability'],
+            ],
+            'priority_plan' => [
+                '30_days' => [],
+                '60_days' => [],
+                '90_days' => [],
+            ],
+            'final_position' => 'Needs stabilisation before further transformation can be absorbed',
+            'tier1_bridge' => 'Further evidence is required.',
+            'compliance_risk_signals' => null,
+        ];
+    }
+
+    private function sirTier2Draft(): array
+    {
+        return [
+            'cover_letter' => 'Dear Sponsor, this is the formal service briefing transmittal.',
+            'executive_position' => 'The service needs stabilisation before further transformation can be absorbed.',
+            'intelligence_dashboard' => [
+                'overall' => ['score' => 2.8, 'rag' => 'Amber', 'context' => 'Transformation'],
+                'indices' => [
+                    'ssi' => ['value' => 2.4, 'interpretation' => 'SSI interpretation.'],
+                    'smi' => ['value' => 2.8, 'interpretation' => 'SMI interpretation.'],
+                    'simi' => ['value' => 2.3, 'interpretation' => 'SIMI interpretation.'],
+                    'bau_ri' => ['value' => 2.5, 'interpretation' => 'BAU readiness interpretation.'],
+                    'chi' => ['value' => 2.6, 'interpretation' => 'CHI interpretation.'],
+                    'smi_simi_delta' => ['value' => 0.5, 'interpretation' => 'Delta interpretation.'],
+                ],
+                'alert_flags' => ['D1 below 3.0'],
+            ],
+            'stakeholder_intelligence' => [
+                'divergence_summary' => 'Sponsor and service management positions diverge on reporting confidence.',
+                'divergence_areas' => [[
+                    'area' => 'Service reporting divergence',
+                    'sponsor_view' => 'Sponsor sees service reporting as controlled.',
+                    'operational_view' => 'Service management reports unresolved incidents.',
+                    'finding' => 'Service reporting does not reflect operational instability.',
+                ]],
+                'governance_implication' => 'The CIO must reset service reporting evidence standards.',
+            ],
+            'intelligence_profile' => [
+                [
+                    'domain_code' => 'D1',
+                    'domain_name' => 'D1 — Service Governance & Ownership',
+                    'score' => 2.4,
+                    'confidence' => 'High',
+                    'evidence' => 'Ownership evidence gap.',
+                    'business_impact' => 'Incident decisions are slow.',
+                    'action' => 'Reset ownership.',
+                ],
+            ],
+            'risk_register' => [],
+            'root_cause_analysis' => [
+                'narrative' => 'The root cause is weak service ownership.',
+                'primary_cause' => 'Ownership ambiguity',
+                'causal_chain' => ['Unclear accountability', 'Weak reporting', 'Delayed action'],
+            ],
+            'priority_plan' => [
+                '30_days' => [['action_title' => 'Reset ownership', 'owner' => 'Service Owner', 'deadline' => '30 days', 'done_condition' => 'Owners named']],
+                '60_days' => [['action_title' => 'Validate reporting', 'owner' => 'Reporting Lead', 'deadline' => '60 days', 'done_condition' => 'Evidence reconciled']],
+                '90_days' => [['action_title' => 'Evidence pack', 'owner' => 'CIO', 'deadline' => '90 days', 'done_condition' => 'Evidence pack complete']],
+            ],
+            'final_position' => 'Needs stabilisation before further transformation can be absorbed',
+            'evidence_validated_statement' => 'Evidence validated on-site. Confidence stated per finding.',
+            'compliance_risk_signals' => null,
         ];
     }
 

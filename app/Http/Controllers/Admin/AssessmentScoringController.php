@@ -198,7 +198,17 @@ class AssessmentScoringController extends Controller
             throw new \Exception("Prompt not found: {$promptKey}");
         }
 
-        if ($assessment->type === 'PIR' && in_array($assessment->report_tier, ['Tier 1 Rapid', 'Tier 2 Full'], true)) {
+        $preflightError = $fullReportGeneration->validateBeforeGeneration($assessment);
+        if ($preflightError !== null) {
+            return redirect()
+                ->route('admin.assessments.show', $assessment)
+                ->with('error', $preflightError);
+        }
+
+        if (
+            ($assessment->type === 'PIR' && in_array($assessment->report_tier, ['Tier 1 Rapid', 'Tier 2 Full'], true))
+            || ($assessment->type === 'SIR' && in_array($assessment->report_tier, ['Tier 1 Rapid', 'Tier 2 Full'], true))
+        ) {
             $fullReportGeneration->markGenerating($assessment);
             GenerateAdminFullReport::dispatch($assessment->id);
 

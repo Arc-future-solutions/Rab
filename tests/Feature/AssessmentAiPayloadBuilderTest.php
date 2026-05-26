@@ -141,6 +141,9 @@ class AssessmentAiPayloadBuilderTest extends TestCase
             'client_concerns' => 'Recurring incidents are not visible in service reporting.',
             'service_context' => 'Transformation',
             'annual_service_cost' => 250000,
+            'sponsor_position' => 'Sponsor sees service reporting as controlled.',
+            'operational_position' => 'Service management reports unresolved recurring incidents.',
+            'divergence_areas' => ['service reporting', 'incident recurrence'],
             'chi' => 3.0,
         ]);
 
@@ -175,6 +178,7 @@ class AssessmentAiPayloadBuilderTest extends TestCase
             'question' => 'D11.F1: Is CMDB governance accurate?',
             'score' => 3,
             'confidence' => 'medium',
+            'stakeholder_divergence_note' => 'Sponsor sees CMDB as stable; operations reports ownership gaps.',
         ]);
 
         $builder = new AssessmentAiPayloadBuilder();
@@ -191,14 +195,142 @@ class AssessmentAiPayloadBuilderTest extends TestCase
         $this->assertArrayNotHasKey('annual_service_cost', $snapshotPayload);
         $this->assertSame('sir_full_tier2', $builder->promptKey($assessment));
         $this->assertSame('SIR', $payload['framework']);
+        $this->assertSame('Briefing', $payload['tier']);
         $this->assertSame('Payments Platform', $payload['service_name']);
         $this->assertSame('Recurring incidents are not visible in service reporting.', $payload['primary_concern']);
         $this->assertSame('Transformation', $payload['service_context']);
         $this->assertSame(250000.0, $payload['annual_service_cost']);
+        $this->assertSame('Sponsor sees service reporting as controlled.', $payload['stakeholder_notes']['sponsor_position']);
+        $this->assertSame('Service management reports unresolved recurring incidents.', $payload['stakeholder_notes']['operational_position']);
+        $this->assertSame(['service reporting', 'incident recurrence'], $payload['stakeholder_notes']['divergence_areas']);
+        $this->assertSame(
+            'Sponsor sees CMDB as stable; operations reports ownership gaps.',
+            $payload['evidence_notes']['D11.F1']['stakeholder_divergence_note']
+        );
         $this->assertSame('D1 — Service Governance & Ownership', $payload['domain_names']['DD1']);
         $this->assertSame('D11 — Service Tooling, CMDB & Knowledge Management', $payload['domain_names']['DD11']);
         $this->assertSame('D11 — Service Tooling, CMDB & Knowledge Management', $payload['domain_names']['D11']);
         $this->assertArrayNotHasKey('pillar_names', $payload);
+        $this->assertArrayNotHasKey('pillar_scores', $payload);
+        foreach (['bri', 'vri', 'dmi', 'rii'] as $pirIndex) {
+            $this->assertArrayNotHasKey($pirIndex, $payload);
+        }
+    }
+
+    public function test_sir_tier1_review_payload_includes_required_contract_fields_and_domain_question_responses(): void
+    {
+        $client = Client::create([
+            'company_name' => 'Service Review Co',
+            'primary_contact' => 'Sam Sponsor',
+        ]);
+
+        $assessment = Assessment::create([
+            'client_id' => $client->id,
+            'name' => 'Customer Support Service',
+            'target_entity' => 'Customer Support Platform',
+            'type' => 'SIR',
+            'report_tier' => 'Tier 1 Rapid',
+            'overall_score' => 2.8,
+            'rag_status' => 'Amber',
+            'status' => 'draft',
+            'client_concerns' => 'Recurring incidents are not visible in service reporting.',
+            'service_context' => 'Transformation',
+            'regulatory_context' => 'fca_uk',
+            'sponsor_name' => 'Sam Sponsor',
+            'interview_count' => 4,
+            'documents_reviewed' => "SLA pack\nIncident report",
+            'annual_service_cost' => 250000,
+            'chi' => 2.6,
+        ]);
+
+        $framework = AssessmentFramework::create([
+            'code' => 'SIR',
+            'name' => 'Service Intelligence Review',
+        ]);
+
+        foreach ([
+            ['D1', 'Service Governance & Ownership', 2.5, 'D1.F1', true],
+            ['D2', 'Incident & Major Incident Management', 2.4, 'D2.F1', false],
+            ['D4', 'Problem Management', 2.7, 'D4.F1', false],
+            ['D5', 'Change & Release Management', 2.3, 'D5.F1', false],
+            ['D6', 'Service Performance, SLA & Reporting', 3.1, 'D6.F1', false],
+            ['D7', 'Service Transition & BAU Readiness', 2.2, 'D7.F1', false],
+            ['D8', 'Service Operations & Support Model', 3.2, 'D8.F1', false],
+            ['D10', 'Operational Resilience & Continuity', 2.6, 'D10.F1', true],
+            ['D11', 'Service Tooling, CMDB & Knowledge Management', 2.8, 'D11.F1', false],
+            ['D12', 'Service Intelligence & Continuous Value', 2.5, 'D12.F1', false],
+        ] as [$domainCode, $domainName, $score, $questionCode, $isCompliance]) {
+            $pillar = AssessmentPillar::create([
+                'framework_id' => $framework->id,
+                'code' => $domainCode,
+                'name' => $domainName,
+                'weight' => 1,
+            ]);
+
+            AssessmentQuestionBank::create([
+                'framework_id' => $framework->id,
+                'pillar_id' => $pillar->id,
+                'level' => 'full',
+                'question_code' => $questionCode,
+                'question_text' => "{$domainName} question",
+                'is_compliance' => $isCompliance,
+            ]);
+
+            AssessmentPillarScore::create([
+                'assessment_id' => $assessment->id,
+                'name' => "{$domainCode} — {$domainName}",
+                'score' => $score,
+                'rag_status' => 'Amber',
+            ]);
+
+            AssessmentQuestionResponse::create([
+                'assessment_id' => $assessment->id,
+                'pillar_name' => "{$domainCode} — {$domainName}",
+                'question' => "{$questionCode}: {$domainName} question",
+                'score' => (int) floor($score),
+                'evidence_note' => "{$domainCode} evidence",
+                'respondent_role' => 'Service Owner',
+                'document_source' => 'Service pack',
+                'confidence' => $domainCode === 'D1' ? 'low' : 'high',
+                'confidence_level' => $domainCode === 'D1' ? 'low' : 'high',
+            ]);
+        }
+
+        $builder = new AssessmentAiPayloadBuilder();
+        $payload = $builder->buildFullPayload($assessment);
+
+        $this->assertSame('sir_full_tier1', $builder->promptKey($assessment));
+        $this->assertSame('SIR', $payload['framework']);
+        $this->assertSame('Review', $payload['tier']);
+        $this->assertSame('Customer Support Platform', $payload['service_name']);
+        $this->assertSame('Transformation', $payload['service_context']);
+        $this->assertArrayHasKey('domain_scores', $payload);
+        $this->assertArrayHasKey('domain_names', $payload);
+        $this->assertSame(2.8, $payload['overall_score']);
+        $this->assertSame('Amber', $payload['rag_status']);
+        foreach (['ssi', 'smi', 'simi', 'bau_ri', 'chi', 'smi_simi_delta'] as $indexKey) {
+            $this->assertArrayHasKey($indexKey, $payload);
+            $this->assertIsNumeric($payload[$indexKey]);
+        }
+        $this->assertArrayHasKey('evidence_notes', $payload);
+        $this->assertSame('Reda Boukhiar', $payload['consultant_name']);
+        $this->assertSame('Sam Sponsor', $payload['sponsor_name']);
+        $this->assertSame(4, $payload['interview_count']);
+        $this->assertSame(['SLA pack', 'Incident report'], $payload['documents_reviewed']);
+        $this->assertSame('Low', $payload['confidence_level']);
+        $this->assertNull($payload['stakeholder_notes']);
+        $this->assertSame(250000.0, $payload['annual_service_cost']);
+        $this->assertArrayHasKey('D1.F1', $payload['compliance_question_scores']);
+        $this->assertArrayHasKey('D10.F1', $payload['compliance_question_scores']);
+
+        $this->assertNotEmpty($payload['question_responses']);
+        foreach ($payload['question_responses'] as $response) {
+            $this->assertSame(['id', 'domain_code', 'score', 'is_compliance'], array_keys($response));
+            $this->assertArrayNotHasKey('pillar_code', $response);
+        }
+
+        $this->assertArrayNotHasKey('pillar_names', $payload);
+        $this->assertArrayNotHasKey('pillar_scores', $payload);
     }
 
     public function test_full_payload_keeps_only_report_relevant_question_evidence(): void

@@ -5,9 +5,31 @@
     $priorityPlan = $report['priority_plan'] ?? [];
     $dashboard = $report['intelligence_dashboard'] ?? [];
     $indices = $dashboard['indices'] ?? [];
+    if (!is_array($indices)) $indices = [];
     $scores = $assessment->pillarScores->sortBy('score')->values();
     $isPir = $meta['is_pir'];
     $isBriefing = $meta['is_briefing'];
+    $profileAreaCodeKey = $isPir ? 'pillar_code' : 'domain_code';
+    $profileAreaNameKey = $isPir ? 'pillar_name' : 'domain_name';
+    $profilePageTitle = $isPir
+        ? 'Intelligence Briefing Profile'
+        : 'Service Intelligence Profile';
+    $indexDefinitions = $isPir
+        ? [
+            'bri' => 'BRI',
+            'vri' => 'VRI',
+            'dmi' => 'DMI',
+            'rii' => 'RII',
+            'chi' => 'CHI',
+        ]
+        : [
+            'ssi' => 'SSI',
+            'smi' => 'SMI',
+            'simi' => 'SIMI',
+            'bau_ri' => 'BAU-RI',
+            'chi' => 'CHI',
+            'smi_simi_delta' => 'SMI/SIMI Delta',
+        ];
     $appendix = is_array($appendix ?? null) ? $appendix : [];
     $appendixRows = $appendix['rows'] ?? [];
     $appendixIsTier2 = (bool) ($appendix['is_tier2'] ?? $isBriefing);
@@ -117,6 +139,34 @@
         }
 
         return trim((string) $value);
+    };
+    $normalisedIndex = function (array $indices, string $key) {
+        $aliases = [$key, strtolower($key), strtoupper($key)];
+
+        if ($key === 'bau_ri') {
+            $aliases[] = 'BAURI';
+            $aliases[] = 'bau-ri';
+        }
+
+        foreach ($aliases as $alias) {
+            if (array_key_exists($alias, $indices)) {
+                $item = $indices[$alias];
+
+                if (is_array($item)) {
+                    return [
+                        'value' => $item['value'] ?? $item['score'] ?? '',
+                        'interpretation' => $item['interpretation'] ?? '',
+                    ];
+                }
+
+                return [
+                    'value' => $item,
+                    'interpretation' => '',
+                ];
+            }
+        }
+
+        return null;
     };
 
     $rowsForHorizon = function ($items) {
@@ -434,14 +484,14 @@
 
 @php
     $dashboardHtml = '<div class="index-grid">';
-    foreach (['bri' => 'BRI', 'vri' => 'VRI', 'dmi' => 'DMI', 'rii' => 'RII', 'chi' => 'CHI'] as $storedName => $displayName) {
-        $item = $indices[$storedName] ?? $indices[$displayName] ?? null;
+    foreach ($indexDefinitions as $storedName => $displayName) {
+        $item = $normalisedIndex($indices, $storedName);
         if ($item === null) {
             continue;
         }
 
-        $value = is_array($item) ? ($item['score'] ?? $item['value'] ?? '') : $item;
-        $interpretation = is_array($item) ? ($item['interpretation'] ?? '') : '';
+        $value = $item['value'];
+        $interpretation = $item['interpretation'];
         $tone = is_numeric($value) ? $scoreTone((float) $value) : $scoreTone((float) ($assessment->overall_score ?? 0));
         $dashboardHtml .= '<div class="index-card"><div class="index-name">' . e($displayName) . '</div><div class="index-value">' . e($value) . '</div><div class="index-rag" style="color:' . e($tone['color']) . '; background:' . e($tone['bg']) . ';">' . e($tone['label']) . '</div><div class="evidence" style="font-style: normal; margin-top: 6px;">' . e($interpretation) . '</div><div class="methodology-stamp">RAB Proprietary Methodology™</div></div>';
     }
@@ -480,8 +530,10 @@
         $stakeholder = $report['stakeholder_intelligence'] ?? null;
         if ($stakeholder) {
             $stakeholderHtml = '<p>' . nl2br(e($asText($stakeholder['divergence_summary'] ?? ''))) . '</p>';
-            $stakeholderHtml .= '<div class="grid-2"><div class="panel"><h2>Sponsor Position</h2><p>' . e($asText($stakeholder['sponsor_position'] ?? $assessment->sponsor_position ?? '') ?: 'Not recorded.') . '</p></div>';
-            $stakeholderHtml .= '<div class="panel"><h2>Operational Position</h2><p>' . e($asText($stakeholder['operational_position'] ?? $assessment->operational_position ?? '') ?: 'Not recorded.') . '</p></div></div>';
+            $sponsorLabel = $isPir ? 'Sponsor Position' : 'Sponsor / Executive Position';
+            $operationalLabel = $isPir ? 'Operational Position' : 'Operational / Service Management Position';
+            $stakeholderHtml .= '<div class="grid-2"><div class="panel"><h2>' . e($sponsorLabel) . '</h2><p>' . e($asText($stakeholder['sponsor_position'] ?? $assessment->sponsor_position ?? '') ?: 'Not recorded.') . '</p></div>';
+            $stakeholderHtml .= '<div class="panel"><h2>' . e($operationalLabel) . '</h2><p>' . e($asText($stakeholder['operational_position'] ?? $assessment->operational_position ?? '') ?: 'Not recorded.') . '</p></div></div>';
 
             $divergenceAreas = $stakeholder['divergence_areas'] ?? [];
             if (is_array($divergenceAreas) && $divergenceAreas !== []) {
@@ -514,7 +566,10 @@
             'LOW' => ['color' => '#B91C1C', 'bg' => '#FEE2E2'],
             default => ['color' => '#B45309', 'bg' => '#FEF3C7'],
         };
-        $profileHtml .= '<div class="panel"><h2>' . e($finding['headline'] ?? $finding['pillar_name'] ?? $finding['domain_name'] ?? 'Finding') . '</h2>'
+        $areaName = $finding[$profileAreaNameKey] ?? null;
+        $areaCode = $finding[$profileAreaCodeKey] ?? null;
+        $profileHtml .= '<div class="panel"><h2>' . e($finding['headline'] ?? $areaName ?? 'Finding') . '</h2>'
+            . ($areaCode || $areaName ? '<p class="evidence">' . e(trim(($areaCode ? "{$areaCode} — " : '') . (string) $areaName)) . '</p>' : '')
             . '<p><span class="confidence-badge" style="background:' . e($confidenceTone['bg']) . '; color:' . e($confidenceTone['color']) . ';">' . e($confidence) . '</span> Score: ' . e($finding['score'] ?? '-') . '</p>'
             . '<p class="evidence">' . e($asText($finding['evidence'] ?? 'Evidence not available.')) . '</p>'
             . '<p>' . e($asText($finding['business_impact'] ?? '')) . '</p>'
@@ -522,7 +577,7 @@
     }
     if ($profile === []) $profileHtml .= '<div class="panel">No intelligence profile findings were returned.</div>';
 @endphp
-{!! $pageTemplate('Intelligence Briefing Profile', $profileHtml) !!}
+{!! $pageTemplate($profilePageTitle, $profileHtml) !!}
 
 @php
     $riskHtml = '<table><tr><th>#</th><th>Risk</th><th>Probability</th><th>Impact</th><th>Owner</th><th>Current Control</th><th>Action</th></tr>';
@@ -628,7 +683,7 @@
 @php
     $finalHtml = '<div class="panel"><h2>' . e($report['final_position'] ?? 'Final position not returned.') . '</h2></div>';
     if (!$isBriefing && !empty($report['tier1_bridge'])) {
-        $finalHtml .= '<p><strong>Tier 1 bridge:</strong> ' . e($asText($report['tier1_bridge'])) . '</p>';
+        $finalHtml .= '<p><strong>Tier 1 Bridge:</strong> ' . e($asText($report['tier1_bridge'])) . '</p>';
     }
 @endphp
 {!! $pageTemplate('Final Position', $finalHtml) !!}

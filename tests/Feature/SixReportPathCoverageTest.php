@@ -111,9 +111,11 @@ class SixReportPathCoverageTest extends TestCase
 
         Http::fake(function ($request) {
             $payload = $request->data();
+            $input = json_decode($payload['messages'][0]['content'][0]['text'], true);
+            $draft = $this->draft($input['prompt_key'] ?? null);
 
             if (($payload['stream'] ?? false) === true) {
-                return Http::response($this->streamedAnthropicResponse($this->draft()), 200, [
+                return Http::response($this->streamedAnthropicResponse($draft), 200, [
                     'Content-Type' => 'text/event-stream',
                 ]);
             }
@@ -122,7 +124,7 @@ class SixReportPathCoverageTest extends TestCase
                 'id' => 'msg_123',
                 'content' => [[
                     'type' => 'text',
-                    'text' => json_encode($this->draft()),
+                    'text' => json_encode($draft),
                 ]],
             ]);
         });
@@ -133,7 +135,7 @@ class SixReportPathCoverageTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('admin.assessments.generateReport', $assessment))
             ->assertRedirect(route('admin.assessments.show', $assessment))
-            ->assertSessionHas('success', $framework === 'PIR'
+            ->assertSessionHas('success', ($framework === 'PIR' || in_array($expectedPromptKey, ['sir_full_tier1', 'sir_full_tier2'], true))
                 ? 'AI report generation started. Refresh this page in a moment.'
                 : 'AI Report generated successfully.');
 
@@ -143,7 +145,7 @@ class SixReportPathCoverageTest extends TestCase
             $aiPayload = $input['ai_payload'];
 
             return $request->url() === 'https://example.test/v1/messages'
-                && (($framework === 'PIR') === (($payload['stream'] ?? false) === true))
+                && (($framework === 'PIR' || in_array($expectedPromptKey, ['sir_full_tier1', 'sir_full_tier2'], true)) === (($payload['stream'] ?? false) === true))
                 && $payload['system'] === config("ai.prompts.{$expectedPromptKey}")
                 && $input['prompt_key'] === $expectedPromptKey
                 && $input['metadata']['type'] === "{$framework}_FULL"
@@ -164,7 +166,7 @@ class SixReportPathCoverageTest extends TestCase
 
         $assessment->refresh();
 
-        $this->assertSame($this->draft(), $assessment->ai_draft_json);
+        $this->assertEquals($this->draft($expectedPromptKey), $assessment->ai_draft_json);
         $this->assertSame('completed', $assessment->status);
     }
 
@@ -425,8 +427,118 @@ class SixReportPathCoverageTest extends TestCase
         }
     }
 
-    private function draft(): array
+    private function draft(?string $promptKey = null): array
     {
+        if ($promptKey === 'sir_full_tier1') {
+            return [
+                'cover_letter' => 'Formal SIR transmittal',
+                'executive_position' => 'Service position',
+                'intelligence_dashboard' => [
+                    'overall' => ['score' => 3.2, 'rag' => 'Amber', 'context' => 'Transformation'],
+                    'indices' => [
+                        'ssi' => ['value' => 3.2, 'interpretation' => 'Stability is partial.'],
+                        'smi' => ['value' => 3.1, 'interpretation' => 'Maturity is partial.'],
+                        'simi' => ['value' => 2.9, 'interpretation' => 'Improvement is weaker.'],
+                        'bau_ri' => ['value' => 3.0, 'interpretation' => 'BAU readiness is partial.'],
+                        'chi' => ['value' => 3.0, 'interpretation' => 'Compliance health is amber.'],
+                        'smi_simi_delta' => ['value' => 0.2, 'interpretation' => 'Maturity and improvement are broadly aligned.'],
+                    ],
+                    'alert_flags' => ['D1 below 3.0'],
+                    'confidence_legend' => [
+                        'high' => 'Confirmed by documentary evidence and interview',
+                        'medium' => 'Supported by interview or partial evidence',
+                        'low' => 'Single source or contradicted evidence',
+                    ],
+                ],
+                'intelligence_profile' => [[
+                    'domain_code' => 'D1',
+                    'domain_name' => 'D1 — Service Governance & Ownership',
+                    'score' => 2.5,
+                    'rag' => 'Amber',
+                    'confidence' => 'High',
+                    'headline' => 'Service ownership needs reset',
+                    'evidence' => ['D1 evidence note'],
+                    'business_impact' => 'Ownership ambiguity slows incident decisions.',
+                    'compliance_dimension' => null,
+                    'action' => 'Name service owners.',
+                ]],
+                'risk_register' => [],
+                'root_cause_analysis' => [
+                    'narrative' => 'Root cause narrative.',
+                    'primary_cause' => 'Ownership ambiguity',
+                    'causal_chain' => ['Unclear ownership'],
+                ],
+                'priority_plan' => [
+                    '30_days' => [],
+                    '60_days' => [],
+                    '90_days' => [],
+                ],
+                'final_position' => 'Stable but not resilient — improvement programme required',
+                'tier1_bridge' => 'Further evidence is required.',
+                'compliance_risk_signals' => null,
+            ];
+        }
+
+        if ($promptKey === 'sir_full_tier2') {
+            return [
+                'cover_letter' => 'Formal SIR briefing transmittal',
+                'executive_position' => 'Service briefing position',
+                'intelligence_dashboard' => [
+                    'overall' => ['score' => 3.2, 'rag' => 'Amber', 'context' => 'Transformation'],
+                    'indices' => [
+                        'ssi' => ['value' => 3.2, 'interpretation' => 'Stability is partial.'],
+                        'smi' => ['value' => 3.1, 'interpretation' => 'Maturity is partial.'],
+                        'simi' => ['value' => 2.9, 'interpretation' => 'Improvement is weaker.'],
+                        'bau_ri' => ['value' => 3.0, 'interpretation' => 'BAU readiness is partial.'],
+                        'chi' => ['value' => 3.0, 'interpretation' => 'Compliance health is amber.'],
+                        'smi_simi_delta' => ['value' => 0.2, 'interpretation' => 'Maturity and improvement are broadly aligned.'],
+                    ],
+                    'alert_flags' => ['D1 below 3.0'],
+                    'confidence_legend' => [
+                        'high' => 'Confirmed by documentary evidence and interview',
+                        'medium' => 'Supported by interview or partial evidence',
+                        'low' => 'Single source or contradicted evidence',
+                    ],
+                ],
+                'stakeholder_intelligence' => [
+                    'divergence_summary' => 'Sponsor and service management positions diverge on reporting confidence.',
+                    'divergence_areas' => [[
+                        'area' => 'Service reporting',
+                        'sponsor_view' => 'Sponsor sees status as controlled.',
+                        'operational_view' => 'Service management reports evidence gaps.',
+                        'finding' => 'Reporting is ahead of operational evidence.',
+                    ]],
+                    'governance_implication' => 'The CIO must reset reporting evidence standards.',
+                ],
+                'intelligence_profile' => [[
+                    'domain_code' => 'D1',
+                    'domain_name' => 'D1 — Service Governance & Ownership',
+                    'score' => 2.5,
+                    'rag' => 'Amber',
+                    'confidence' => 'High',
+                    'headline' => 'Service ownership needs reset',
+                    'evidence' => ['D1 evidence note'],
+                    'business_impact' => 'Ownership ambiguity slows incident decisions.',
+                    'compliance_dimension' => null,
+                    'action' => 'Name service owners.',
+                ]],
+                'risk_register' => [],
+                'root_cause_analysis' => [
+                    'narrative' => 'Root cause narrative.',
+                    'primary_cause' => 'Ownership ambiguity',
+                    'causal_chain' => ['Unclear ownership', 'Weak reporting', 'Delayed action'],
+                ],
+                'priority_plan' => [
+                    '30_days' => [['action_title' => 'Reset ownership', 'owner' => 'Service Owner', 'deadline' => '30 days', 'done_condition' => 'Owners named']],
+                    '60_days' => [['action_title' => 'Validate reporting', 'owner' => 'Reporting Lead', 'deadline' => '60 days', 'done_condition' => 'Evidence reconciled']],
+                    '90_days' => [['action_title' => 'Evidence pack', 'owner' => 'CIO', 'deadline' => '90 days', 'done_condition' => 'Evidence pack complete']],
+                ],
+                'final_position' => 'Stable but not resilient - service improvement plan required',
+                'evidence_validated_statement' => 'Evidence validated on-site. Confidence stated per finding.',
+                'compliance_risk_signals' => null,
+            ];
+        }
+
         return [
             'cover_letter' => 'Formal transmittal',
             'executive_position' => 'Recoverable with intervention',

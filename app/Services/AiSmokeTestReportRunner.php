@@ -98,7 +98,7 @@ class AiSmokeTestReportRunner
         ],
         'sir_full_tier2' => [
             'Stable and improving with focused action',
-            'Stable but not resilient — improvement programme required',
+            'Stable but not resilient - service improvement plan required',
             'Needs stabilisation before further transformation can be absorbed',
         ],
     ];

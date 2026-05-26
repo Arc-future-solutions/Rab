@@ -20,6 +20,13 @@ class AdminFullReportGenerationService
     {
         $assessment->load(['questionResponses', 'pillarScores', 'client', 'assessor']);
 
+        $preflightError = $this->validateBeforeGeneration($assessment);
+        if ($preflightError !== null) {
+            $this->markFailed($assessment, $preflightError);
+
+            return false;
+        }
+
         $aiPayload = $this->payloadBuilder->buildFullPayload($assessment);
         $promptKey = $this->payloadBuilder->promptKey($assessment);
         $systemPrompt = config("ai.prompts.{$promptKey}");
@@ -76,6 +83,33 @@ class AdminFullReportGenerationService
                 return false;
             }
 
+            $validationError = $this->validateStructuredDraft($assessment, $aiDraft);
+            if ($validationError !== null) {
+                Log::warning('Full assessment AI response failed structured contract validation', [
+                    'assessment_id' => $assessment->id,
+                    'framework' => $assessment->type,
+                    'report_tier' => $assessment->report_tier,
+                    'message' => $validationError,
+                    'draft_keys' => array_keys($aiDraft),
+                ]);
+
+                $this->markFailed($assessment, $validationError);
+
+                if ($usesStreaming) {
+                    $this->logStreamedGeneration(
+                        $assessment,
+                        'warning',
+                        'Queued streamed admin full-report generation failed contract validation',
+                        'failed',
+                        $data,
+                        RuntimeException::class,
+                        $validationError
+                    );
+                }
+
+                return false;
+            }
+
             $topRisks = $data['top_5_risks'] ?? null;
             if ($topRisks && is_array($topRisks)) {
                 $topRisks = json_encode($topRisks);
@@ -83,7 +117,7 @@ class AdminFullReportGenerationService
 
             $assessment->forceFill([
                 'ai_recommendation' => $aiRecommendation,
-                'ai_draft_json' => $aiDraft,
+                'ai_draft_json' => $this->canonicalStructuredDraft($assessment, $aiDraft),
                 'top_5_risks' => $topRisks,
                 'status' => 'completed',
                 'ai_generation_status' => 'completed',
@@ -136,6 +170,45 @@ class AdminFullReportGenerationService
         ])->save();
     }
 
+    public function validateBeforeGeneration(Assessment $assessment): ?string
+    {
+        if (! $this->isSirTier2($assessment)) {
+            return null;
+        }
+
+        $assessment->loadMissing(['questionResponses']);
+
+        $missingFields = [];
+
+        if (blank($assessment->sponsor_position)) {
+            $missingFields[] = 'sponsor_position';
+        }
+
+        if (blank($assessment->operational_position)) {
+            $missingFields[] = 'operational_position';
+        }
+
+        if ($this->stringList($assessment->divergence_areas) === []) {
+            $missingFields[] = 'divergence_areas';
+        }
+
+        $hasQuestionDivergence = $assessment->questionResponses
+            ->contains(fn ($response) => filled($response->stakeholder_divergence_note));
+
+        $hasAssessmentDivergence = $this->stringList($assessment->divergence_areas) !== [];
+
+        if (! $hasQuestionDivergence && ! $hasAssessmentDivergence) {
+            $missingFields[] = 'stakeholder_divergence_note or assessment-level divergence_areas';
+        }
+
+        if ($missingFields === []) {
+            return null;
+        }
+
+        return 'SIR Tier 2 generation requires stakeholder divergence inputs before Claude: '
+            . implode(', ', array_values(array_unique($missingFields))) . '.';
+    }
+
     private function markFailed(Assessment $assessment, string $message): void
     {
         $assessment->forceFill([
@@ -147,8 +220,205 @@ class AdminFullReportGenerationService
 
     private function shouldUseStreaming(Assessment $assessment): bool
     {
-        return strtoupper((string) $assessment->type) === 'PIR'
-            && in_array($assessment->report_tier, ['Tier 1 Rapid', 'Tier 2 Full'], true);
+        $framework = strtoupper((string) $assessment->type);
+
+        return ($framework === 'PIR' && in_array($assessment->report_tier, ['Tier 1 Rapid', 'Tier 2 Full'], true))
+            || ($framework === 'SIR' && in_array($assessment->report_tier, ['Tier 1 Rapid', 'Tier 2 Full'], true));
+    }
+
+    private function validateStructuredDraft(Assessment $assessment, array $draft): ?string
+    {
+        if ($this->isSirTier2($assessment)) {
+            return $this->validateSirTier2StructuredDraft($draft);
+        }
+
+        if (strtoupper((string) $assessment->type) !== 'SIR' || $assessment->report_tier !== 'Tier 1 Rapid') {
+            return null;
+        }
+
+        $requiredKeys = [
+            'cover_letter',
+            'executive_position',
+            'intelligence_dashboard',
+            'intelligence_profile',
+            'risk_register',
+            'root_cause_analysis',
+            'priority_plan',
+            'final_position',
+            'tier1_bridge',
+            'compliance_risk_signals',
+        ];
+
+        $forbiddenKeys = [
+            'raid_summary',
+            'stakeholder_intelligence',
+            'evidence_validated_statement',
+            'reporting_accuracy_risk_finding',
+            'bri',
+            'vri',
+            'dmi',
+            'rii',
+        ];
+
+        $missingKeys = array_values(array_diff($requiredKeys, array_keys($draft)));
+        if ($missingKeys !== []) {
+            return 'SIR Tier 1 AI response is missing required canonical keys: ' . implode(', ', $missingKeys);
+        }
+
+        $extraKeys = array_values(array_diff(array_keys($draft), $requiredKeys));
+        if ($extraKeys !== []) {
+            return 'SIR Tier 1 AI response included non-canonical top-level keys: ' . implode(', ', $extraKeys);
+        }
+
+        $presentForbiddenKeys = array_values(array_intersect(array_keys($draft), $forbiddenKeys));
+        if ($presentForbiddenKeys !== []) {
+            return 'SIR Tier 1 AI response included forbidden PIR/Tier 2 keys: ' . implode(', ', $presentForbiddenKeys);
+        }
+
+        $dashboard = $draft['intelligence_dashboard'];
+        if (! is_array($dashboard)) {
+            return 'SIR Tier 1 AI response intelligence_dashboard must be an object.';
+        }
+
+        $indices = $dashboard['indices'] ?? null;
+        if (! is_array($indices)) {
+            return 'SIR Tier 1 AI response intelligence_dashboard.indices must be an object.';
+        }
+
+        $requiredIndices = ['ssi', 'smi', 'simi', 'bau_ri', 'chi', 'smi_simi_delta'];
+        $normalisedIndexKeys = array_map(fn ($key) => strtolower((string) $key), array_keys($indices));
+        $missingIndices = array_values(array_diff($requiredIndices, $normalisedIndexKeys));
+        if ($missingIndices !== []) {
+            return 'SIR Tier 1 AI response is missing required SIR indices: ' . implode(', ', $missingIndices);
+        }
+
+        $forbiddenIndices = ['bri', 'vri', 'dmi', 'rii'];
+        $presentForbiddenIndices = array_values(array_intersect($normalisedIndexKeys, $forbiddenIndices));
+        if ($presentForbiddenIndices !== []) {
+            return 'SIR Tier 1 AI response included forbidden PIR indices: ' . implode(', ', $presentForbiddenIndices);
+        }
+
+        if (! is_array($draft['intelligence_profile'])) {
+            return 'SIR Tier 1 AI response intelligence_profile must be an array.';
+        }
+
+        foreach ($draft['intelligence_profile'] as $index => $finding) {
+            if (! is_array($finding)) {
+                return "SIR Tier 1 intelligence_profile item {$index} must be an object.";
+            }
+
+            foreach (['domain_code', 'domain_name'] as $requiredProfileKey) {
+                if (! array_key_exists($requiredProfileKey, $finding)) {
+                    return "SIR Tier 1 intelligence_profile item {$index} is missing {$requiredProfileKey}.";
+                }
+            }
+
+            foreach (['pillar_code', 'pillar_name'] as $forbiddenProfileKey) {
+                if (array_key_exists($forbiddenProfileKey, $finding)) {
+                    return "SIR Tier 1 intelligence_profile item {$index} included forbidden {$forbiddenProfileKey}.";
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function validateSirTier2StructuredDraft(array $draft): ?string
+    {
+        $requiredKeys = $this->sirTier2ReportKeys();
+        $forbiddenKeys = [
+            'raid_summary',
+            'tier1_bridge',
+            'reporting_accuracy_risk_finding',
+            'bri',
+            'vri',
+            'dmi',
+            'rii',
+        ];
+
+        $missingKeys = array_values(array_diff($requiredKeys, array_keys($draft)));
+        if ($missingKeys !== []) {
+            return 'SIR Tier 2 AI response is missing required canonical keys: ' . implode(', ', $missingKeys);
+        }
+
+        $extraKeys = array_values(array_diff(array_keys($draft), $requiredKeys));
+        if ($extraKeys !== []) {
+            return 'SIR Tier 2 AI response included non-canonical top-level keys: ' . implode(', ', $extraKeys);
+        }
+
+        $presentForbiddenKeys = array_values(array_intersect(array_keys($draft), $forbiddenKeys));
+        if ($presentForbiddenKeys !== []) {
+            return 'SIR Tier 2 AI response included forbidden PIR/Tier 1 keys: ' . implode(', ', $presentForbiddenKeys);
+        }
+
+        if (! is_array($draft['intelligence_dashboard'])) {
+            return 'SIR Tier 2 AI response intelligence_dashboard must be an object.';
+        }
+
+        $indices = $draft['intelligence_dashboard']['indices'] ?? null;
+        if (! is_array($indices)) {
+            return 'SIR Tier 2 AI response intelligence_dashboard.indices must be an object.';
+        }
+
+        $requiredIndices = ['ssi', 'smi', 'simi', 'bau_ri', 'chi', 'smi_simi_delta'];
+        $normalisedIndexKeys = array_map(fn ($key) => strtolower((string) $key), array_keys($indices));
+        $missingIndices = array_values(array_diff($requiredIndices, $normalisedIndexKeys));
+        if ($missingIndices !== []) {
+            return 'SIR Tier 2 AI response is missing required SIR indices: ' . implode(', ', $missingIndices);
+        }
+
+        $forbiddenIndices = ['bri', 'vri', 'dmi', 'rii'];
+        $presentForbiddenIndices = array_values(array_intersect($normalisedIndexKeys, $forbiddenIndices));
+        if ($presentForbiddenIndices !== []) {
+            return 'SIR Tier 2 AI response included forbidden PIR indices: ' . implode(', ', $presentForbiddenIndices);
+        }
+
+        if (! is_array($draft['stakeholder_intelligence'])) {
+            return 'SIR Tier 2 AI response stakeholder_intelligence must be an object.';
+        }
+
+        foreach (['divergence_summary', 'divergence_areas', 'governance_implication'] as $requiredStakeholderKey) {
+            if (! array_key_exists($requiredStakeholderKey, $draft['stakeholder_intelligence'])) {
+                return "SIR Tier 2 stakeholder_intelligence is missing {$requiredStakeholderKey}.";
+            }
+        }
+
+        if (! is_array($draft['stakeholder_intelligence']['divergence_areas'])) {
+            return 'SIR Tier 2 stakeholder_intelligence.divergence_areas must be an array.';
+        }
+
+        if (! is_array($draft['intelligence_profile'])) {
+            return 'SIR Tier 2 AI response intelligence_profile must be an array.';
+        }
+
+        foreach ($draft['intelligence_profile'] as $index => $finding) {
+            if (! is_array($finding)) {
+                return "SIR Tier 2 intelligence_profile item {$index} must be an object.";
+            }
+
+            foreach (['domain_code', 'domain_name'] as $requiredProfileKey) {
+                if (! array_key_exists($requiredProfileKey, $finding)) {
+                    return "SIR Tier 2 intelligence_profile item {$index} is missing {$requiredProfileKey}.";
+                }
+            }
+
+            foreach (['pillar_code', 'pillar_name'] as $forbiddenProfileKey) {
+                if (array_key_exists($forbiddenProfileKey, $finding)) {
+                    return "SIR Tier 2 intelligence_profile item {$index} included forbidden {$forbiddenProfileKey}.";
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function canonicalStructuredDraft(Assessment $assessment, array $draft): array
+    {
+        if ($this->isSirTier2($assessment)) {
+            return array_intersect_key($draft, array_flip($this->sirTier2ReportKeys()));
+        }
+
+        return $draft;
     }
 
     private function logStreamedGeneration(
@@ -502,6 +772,45 @@ class AdminFullReportGenerationService
             'priority_plan',
             'final_position',
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function sirTier2ReportKeys(): array
+    {
+        return [
+            'cover_letter',
+            'executive_position',
+            'intelligence_dashboard',
+            'stakeholder_intelligence',
+            'intelligence_profile',
+            'risk_register',
+            'root_cause_analysis',
+            'priority_plan',
+            'final_position',
+            'evidence_validated_statement',
+            'compliance_risk_signals',
+        ];
+    }
+
+    private function isSirTier2(Assessment $assessment): bool
+    {
+        return strtoupper((string) $assessment->type) === 'SIR'
+            && $assessment->report_tier === 'Tier 2 Full';
+    }
+
+    private function stringList($value): array
+    {
+        if (is_array($value)) {
+            return array_values(array_filter(array_map('trim', $value), fn ($item) => $item !== ''));
+        }
+
+        if (! is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n|,/', $value)), fn ($item) => $item !== ''));
     }
 
     private function normaliseAiResponsePayload($responseData): array

@@ -117,8 +117,41 @@ class AdminAssessmentShowTest extends TestCase
             ->assertOk()
             ->assertSee('Regenerate AI Report')
             ->assertSee(route('admin.assessments.generateReport', $assessment), false)
+            ->assertDontSee('Evidence Gaps / Recommended Deep-Dive')
             ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $assessment->id), false)
             ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $lead->id), false);
+    }
+
+    public function test_tier2_structured_preview_does_not_render_tier1_bridge_for_pir_or_sir(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin-tier2-no-tier1-bridge@example.com',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
+        foreach (['PIR', 'SIR'] as $framework) {
+            $lead = $this->snapshotLead([
+                'email' => strtolower($framework) . '-tier2-no-bridge@example.com',
+                'booking_token' => strtolower($framework) . '-tier2-no-bridge-token',
+            ]);
+            $assessment = $this->formalPirTier1Assessment($lead);
+            $assessment->forceFill([
+                'type' => $framework,
+                'report_tier' => 'Tier 2 Full',
+                'status' => 'completed',
+                'ai_generation_status' => 'completed',
+                'ai_draft_json' => $this->structuredPirTier1Draft(),
+                'ai_recommendation' => json_encode($this->structuredPirTier1Draft()),
+            ])->save();
+
+            $this->actingAs($admin)
+                ->get(route('admin.assessments.show', $assessment))
+                ->assertOk()
+                ->assertDontSee('Tier 1 Bridge')
+                ->assertDontSee('Evidence Gaps / Recommended Deep-Dive');
+        }
     }
 
     public function test_formal_completed_pir_tier2_with_ai_draft_shows_regenerate_ai_report_action(): void
@@ -343,7 +376,9 @@ class AdminAssessmentShowTest extends TestCase
             ->assertSee('Root Cause Analysis')
             ->assertSee('Priority Plan')
             ->assertSee('Final Position')
-            ->assertSee('Evidence Gaps / Recommended Deep-Dive')
+            ->assertSee('Tier 1 Bridge')
+            ->assertSee('Evidence gaps and recommended deep-dive areas')
+            ->assertDontSee('Evidence Gaps / Recommended Deep-Dive')
             ->assertSee('Compliance Risk Signals')
             ->assertSee('Reporting Accuracy Risk Finding')
             ->assertSee('Decision Required')

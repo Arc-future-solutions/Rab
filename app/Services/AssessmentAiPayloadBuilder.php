@@ -88,7 +88,7 @@ class AssessmentAiPayloadBuilder
             'rag_status' => $assessment->rag_status,
             'regulatory_context' => $assessment->regulatory_context,
             'alert_flags' => $this->alertFlags($pillarScores),
-            'question_responses' => $this->questionResponses($assessment),
+            'question_responses' => $this->questionResponses($assessment, $framework),
             'compliance_question_scores' => $this->complianceQuestionScores($assessment),
         ];
 
@@ -182,17 +182,18 @@ class AssessmentAiPayloadBuilder
             ->toArray();
     }
 
-    private function questionResponses(Assessment $assessment): array
+    private function questionResponses(Assessment $assessment, string $framework): array
     {
         $questionBank = $this->questionBank($assessment);
+        $areaCodeKey = $framework === 'SIR' ? 'domain_code' : 'pillar_code';
 
-        return $assessment->questionResponses->map(function ($response) use ($questionBank) {
+        return $assessment->questionResponses->map(function ($response) use ($questionBank, $areaCodeKey) {
             $code = $this->questionCode($response->question);
             $bankQuestion = $questionBank[$code] ?? null;
 
             return [
                 'id' => $code,
-                'pillar_code' => $bankQuestion?->pillar?->code ?? explode(' — ', (string) $response->pillar_name)[0],
+                $areaCodeKey => $bankQuestion?->pillar?->code ?? explode(' — ', (string) $response->pillar_name)[0],
                 'score' => (int) $response->score,
                 'is_compliance' => (bool) ($bankQuestion?->is_compliance ?? false),
             ];

@@ -54,6 +54,99 @@ class AiPromptConfigTest extends TestCase
         $this->assertStringContainsString('Include evidence_validated_statement.', $prompt);
     }
 
+    public function test_sir_full_tier1_prompt_defines_standalone_review_schema_contract(): void
+    {
+        $prompt = config('ai.prompts.sir_full_tier1');
+
+        foreach ($this->canonicalSirTier1Keys() as $key) {
+            $this->assertStringContainsString("\"{$key}\"", $prompt);
+        }
+
+        foreach ([
+            'Return one JSON object only.',
+            'No markdown.',
+            'No fenced code blocks.',
+            'No ```json fences.',
+            'The first character of the response must be {.',
+            'The last character of the response must be }.',
+            'Use exactly these top-level keys and no others',
+            'Do not include these top-level keys:',
+            'Use domain_code and domain_name in SIR report sections.',
+            'All metrics are pre-calculated',
+            'Do not calculate SSI, SMI, SIMI, BAU-RI, CHI',
+            'Use the payload values exactly.',
+            'smi_simi_delta: use from payload.',
+        ] as $requiredText) {
+            $this->assertStringContainsString($requiredText, $prompt);
+        }
+
+        foreach ([
+            'raid_summary',
+            'stakeholder_intelligence',
+            'evidence_validated_statement',
+            'reporting_accuracy_risk_finding',
+            'bri',
+            'vri',
+            'dmi',
+            'rii',
+        ] as $forbiddenKey) {
+            $this->assertStringContainsString("\"{$forbiddenKey}\"", $prompt);
+        }
+
+        foreach ([
+            'cover_letter max 180 words.',
+            'executive_position max 180 words.',
+            'intelligence_profile max 5 items.',
+            'risk_register max 5 risks.',
+            'priority_plan 30/60/90 max 3 actions each.',
+            'compliance_risk_signals max 120 words or null.',
+        ] as $limit) {
+            $this->assertStringContainsString($limit, $prompt);
+        }
+    }
+
+    public function test_sir_full_tier2_prompt_defines_standalone_briefing_schema_contract(): void
+    {
+        $prompt = config('ai.prompts.sir_full_tier2');
+
+        foreach ($this->canonicalSirTier2Keys() as $key) {
+            $this->assertStringContainsString("\"{$key}\"", $prompt);
+        }
+
+        foreach ([
+            'SIR Tier 2 is based on SIR Tier 1 for service/domain/index structure.',
+            'Use PIR Tier 2 only for stakeholder intelligence and divergence pattern.',
+            'This report is generated through queued + streamed generation.',
+            'Avoid PIR-only wording such as programme, go-live, cutover, ERP, and pillar.',
+            'Do not set stakeholder_intelligence to null.',
+            'Use exactly these top-level keys and no others',
+            'Use domain_code and domain_name in SIR report sections.',
+            'priority_plan 30/60/90 must contain 4-5 actions each.',
+        ] as $requiredText) {
+            $this->assertStringContainsString($requiredText, $prompt);
+        }
+
+        foreach ([
+            'ssi',
+            'smi',
+            'simi',
+            'bau_ri',
+            'chi',
+            'smi_simi_delta',
+            'raid_summary',
+            'tier1_bridge',
+            'reporting_accuracy_risk_finding',
+            'bri',
+            'vri',
+            'dmi',
+            'rii',
+            'pillar_code',
+            'pillar_name',
+        ] as $key) {
+            $this->assertStringContainsString("\"{$key}\"", $prompt);
+        }
+    }
+
     public function test_full_report_prompt_key_selection_uses_active_prompt_keys(): void
     {
         $client = Client::create([
@@ -109,6 +202,39 @@ class AiPromptConfigTest extends TestCase
             'reporting_accuracy_risk_finding',
             'risk_register',
             'raid_summary',
+            'root_cause_analysis',
+            'priority_plan',
+            'final_position',
+            'evidence_validated_statement',
+            'compliance_risk_signals',
+        ];
+    }
+
+    private function canonicalSirTier1Keys(): array
+    {
+        return [
+            'cover_letter',
+            'executive_position',
+            'intelligence_dashboard',
+            'intelligence_profile',
+            'risk_register',
+            'root_cause_analysis',
+            'priority_plan',
+            'final_position',
+            'tier1_bridge',
+            'compliance_risk_signals',
+        ];
+    }
+
+    private function canonicalSirTier2Keys(): array
+    {
+        return [
+            'cover_letter',
+            'executive_position',
+            'intelligence_dashboard',
+            'stakeholder_intelligence',
+            'intelligence_profile',
+            'risk_register',
             'root_cause_analysis',
             'priority_plan',
             'final_position',

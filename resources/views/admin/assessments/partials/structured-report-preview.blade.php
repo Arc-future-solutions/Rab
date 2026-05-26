@@ -10,6 +10,28 @@
     $rootCause = is_array($report['root_cause_analysis'] ?? null) ? $report['root_cause_analysis'] : [];
     $priorityPlan = is_array($report['priority_plan'] ?? null) ? $report['priority_plan'] : [];
     $rawJson = json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $isSir = strtoupper((string) ($assessment->type ?? '')) === 'SIR';
+    $isBriefing = ($assessment->report_tier ?? null) === 'Tier 2 Full';
+    $contextLabel = $isSir ? 'Service Context' : 'Delivery Stage';
+    $contextValue = $isSir
+        ? ($overall['context'] ?? $assessment->service_context ?? 'Not recorded')
+        : ($overall['stage'] ?? $assessment->delivery_stage ?? 'Not recorded');
+    $indexDefinitions = $isSir
+        ? [
+            'ssi' => ['label' => 'SSI', 'name' => 'Service Stability Index'],
+            'smi' => ['label' => 'SMI', 'name' => 'Service Maturity Index'],
+            'simi' => ['label' => 'SIMI', 'name' => 'Service Improvement Maturity Index'],
+            'bau_ri' => ['label' => 'BAU-RI', 'name' => 'BAU Readiness Index'],
+            'chi' => ['label' => 'CHI', 'name' => 'Compliance Health Index'],
+            'smi_simi_delta' => ['label' => 'SMI/SIMI Delta', 'name' => 'SMI/SIMI Delta'],
+        ]
+        : [
+            'BRI' => ['label' => 'BRI', 'name' => 'Business Readiness Index'],
+            'VRI' => ['label' => 'VRI', 'name' => 'Value Realisation Index'],
+            'DMI' => ['label' => 'DMI', 'name' => 'Digital Maturity Index'],
+            'RII' => ['label' => 'RII', 'name' => 'Risk Intelligence Index'],
+            'CHI' => ['label' => 'CHI', 'name' => 'Compliance Health Index'],
+        ];
 
     $asText = function ($value) use (&$asText): string {
         if (is_array($value)) {
@@ -144,7 +166,7 @@
                     <div class="flex flex-wrap gap-2">
                         <span class="inline-flex items-center px-3 py-1 rounded-full border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700">Score {{ $scoreValue($overall['score'] ?? $assessment->overall_score) }}</span>
                         {!! $badge($overall['rag'] ?? $assessment->rag_status, 'RAG') !!}
-                        <span class="inline-flex items-center px-3 py-1 rounded-full border border-blue-100 bg-blue-50 text-xs font-bold text-blue-800">Stage: {{ $overall['stage'] ?? $assessment->delivery_stage ?? 'Not recorded' }}</span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full border border-blue-100 bg-blue-50 text-xs font-bold text-blue-800">{{ $contextLabel }}: {{ $contextValue }}</span>
                     </div>
                 </div>
                 @if(!empty($report['final_position']))
@@ -171,19 +193,19 @@
                     <div class="mt-2">{!! $badge($overall['rag'] ?? $assessment->rag_status, 'RAG') !!}</div>
                 </div>
                 <div class="bg-slate-50 border border-slate-100 p-4">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Delivery Stage</p>
-                    <p class="text-sm font-bold text-slate-900 mt-2">Stage: {{ $overall['stage'] ?? $assessment->delivery_stage ?? 'Not recorded' }}</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $contextLabel }}</p>
+                    <p class="text-sm font-bold text-slate-900 mt-2">{{ $contextValue }}</p>
                 </div>
             </div>
 
             <p class="text-xs text-slate-500 mb-3">Indices are scored from 1 to 5.</p>
             <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
-                @foreach(['BRI' => 'Business Readiness Index', 'VRI' => 'Value Realisation Index', 'DMI' => 'Digital Maturity Index', 'RII' => 'Risk Intelligence Index', 'CHI' => 'Compliance Health Index'] as $indexKey => $indexName)
+                @foreach($indexDefinitions as $indexKey => $indexDefinition)
                     @php $index = $normalisedIndex($indices, $indexKey); @endphp
                     @if($index)
                         <div class="border border-slate-200 p-4">
-                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $indexName }}</p>
-                            <p class="text-xl font-black text-slate-900 mt-1">{{ $indexKey }} · {{ $scoreValue($index['value']) }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">{{ $indexDefinition['name'] }}</p>
+                            <p class="text-xl font-black text-slate-900 mt-1">{{ $indexDefinition['label'] }} · {{ $scoreValue($index['value']) }}</p>
                             @if(filled($index['interpretation']))
                                 <p class="text-xs text-slate-600 leading-5 mt-2">{{ $index['interpretation'] }}</p>
                             @endif
@@ -191,7 +213,7 @@
                     @endif
                 @endforeach
             </div>
-            @if(collect(['BRI', 'VRI', 'DMI', 'RII', 'CHI'])->every(fn ($indexKey) => $normalisedIndex($indices, $indexKey) === null))
+            @if(collect(array_keys($indexDefinitions))->every(fn ($indexKey) => $normalisedIndex($indices, $indexKey) === null))
                 <p class="text-sm text-slate-500 mb-4">Not available from generated report.</p>
             @endif
 
@@ -220,7 +242,7 @@
         </section>
     @endif
 
-    @if($stakeholder !== null)
+    @if($stakeholder !== null && !($isSir && !$isBriefing))
         <section class="bg-white border border-slate-200 shadow-sm p-6">
             <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Stakeholder Intelligence</h4>
             @if(!empty($stakeholder['divergence_summary']))
@@ -228,11 +250,11 @@
             @endif
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                 <div class="bg-blue-50 border border-blue-100 p-4">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-blue-700 mb-1">Sponsor Position</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-blue-700 mb-1">{{ $isSir ? 'Sponsor / Executive Position' : 'Sponsor Position' }}</p>
                     <p class="text-sm text-blue-950 leading-6 whitespace-pre-wrap">{{ $asText($stakeholder['sponsor_position'] ?? $assessment->sponsor_position ?? '') ?: 'Not recorded.' }}</p>
                 </div>
                 <div class="bg-slate-50 border border-slate-100 p-4">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Operational Position</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{{ $isSir ? 'Operational / Service Management Position' : 'Operational Position' }}</p>
                     <p class="text-sm text-slate-900 leading-6 whitespace-pre-wrap">{{ $asText($stakeholder['operational_position'] ?? $assessment->operational_position ?? '') ?: 'Not recorded.' }}</p>
                 </div>
             </div>
@@ -278,13 +300,13 @@
                     @php $finding = is_array($finding) ? $finding : ['headline' => $asText($finding)]; @endphp
                     <article class="border border-slate-200 p-4">
                         <div class="flex flex-wrap items-center gap-2 mb-3">
-                            <span class="text-[11px] font-black text-slate-500 uppercase tracking-widest">{{ $finding['pillar_code'] ?? 'Finding' }}</span>
+                            <span class="text-[11px] font-black text-slate-500 uppercase tracking-widest">{{ $isSir ? ($finding['domain_code'] ?? 'Finding') : ($finding['pillar_code'] ?? 'Finding') }}</span>
                             {!! $badge($finding['rag'] ?? '-', 'RAG') !!}
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full border text-[11px] font-bold {{ $toneClass($finding['confidence'] ?? 'Medium') }}">{{ $finding['confidence'] ?? 'Medium' }}</span>
                         </div>
-                        <h5 class="text-sm font-black text-slate-900 mb-1">{{ $finding['headline'] ?? $finding['pillar_name'] ?? $finding['domain_name'] ?? 'Finding' }}</h5>
-                        @if(!empty($finding['pillar_name']))
-                            <p class="text-xs font-semibold text-slate-500 mb-2">{{ $finding['pillar_name'] }}</p>
+                        <h5 class="text-sm font-black text-slate-900 mb-1">{{ $finding['headline'] ?? ($isSir ? ($finding['domain_name'] ?? null) : ($finding['pillar_name'] ?? null)) ?? 'Finding' }}</h5>
+                        @if(!empty($isSir ? ($finding['domain_name'] ?? null) : ($finding['pillar_name'] ?? null)))
+                            <p class="text-xs font-semibold text-slate-500 mb-2">{{ $isSir ? $finding['domain_name'] : $finding['pillar_name'] }}</p>
                         @endif
                         <p class="text-xs text-slate-500 mb-3">Score: {{ $finding['score'] ?? '-' }}</p>
                         @if($asList($finding['evidence'] ?? []) !== [])
@@ -350,7 +372,7 @@
         </section>
     @endif
 
-    @if($raid !== [])
+    @if(!$isSir && $raid !== [])
         <section class="bg-white border border-slate-200 shadow-sm p-6">
             <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">RAID Summary</h4>
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
@@ -421,7 +443,8 @@
 
     @if($assessment->report_tier !== 'Tier 2 Full' && !empty($report['tier1_bridge']))
         <section class="bg-white border border-slate-200 shadow-sm p-6">
-            <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Evidence Gaps / Recommended Deep-Dive</h4>
+            <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Tier 1 Bridge</h4>
+            <p class="text-xs font-semibold text-slate-500 mb-4">Evidence gaps and recommended deep-dive areas</p>
             <p class="text-sm text-slate-700 leading-7 whitespace-pre-wrap">{{ $asText($report['tier1_bridge']) }}</p>
         </section>
     @endif

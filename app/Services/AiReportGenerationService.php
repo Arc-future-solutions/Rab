@@ -189,7 +189,12 @@ class AiReportGenerationService
         ));
 
         return [
-            'prompt_contract_version' => $promptKey === 'pir_full_tier2' ? 'pir_full_tier2_canonical_v1' : null,
+            'prompt_contract_version' => match ($promptKey) {
+                'pir_full_tier2' => 'pir_full_tier2_canonical_v1',
+                'sir_full_tier1' => 'sir_full_tier1_canonical_v1',
+                'sir_full_tier2' => 'sir_full_tier2_canonical_v1',
+                default => null,
+            },
             'prompt_hash' => substr(hash('sha256', $systemPrompt), 0, 16),
             'canonical_prompt_keys_present' => $canonicalKeys === [] || $missingKeys === [],
             'canonical_prompt_keys_missing' => $missingKeys,
@@ -201,6 +206,37 @@ class AiReportGenerationService
      */
     private function canonicalPromptKeys(string $promptKey): array
     {
+        if ($promptKey === 'sir_full_tier1') {
+            return [
+                'cover_letter',
+                'executive_position',
+                'intelligence_dashboard',
+                'intelligence_profile',
+                'risk_register',
+                'root_cause_analysis',
+                'priority_plan',
+                'final_position',
+                'tier1_bridge',
+                'compliance_risk_signals',
+            ];
+        }
+
+        if ($promptKey === 'sir_full_tier2') {
+            return [
+                'cover_letter',
+                'executive_position',
+                'intelligence_dashboard',
+                'stakeholder_intelligence',
+                'intelligence_profile',
+                'risk_register',
+                'root_cause_analysis',
+                'priority_plan',
+                'final_position',
+                'evidence_validated_statement',
+                'compliance_risk_signals',
+            ];
+        }
+
         if ($promptKey !== 'pir_full_tier2') {
             return [];
         }
