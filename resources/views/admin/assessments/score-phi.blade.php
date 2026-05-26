@@ -314,22 +314,38 @@ $savedPillars = $assessment->pillarScores->keyBy('name');
         </div>
 
         @if($assessment->ai_draft_json)
+            @php
+                $aiDraft = $assessment->ai_draft_json;
+                $executiveSummary = $aiDraft['executive_summary']
+                    ?? $aiDraft['executive_position']
+                    ?? $aiDraft['cover_letter']
+                    ?? null;
+                $recommendations = $aiDraft['recommendations'] ?? $aiDraft['priority_plan'] ?? [];
+                if (is_string($recommendations)) {
+                    $recommendations = preg_split('/\r\n|\r|\n/', $recommendations) ?: [];
+                }
+                if (is_array($recommendations) && array_is_list($recommendations) === false) {
+                    $recommendations = array_values($recommendations);
+                }
+            @endphp
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
                     <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Executive Summary</h4>
                     <p class="text-slate-700 font-medium leading-relaxed">
-                        {{ $assessment->ai_draft_json['executive_summary'] }}
+                        {{ is_scalar($executiveSummary) ? $executiveSummary : 'Structured full-report output is available from the assessment preview.' }}
                     </p>
                 </div>
                 <div class="bg-slate-900 rounded-3xl p-8 text-white shadow-2xl">
                     <h4 class="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-4">Strategic Recommendations</h4>
                     <ul class="space-y-3">
-                        @foreach($assessment->ai_draft_json['recommendations'] ?? [] as $rec)
+                        @forelse($recommendations as $rec)
                             <li class="flex items-start gap-3">
                                 <svg class="w-4 h-4 text-blue-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                <span class="text-sm font-bold text-slate-300">{{ $rec }}</span>
+                                <span class="text-sm font-bold text-slate-300">{{ is_scalar($rec) ? $rec : json_encode($rec) }}</span>
                             </li>
-                        @endforeach
+                        @empty
+                            <li class="text-sm font-bold text-slate-300">Structured recommendations are available from the assessment preview.</li>
+                        @endforelse
                     </ul>
                 </div>
             </div>

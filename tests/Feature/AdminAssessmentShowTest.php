@@ -292,6 +292,35 @@ class AdminAssessmentShowTest extends TestCase
         $this->assertStringContainsString('intelligence_dashboard', $html);
     }
 
+    public function test_pir_score_page_renders_full_report_schema_without_legacy_summary_key(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin-pir-score-full-schema@example.com',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
+        $lead = $this->snapshotLead(['email' => 'pir-score-full-schema@example.com']);
+        $assessment = $this->formalPirTier1Assessment($lead);
+        $draft = $this->structuredPirTier1Draft();
+        unset($draft['executive_summary'], $draft['recommendations']);
+
+        $assessment->forceFill([
+            'report_tier' => 'Tier 2 Full',
+            'ai_generation_status' => 'completed',
+            'ai_draft_json' => $draft,
+            'ai_recommendation' => json_encode($draft),
+        ])->save();
+
+        $this->actingAs($admin)
+            ->get(route('admin.assessments.score.phi', $assessment))
+            ->assertOk()
+            ->assertSee('AI Agent Recommendations')
+            ->assertSee('The programme is recoverable if decision ownership is reset.')
+            ->assertSee('Reset decisions');
+    }
+
     public function test_snapshot_fallback_show_still_uses_snapshot_regeneration_route(): void
     {
         $admin = User::create([

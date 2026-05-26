@@ -32,7 +32,7 @@ class ReportPdfService
         }
 
         $filename = $this->filename($assessment);
-        $path = $directory . '/' . $filename;
+        $path = $directory . '/' . Str::uuid() . '-' . $filename;
 
         $browsershot = Browsershot::html($this->renderHtml($assessment))
             ->setNodeBinary($this->nodeBinary())
