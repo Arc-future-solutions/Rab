@@ -80,7 +80,7 @@ class AiReportGenerationService
             'model' => $requestPayload['model'],
             'max_tokens' => $requestPayload['max_tokens'],
             'stream' => true,
-        ]);
+        ] + $this->promptContractDiagnostics($promptKey, $systemPrompt));
 
         $response = Http::withHeaders([
                 'x-api-key' => $apiKey,
@@ -136,12 +136,8 @@ class AiReportGenerationService
             throw new RuntimeException('Anthropic response did not include output text.');
         }
 
-        $decoded = $this->decodeJsonCandidate($output);
-        if (is_array($decoded)) {
-            $output = json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-        }
-
-        $payload = [
+        return [
+            'output_raw' => $output,
             'output' => $output,
             'provider_response_id' => $streamResult['provider_response_id'],
             'prompt_key' => $promptKey,
@@ -156,13 +152,6 @@ class AiReportGenerationService
                 'final_text_length' => strlen($output),
             ],
         ];
-
-        if (is_array($decoded)) {
-            $payload['report'] = $decoded;
-            $payload['snapshot_report_json'] = $decoded;
-        }
-
-        return $payload;
     }
 
     private function requestPayload(string $promptKey, string $systemPrompt, array $aiPayload, array $metadata): array
@@ -189,6 +178,48 @@ class AiReportGenerationService
     private function messagesUrl(): string
     {
         return rtrim((string) config('services.anthropic.base_url', 'https://api.anthropic.com/v1'), '/') . '/messages';
+    }
+
+    private function promptContractDiagnostics(string $promptKey, string $systemPrompt): array
+    {
+        $canonicalKeys = $this->canonicalPromptKeys($promptKey);
+        $missingKeys = array_values(array_filter(
+            $canonicalKeys,
+            fn (string $key) => ! str_contains($systemPrompt, "\"{$key}\"")
+        ));
+
+        return [
+            'prompt_contract_version' => $promptKey === 'pir_full_tier2' ? 'pir_full_tier2_canonical_v1' : null,
+            'prompt_hash' => substr(hash('sha256', $systemPrompt), 0, 16),
+            'canonical_prompt_keys_present' => $canonicalKeys === [] || $missingKeys === [],
+            'canonical_prompt_keys_missing' => $missingKeys,
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function canonicalPromptKeys(string $promptKey): array
+    {
+        if ($promptKey !== 'pir_full_tier2') {
+            return [];
+        }
+
+        return [
+            'cover_letter',
+            'executive_position',
+            'intelligence_dashboard',
+            'stakeholder_intelligence',
+            'intelligence_profile',
+            'reporting_accuracy_risk_finding',
+            'risk_register',
+            'raid_summary',
+            'root_cause_analysis',
+            'priority_plan',
+            'final_position',
+            'evidence_validated_statement',
+            'compliance_risk_signals',
+        ];
     }
 
     private function extractOutputText(array $responseData): string
@@ -230,14 +261,128 @@ class AiReportGenerationService
             $candidate = $matches[1];
         }
 
-        $decoded = json_decode($candidate, true);
-
-        if (json_last_error() === JSON_ERROR_NONE && is_string($decoded)) {
-            $decoded = json_decode($decoded, true);
+        $decoded = $this->decodeJsonString($candidate);
+        if (is_array($decoded)) {
+            return $decoded;
         }
 
-        return json_last_error() === JSON_ERROR_NONE && is_array($decoded)
-            ? $decoded
-            : null;
+        $firstDecodedPayload = null;
+
+        foreach ($this->extractJsonObjectStrings($candidate) as $jsonObject) {
+            $decoded = $this->decodeJsonString($jsonObject);
+            if (! is_array($decoded)) {
+                continue;
+            }
+
+            if ($this->structuredKeyMatches($decoded) !== []) {
+                return $decoded;
+            }
+
+            $firstDecodedPayload ??= $decoded;
+        }
+
+        return $firstDecodedPayload;
+    }
+
+    private function decodeJsonString(string $candidate): ?array
+    {
+        $decoded = json_decode($candidate, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return null;
+        }
+
+        if (is_string($decoded)) {
+            return $this->decodeJsonCandidate($decoded);
+        }
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function extractJsonObjectStrings(string $value): array
+    {
+        $objects = [];
+        $length = strlen($value);
+
+        for ($start = 0; $start < $length; $start++) {
+            if ($value[$start] !== '{') {
+                continue;
+            }
+
+            $depth = 0;
+            $inString = false;
+            $escaped = false;
+
+            for ($i = $start; $i < $length; $i++) {
+                $char = $value[$i];
+
+                if ($inString) {
+                    if ($escaped) {
+                        $escaped = false;
+                        continue;
+                    }
+
+                    if ($char === '\\') {
+                        $escaped = true;
+                        continue;
+                    }
+
+                    if ($char === '"') {
+                        $inString = false;
+                    }
+
+                    continue;
+                }
+
+                if ($char === '"') {
+                    $inString = true;
+                    continue;
+                }
+
+                if ($char === '{') {
+                    $depth++;
+                    continue;
+                }
+
+                if ($char !== '}') {
+                    continue;
+                }
+
+                $depth--;
+
+                if ($depth === 0) {
+                    $objects[] = substr($value, $start, $i - $start + 1);
+                    break;
+                }
+            }
+        }
+
+        return array_values(array_unique($objects));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function structuredKeyMatches(array $payload): array
+    {
+        return array_values(array_intersect(array_keys($payload), [
+            'cover_letter',
+            'executive_position',
+            'intelligence_dashboard',
+            'stakeholder_intelligence',
+            'intelligence_profile',
+            'reporting_accuracy_risk_finding',
+            'risk_register',
+            'raid_summary',
+            'root_cause_analysis',
+            'priority_plan',
+            'evidence_validated_statement',
+            'compliance_risk_signals',
+            'final_position',
+            'tier1_bridge',
+        ]));
     }
 }

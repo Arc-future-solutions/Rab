@@ -198,7 +198,7 @@ class AssessmentScoringController extends Controller
             throw new \Exception("Prompt not found: {$promptKey}");
         }
 
-        if ($assessment->type === 'PIR' && $assessment->report_tier === 'Tier 1 Rapid') {
+        if ($assessment->type === 'PIR' && in_array($assessment->report_tier, ['Tier 1 Rapid', 'Tier 2 Full'], true)) {
             $fullReportGeneration->markGenerating($assessment);
             GenerateAdminFullReport::dispatch($assessment->id);
 
@@ -505,6 +505,7 @@ class AssessmentScoringController extends Controller
             'raid_summary',
             'root_cause_analysis',
             'priority_plan',
+            'evidence_validated_statement',
             'compliance_risk_signals',
             'final_position',
             'tier1_bridge',
@@ -574,9 +575,77 @@ class AssessmentScoringController extends Controller
             $decoded = json_decode($decoded, true);
         }
 
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return $decoded;
+        }
+
+        $jsonObject = $this->extractJsonObjectString($candidate);
+        if ($jsonObject === null) {
+            return null;
+        }
+
+        $decoded = json_decode($jsonObject, true);
+
         return json_last_error() === JSON_ERROR_NONE && is_array($decoded)
             ? $decoded
             : null;
+    }
+
+    private function extractJsonObjectString(string $value): ?string
+    {
+        $start = strpos($value, '{');
+        if ($start === false) {
+            return null;
+        }
+
+        $depth = 0;
+        $inString = false;
+        $escaped = false;
+        $length = strlen($value);
+
+        for ($i = $start; $i < $length; $i++) {
+            $char = $value[$i];
+
+            if ($inString) {
+                if ($escaped) {
+                    $escaped = false;
+                    continue;
+                }
+
+                if ($char === '\\') {
+                    $escaped = true;
+                    continue;
+                }
+
+                if ($char === '"') {
+                    $inString = false;
+                }
+
+                continue;
+            }
+
+            if ($char === '"') {
+                $inString = true;
+                continue;
+            }
+
+            if ($char === '{') {
+                $depth++;
+                continue;
+            }
+
+            if ($char !== '}') {
+                continue;
+            }
+
+            $depth--;
+
+            if ($depth === 0) {
+                return substr($value, $start, $i - $start + 1);
+            }
+        }
+
+        return null;
     }
 
     private function normaliseAiResponsePayload($responseData): array

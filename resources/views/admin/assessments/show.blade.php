@@ -26,6 +26,12 @@
         : null;
     $hasStructuredDraft = $fullReportDraft !== null;
     $needsStructuredDraft = !$hasStructuredDraft;
+    $generatedReportPreviewHeading = match (true) {
+        $assessment->type === 'PIR' && $assessment->report_tier === 'Tier 2 Full' => 'Generated Programme Intelligence Briefing Preview',
+        $assessment->type === 'PIR' => 'Generated Programme Intelligence Review Preview',
+        $assessment->type === 'SIR' && $assessment->report_tier === 'Tier 2 Full' => 'Generated Service Intelligence Briefing Preview',
+        default => 'Generated Service Intelligence Review Preview',
+    };
     $hasConsultantNotes = $assessment->pillarScores->contains(function ($pillar) {
         return filled($pillar->commentary) || filled($pillar->key_risks) || filled($pillar->immediate_actions);
     });
@@ -517,7 +523,7 @@
             </div>
             <div>
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">AI-generated client narrative</p>
-                <h2 class="text-2xl font-black text-slate-900 tracking-tight">Generated PIR Tier 1 Report Preview</h2>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight">{{ $generatedReportPreviewHeading }}</h2>
             </div>
         </div>
     </div>

@@ -32,6 +32,28 @@ class AiPromptConfigTest extends TestCase
         }
     }
 
+    public function test_pir_full_tier2_prompt_defines_canonical_briefing_schema_contract(): void
+    {
+        $prompt = config('ai.prompts.pir_full_tier2');
+
+        foreach ($this->canonicalPirTier2Keys() as $key) {
+            $this->assertStringContainsString("\"{$key}\"", $prompt);
+        }
+
+        $this->assertStringContainsString('Do not use alternate top-level keys such as opening, overall_position, key_themes,', $prompt);
+
+        foreach (['opening', 'overall_position', 'key_themes', 'instruction_to_sponsor'] as $alternateKey) {
+            $this->assertStringContainsString($alternateKey, $prompt);
+        }
+
+        $this->assertStringContainsString('Do not include tier1_bridge for Tier 2.', $prompt);
+        $this->assertStringContainsString('Return JSON only.', $prompt);
+        $this->assertStringContainsString('Use exactly these top-level keys and no others', $prompt);
+        $this->assertStringContainsString('Treat this report tier as Briefing.', $prompt);
+        $this->assertStringContainsString('Include stakeholder_intelligence.', $prompt);
+        $this->assertStringContainsString('Include evidence_validated_statement.', $prompt);
+    }
+
     public function test_full_report_prompt_key_selection_uses_active_prompt_keys(): void
     {
         $client = Client::create([
@@ -73,6 +95,25 @@ class AiPromptConfigTest extends TestCase
             'pir_full_tier2',
             'sir_full_tier1',
             'sir_full_tier2',
+        ];
+    }
+
+    private function canonicalPirTier2Keys(): array
+    {
+        return [
+            'cover_letter',
+            'executive_position',
+            'intelligence_dashboard',
+            'stakeholder_intelligence',
+            'intelligence_profile',
+            'reporting_accuracy_risk_finding',
+            'risk_register',
+            'raid_summary',
+            'root_cause_analysis',
+            'priority_plan',
+            'final_position',
+            'evidence_validated_statement',
+            'compliance_risk_signals',
         ];
     }
 

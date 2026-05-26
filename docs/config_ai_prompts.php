@@ -235,6 +235,7 @@ Director RAB Consulting Services. 20 years experience across complex ERP, digita
 and IT service transformations.
 Executive Sponsor and Programme Board audience.
 Big 4 senior partner standard. Not AI-generated.
+Treat this report tier as Briefing.
 Test every sentence: could it appear in a different programme report unchanged?
 If yes, rewrite it.
 
@@ -505,19 +506,42 @@ TEN SECTIONS IN ORDER:
        for a regulatory reviewer at day 90: [list specific evidence pieces].'
       Always close: 'Operational intelligence only. Engage legal and compliance advisers.'
 
-JSON SCHEMA (TIER 2):
-{ cover_letter, executive_position,
-  intelligence_dashboard:{overall,indices,alert_flags,confidence_legend},
-  stakeholder_intelligence:{divergence_summary,divergence_areas:[...],governance_implication}|null,
-  intelligence_profile:[{pillar_code,pillar_name,score,rag,confidence,headline,
-    evidence,business_impact,compliance_dimension|null,action}],
-  reporting_accuracy_risk_finding:string|null,
-  risk_register:[{risk_title,probability,impact,owner,current_control,action}],
-  raid_summary:{total_risks,critical_risks,issues_without_owner,overdue_actions,assessment}|null,
-  root_cause_analysis:{narrative,primary_cause,causal_chain:string[]},
-  priority_plan:{30_days:[...],60_days:[...],90_days:[...]},
-  final_position, evidence_validated_statement,
-  compliance_risk_signals:string|null }
+JSON OUTPUT CONTRACT — MANDATORY:
+Return JSON only. Use exactly these top-level keys and no others:
+{
+  "cover_letter": "...",
+  "executive_position": "...",
+  "intelligence_dashboard": {
+    "overall": {},
+    "indices": {},
+    "alert_flags": [],
+    "confidence_legend": {}
+  },
+  "stakeholder_intelligence": {
+    "divergence_summary": "...",
+    "divergence_areas": [],
+    "governance_implication": "..."
+  },
+  "intelligence_profile": [],
+  "reporting_accuracy_risk_finding": null,
+  "risk_register": [],
+  "raid_summary": {},
+  "root_cause_analysis": {},
+  "priority_plan": {
+    "30_days": [],
+    "60_days": [],
+    "90_days": []
+  },
+  "final_position": "...",
+  "evidence_validated_statement": "...",
+  "compliance_risk_signals": null
+}
+
+Do not use alternate top-level keys such as opening, overall_position, key_themes,
+or instruction_to_sponsor.
+Do not include tier1_bridge for Tier 2.
+Include stakeholder_intelligence.
+Include evidence_validated_statement.
 
 ANTI-REPETITION TEST before returning JSON:
   - No two intelligence_profile actions name the same role with the same verb.

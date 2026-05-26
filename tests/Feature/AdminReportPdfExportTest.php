@@ -207,6 +207,14 @@ class AdminReportPdfExportTest extends TestCase
         $this->assertStringContainsString('Executive Intelligence Position', $html);
         $this->assertStringContainsString('Intelligence Dashboard', $html);
         $this->assertStringContainsString('Stakeholder Intelligence', $html);
+        $this->assertStringContainsString('Sponsor Position', $html);
+        $this->assertStringContainsString('Operational Position', $html);
+        $this->assertStringContainsString('Sponsor and delivery team positions diverge on confidence.', $html);
+        $this->assertStringContainsString('Status reporting', $html);
+        $this->assertStringContainsString('Sponsor sees status as controlled.', $html);
+        $this->assertStringContainsString('Delivery team reports evidence gaps.', $html);
+        $this->assertStringContainsString('Evidence Validated Statement', $html);
+        $this->assertStringContainsString('Evidence has been validated through direct document review and interview.', $html);
         $this->assertStringContainsString('RAID Summary', $html);
         $this->assertStringContainsString('Risk Register + Risk Heat Map', $html);
         $this->assertStringContainsString('Risk Heat Map — Probability × Impact', $html);
@@ -440,6 +448,14 @@ class AdminReportPdfExportTest extends TestCase
             ],
             'stakeholder_intelligence' => [
                 'divergence_summary' => 'Sponsor and delivery team positions diverge on confidence.',
+                'sponsor_position' => 'Sponsor sees status as controlled.',
+                'operational_position' => 'Delivery team reports evidence gaps.',
+                'divergence_areas' => [[
+                    'area' => 'Status reporting',
+                    'sponsor_view' => 'Sponsor sees status as controlled.',
+                    'operational_view' => 'Delivery team reports evidence gaps.',
+                    'finding' => 'Status is ahead of delivery evidence.',
+                ]],
                 'governance_implication' => 'Decision rights need to be reset.',
             ],
             'intelligence_profile' => [
@@ -481,6 +497,7 @@ class AdminReportPdfExportTest extends TestCase
             ],
             'compliance_risk_signals' => 'Regulatory evidence trail is incomplete.',
             'final_position' => 'Proceed with controlled recovery.',
+            'evidence_validated_statement' => 'Evidence has been validated through direct document review and interview.',
         ];
     }
 

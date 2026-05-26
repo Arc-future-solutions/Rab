@@ -21,6 +21,7 @@ class AdminGenerateReportPromptTest extends TestCase
     public function test_generate_report_sends_active_prompt_key_and_system_prompt_to_anthropic(): void
     {
         $this->configureAnthropic();
+        Log::spy();
 
         $draft = [
             'cover_letter' => 'Formal transmittal',
@@ -29,12 +30,8 @@ class AdminGenerateReportPromptTest extends TestCase
         ];
 
         Http::fake([
-            'example.test/*' => Http::response([
-                'id' => 'msg_123',
-                'content' => [[
-                    'type' => 'text',
-                    'text' => json_encode($draft),
-                ]],
+            'example.test/*' => Http::response($this->streamedAnthropicResponse($draft), 200, [
+                'Content-Type' => 'text/event-stream',
             ]),
         ]);
 
@@ -52,6 +49,7 @@ class AdminGenerateReportPromptTest extends TestCase
                 && $request->hasHeader('x-api-key', 'test-anthropic-key')
                 && $request->hasHeader('anthropic-version', '2023-06-01')
                 && $payload['model'] === 'claude-sonnet-4-5'
+                && $payload['stream'] === true
                 && $payload['system'] === config('ai.prompts.pir_full_tier2')
                 && ! isset($payload['output_config'])
                 && $input['prompt_key'] === 'pir_full_tier2'
@@ -63,6 +61,20 @@ class AdminGenerateReportPromptTest extends TestCase
                 && ! array_key_exists('results', $input['metadata'])
                 && ! array_key_exists('answers', $input['metadata']);
         });
+
+        Log::shouldHaveReceived('info')
+            ->with('Anthropic streamed report request started', \Mockery::on(function (array $context) {
+                return $context['prompt_key'] === 'pir_full_tier2'
+                    && $context['prompt_contract_version'] === 'pir_full_tier2_canonical_v1'
+                    && $context['prompt_hash'] === substr(hash('sha256', config('ai.prompts.pir_full_tier2')), 0, 16)
+                    && $context['canonical_prompt_keys_present'] === true
+                    && $context['canonical_prompt_keys_missing'] === []
+                    && ! array_key_exists('prompt', $context)
+                    && ! array_key_exists('payload', $context)
+                    && ! array_key_exists('ai_payload', $context)
+                    && ! array_key_exists('evidence_notes', $context);
+            }))
+            ->once();
     }
 
     public function test_generate_report_fails_fast_when_active_prompt_is_missing(): void
@@ -90,11 +102,8 @@ class AdminGenerateReportPromptTest extends TestCase
         ];
 
         Http::fake([
-            'example.test/*' => Http::response([
-                'content' => [[
-                    'type' => 'text',
-                    'text' => json_encode($draft),
-                ]],
+            'example.test/*' => Http::response($this->streamedAnthropicResponse($draft), 200, [
+                'Content-Type' => 'text/event-stream',
             ]),
         ]);
 
@@ -103,7 +112,7 @@ class AdminGenerateReportPromptTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('admin.assessments.generateReport', $assessment))
             ->assertRedirect(route('admin.assessments.show', $assessment))
-            ->assertSessionHas('success', 'AI Report generated successfully.');
+            ->assertSessionHas('success', 'AI report generation started. Refresh this page in a moment.');
 
         $assessment->refresh();
 
@@ -124,7 +133,7 @@ class AdminGenerateReportPromptTest extends TestCase
             'example.test/*' => Http::response(['id' => 'msg_empty', 'content' => [['type' => 'text', 'text' => '']]]),
         ]);
 
-        $assessment = $this->assessment('PIR', 'Tier 2 Full');
+        $assessment = $this->assessment('SIR', 'Tier 1 Rapid');
 
         $this->actingAs($this->admin())
             ->post(route('admin.assessments.generateReport', $assessment))
@@ -148,7 +157,7 @@ class AdminGenerateReportPromptTest extends TestCase
             'example.test/*' => Http::response(['message' => 'Upstream validation failed'], 500),
         ]);
 
-        $assessment = $this->assessment('PIR', 'Tier 2 Full');
+        $assessment = $this->assessment('SIR', 'Tier 1 Rapid');
 
         $this->actingAs($this->admin())
             ->post(route('admin.assessments.generateReport', $assessment))

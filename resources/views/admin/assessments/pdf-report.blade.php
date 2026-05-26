@@ -478,9 +478,25 @@
 @if($isBriefing)
     @php
         $stakeholder = $report['stakeholder_intelligence'] ?? null;
-        $stakeholderHtml = $stakeholder
-            ? '<p>' . nl2br(e($asText($stakeholder['divergence_summary'] ?? ''))) . '</p><div class="panel"><strong>Governance implication:</strong> ' . e($asText($stakeholder['governance_implication'] ?? '')) . '</div>'
-            : '<div class="panel">Stakeholder intelligence was not returned by the AI response.</div>';
+        if ($stakeholder) {
+            $stakeholderHtml = '<p>' . nl2br(e($asText($stakeholder['divergence_summary'] ?? ''))) . '</p>';
+            $stakeholderHtml .= '<div class="grid-2"><div class="panel"><h2>Sponsor Position</h2><p>' . e($asText($stakeholder['sponsor_position'] ?? $assessment->sponsor_position ?? '') ?: 'Not recorded.') . '</p></div>';
+            $stakeholderHtml .= '<div class="panel"><h2>Operational Position</h2><p>' . e($asText($stakeholder['operational_position'] ?? $assessment->operational_position ?? '') ?: 'Not recorded.') . '</p></div></div>';
+
+            $divergenceAreas = $stakeholder['divergence_areas'] ?? [];
+            if (is_array($divergenceAreas) && $divergenceAreas !== []) {
+                $stakeholderHtml .= '<table><tr><th>Area</th><th>Sponsor View</th><th>Operational View</th><th>Finding</th></tr>';
+                foreach ($divergenceAreas as $area) {
+                    $area = is_array($area) ? $area : ['area' => $asText($area)];
+                    $stakeholderHtml .= '<tr><td>' . e($area['area'] ?? '-') . '</td><td>' . e($area['sponsor_view'] ?? '-') . '</td><td>' . e($area['operational_view'] ?? '-') . '</td><td>' . e($area['finding'] ?? '-') . '</td></tr>';
+                }
+                $stakeholderHtml .= '</table>';
+            }
+
+            $stakeholderHtml .= '<div class="panel"><strong>Governance implication:</strong> ' . e($asText($stakeholder['governance_implication'] ?? '')) . '</div>';
+        } else {
+            $stakeholderHtml = '<div class="panel">Stakeholder intelligence was not returned by the AI response.</div>';
+        }
     @endphp
     {!! $pageTemplate('Stakeholder Intelligence', $stakeholderHtml) !!}
 @endif
@@ -600,6 +616,13 @@
         $complianceHtml .= '</table>';
     @endphp
     {!! $pageTemplate('Compliance Risk Signals', $complianceHtml) !!}
+@endif
+
+@if(array_key_exists('evidence_validated_statement', $report))
+    @php
+        $evidenceValidatedHtml = '<div class="panel"><p>' . e($asText($report['evidence_validated_statement']) ?: 'No evidence validation statement returned.') . '</p></div>';
+    @endphp
+    {!! $pageTemplate('Evidence Validated Statement', $evidenceValidatedHtml) !!}
 @endif
 
 @php

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Assessment;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
@@ -45,10 +46,14 @@ class AdminFullReportGenerationService
                 ? $this->aiReportGeneration->generateStreamed($promptKey, $systemPrompt, $aiPayload, $metadata)
                 : $this->aiReportGeneration->generate($promptKey, $systemPrompt, $aiPayload, $metadata);
 
-            $aiRecommendation = $data['output'] ?? $data['recommendation'] ?? null;
+            $aiRecommendation = $data['output_raw'] ?? $data['output'] ?? $data['recommendation'] ?? null;
             $aiDraft = $this->normaliseAiDraft($aiRecommendation, $data);
 
             if ($aiDraft === null) {
+                if ($usesStreaming) {
+                    $this->logStreamedOutputDiagnostics($assessment, $data);
+                }
+
                 Log::warning('Full assessment AI response missing usable content', [
                     'assessment_id' => $assessment->id,
                     'response_keys' => array_keys($data),
@@ -143,7 +148,7 @@ class AdminFullReportGenerationService
     private function shouldUseStreaming(Assessment $assessment): bool
     {
         return strtoupper((string) $assessment->type) === 'PIR'
-            && $assessment->report_tier === 'Tier 1 Rapid';
+            && in_array($assessment->report_tier, ['Tier 1 Rapid', 'Tier 2 Full'], true);
     }
 
     private function logStreamedGeneration(
@@ -186,8 +191,8 @@ class AdminFullReportGenerationService
 
         foreach ([
             $aiRecommendation,
+            $responseData['output_raw'] ?? null,
             $responseData['report'] ?? null,
-            $responseData['snapshot_report_json'] ?? null,
             $responseData['output'] ?? null,
             $responseData['recommendation'] ?? null,
             $responseData['content'] ?? null,
@@ -227,6 +232,7 @@ class AdminFullReportGenerationService
             'raid_summary',
             'root_cause_analysis',
             'priority_plan',
+            'evidence_validated_statement',
             'compliance_risk_signals',
             'final_position',
             'tier1_bridge',
@@ -264,7 +270,7 @@ class AdminFullReportGenerationService
             return null;
         }
 
-        foreach (['report', 'snapshot_report_json', 'output', 'recommendation', 'content', 'message', 'text'] as $key) {
+        foreach (['report', 'output_raw', 'output', 'recommendation', 'content', 'message', 'text'] as $key) {
             if (! array_key_exists($key, $value)) {
                 continue;
             }
@@ -290,15 +296,212 @@ class AdminFullReportGenerationService
             $candidate = $matches[1];
         }
 
-        $decoded = json_decode($candidate, true);
-
-        if (json_last_error() === JSON_ERROR_NONE && is_string($decoded)) {
-            $decoded = json_decode($decoded, true);
+        $decoded = $this->decodeJsonString($candidate);
+        if (is_array($decoded)) {
+            return $this->normaliseAiResponsePayload($decoded);
         }
 
-        return json_last_error() === JSON_ERROR_NONE && is_array($decoded)
-            ? $this->normaliseAiResponsePayload($decoded)
-            : null;
+        $firstDecodedPayload = null;
+
+        foreach ($this->extractJsonObjectStrings($candidate) as $jsonObject) {
+            $decoded = $this->decodeJsonString($jsonObject);
+            if (! is_array($decoded)) {
+                continue;
+            }
+
+            $payload = $this->normaliseAiResponsePayload($decoded);
+
+            if ($this->structuredKeyMatches($payload) !== []) {
+                return $payload;
+            }
+
+            $firstDecodedPayload ??= $payload;
+        }
+
+        return $firstDecodedPayload;
+    }
+
+    private function decodeJsonString(string $candidate): ?array
+    {
+        $decoded = json_decode($candidate, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return null;
+        }
+
+        if (is_string($decoded)) {
+            return $this->decodeJsonCandidate($decoded);
+        }
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function extractJsonObjectStrings(string $value): array
+    {
+        $objects = [];
+        $length = strlen($value);
+
+        for ($start = 0; $start < $length; $start++) {
+            if ($value[$start] !== '{') {
+                continue;
+            }
+
+            $depth = 0;
+            $inString = false;
+            $escaped = false;
+
+            for ($i = $start; $i < $length; $i++) {
+                $char = $value[$i];
+
+                if ($inString) {
+                    if ($escaped) {
+                        $escaped = false;
+                        continue;
+                    }
+
+                    if ($char === '\\') {
+                        $escaped = true;
+                        continue;
+                    }
+
+                    if ($char === '"') {
+                        $inString = false;
+                    }
+
+                    continue;
+                }
+
+                if ($char === '"') {
+                    $inString = true;
+                    continue;
+                }
+
+                if ($char === '{') {
+                    $depth++;
+                    continue;
+                }
+
+                if ($char !== '}') {
+                    continue;
+                }
+
+                $depth--;
+
+                if ($depth === 0) {
+                    $objects[] = substr($value, $start, $i - $start + 1);
+                    break;
+                }
+            }
+        }
+
+        return array_values(array_unique($objects));
+    }
+
+    private function logStreamedOutputDiagnostics(Assessment $assessment, array $responseData): void
+    {
+        [$source, $output] = $this->normalisationInputSource($responseData);
+        if (! is_string($output)) {
+            Log::warning('Streamed full-report output diagnostics', [
+                'assessment_id' => $assessment->id,
+                'prompt_key' => $responseData['prompt_key'] ?? null,
+                'output_present' => false,
+                'normalisation_input_source' => $source,
+            ]);
+
+            return;
+        }
+
+        if ((int) $assessment->id === 17 && $assessment->type === 'PIR' && $assessment->report_tier === 'Tier 2 Full') {
+            $path = storage_path('app/private/debug/assessment-17-pir-tier2-stream-output.txt');
+            File::ensureDirectoryExists(dirname($path));
+            File::put($path, $output);
+        }
+
+        $directDecoded = $this->decodeJsonString(trim($output));
+        $balancedDecoded = null;
+
+        foreach ($this->extractJsonObjectStrings($output) as $jsonObject) {
+            $decoded = $this->decodeJsonString($jsonObject);
+            if (! is_array($decoded)) {
+                continue;
+            }
+
+            $payload = $this->normaliseAiResponsePayload($decoded);
+            if ($this->structuredKeyMatches($payload) !== []) {
+                $balancedDecoded = $payload;
+                break;
+            }
+
+            $balancedDecoded ??= $payload;
+        }
+
+        $parsed = is_array($directDecoded) ? $this->normaliseAiResponsePayload($directDecoded) : $balancedDecoded;
+        $foundKeys = is_array($parsed) ? $this->structuredKeyMatches($parsed) : [];
+        $requiredKeys = $this->requiredPirTier2ReportKeys();
+
+        Log::warning('Streamed full-report output diagnostics', [
+            'assessment_id' => $assessment->id,
+            'prompt_key' => $responseData['prompt_key'] ?? null,
+            'final_streamed_text_length' => $responseData['stream_metadata']['final_text_length'] ?? null,
+            'normalisation_input_length' => strlen($output),
+            'normalisation_input_source' => $source,
+            'output_length' => strlen($output),
+            'output_first_non_whitespace_char' => trim($output) !== '' ? trim($output)[0] : null,
+            'output_contains_open_brace' => str_contains($output, '{'),
+            'output_contains_fenced_json' => preg_match('/```(?:json)?\s*\{/i', $output) === 1,
+            'json_decode_direct_success' => is_array($directDecoded),
+            'balanced_json_extraction_success' => is_array($balancedDecoded),
+            'parsed_top_level_keys' => is_array($parsed) ? array_keys($parsed) : [],
+            'required_report_key_matches' => [
+                'found' => array_values(array_intersect($requiredKeys, $foundKeys)),
+                'missing' => array_values(array_diff($requiredKeys, $foundKeys)),
+            ],
+        ]);
+    }
+
+    /**
+     * @return array{0: string|null, 1: mixed}
+     */
+    private function normalisationInputSource(array $responseData): array
+    {
+        foreach (['output_raw', 'output', 'report'] as $key) {
+            if (array_key_exists($key, $responseData)) {
+                return [$key, $responseData[$key]];
+            }
+        }
+
+        return [null, null];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function structuredKeyMatches(array $payload): array
+    {
+        return array_values(array_intersect(array_keys($payload), $this->structuredDraftKeys()));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function requiredPirTier2ReportKeys(): array
+    {
+        return [
+            'cover_letter',
+            'executive_position',
+            'intelligence_dashboard',
+            'intelligence_profile',
+            'stakeholder_intelligence',
+            'evidence_validated_statement',
+            'risk_register',
+            'raid_summary',
+            'root_cause_analysis',
+            'priority_plan',
+            'final_position',
+        ];
     }
 
     private function normaliseAiResponsePayload($responseData): array
@@ -336,7 +539,7 @@ class AdminFullReportGenerationService
             return [];
         }
 
-        foreach (['report', 'snapshot_report_json'] as $key) {
+        foreach (['report'] as $key) {
             if (! array_key_exists($key, $payload)) {
                 continue;
             }

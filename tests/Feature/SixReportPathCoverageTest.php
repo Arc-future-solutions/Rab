@@ -133,7 +133,7 @@ class SixReportPathCoverageTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('admin.assessments.generateReport', $assessment))
             ->assertRedirect(route('admin.assessments.show', $assessment))
-            ->assertSessionHas('success', $framework === 'PIR' && $reportTier === 'Tier 1 Rapid'
+            ->assertSessionHas('success', $framework === 'PIR'
                 ? 'AI report generation started. Refresh this page in a moment.'
                 : 'AI Report generated successfully.');
 
@@ -143,7 +143,7 @@ class SixReportPathCoverageTest extends TestCase
             $aiPayload = $input['ai_payload'];
 
             return $request->url() === 'https://example.test/v1/messages'
-                && (($framework === 'PIR' && $expectedPayloadTier === 'Review') === (($payload['stream'] ?? false) === true))
+                && (($framework === 'PIR') === (($payload['stream'] ?? false) === true))
                 && $payload['system'] === config("ai.prompts.{$expectedPromptKey}")
                 && $input['prompt_key'] === $expectedPromptKey
                 && $input['metadata']['type'] === "{$framework}_FULL"

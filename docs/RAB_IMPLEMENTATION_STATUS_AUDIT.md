@@ -4,6 +4,12 @@
 
 | Date | Task | Status | Files Changed | Tests Run | Result | Remaining Risk |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-05-25 | PIR Tier 2 Runtime Prompt Verification | Complete / assessment `17` ready for controlled retry | `app/Services/AiReportGenerationService.php`, `tests/Feature/AdminGenerateReportPromptTest.php`, `docs/RAB_IMPLEMENTATION_STATUS_AUDIT.md` | `php artisan test --filter=AdminGenerateReportPromptTest`; `php artisan test --filter=AiPromptConfigTest`; `php artisan test --filter=AdminPirTier2BriefingWorkflowTest`; runtime config/cache/assessment checks without Anthropic call | Runtime check confirmed assessment `17` resolves to `prompt_key=pir_full_tier2`, `tier=Briefing`, populated `stakeholder_notes`, streamed queued path, config not cached, prompt hash `a4dc31356de9cb1d`, all canonical keys present, and alternate keys explicitly forbidden; stream-start logs now include prompt key, prompt contract version, short prompt hash, and canonical-key presence without logging prompt text or client data. | Run `php artisan optimize:clear`, `php artisan queue:restart`, and manually restart the queue worker before retrying assessment `17`; PIR Tier 2 still needs successful real Claude retry, admin preview inspection, and real Browsershot PDF proof before functional completion. |
+| 2026-05-25 | PIR Tier 2 Prompt Contract Fix | Complete / ready for assessment `17` retry after worker restart | `config/ai.php`, `docs/RAB_Developer_Final_Build_Guide_v5.md`, `docs/config_ai_prompts.php`, `tests/Feature/AiPromptConfigTest.php`, `tests/Feature/AdminPirTier2BriefingWorkflowTest.php`, `docs/RAB_IMPLEMENTATION_STATUS_AUDIT.md` | `php artisan test --filter=AiPromptConfigTest`; `php artisan test --filter=AdminPirTier2BriefingWorkflowTest`; `php artisan test --filter=AdminPirTier1ReviewWorkflowTest`; `php artisan test --filter=AdminGenerateReportPromptTest`; `php artisan test --filter=SixReportPathCoverageTest` | Active `pir_full_tier2` prompt is now fully expanded and explicitly requires the canonical Briefing JSON top-level keys, rejects alternate `opening` / `overall_position` / `key_themes` / `instruction_to_sponsor` style keys, excludes `tier1_bridge`, and requires `stakeholder_intelligence` plus `evidence_validated_statement`; normaliser rejection behaviour remains unchanged. | Restart/refresh queue worker before retrying assessment `17`; PIR Tier 2 still needs successful real Claude retry, admin preview inspection, and real Browsershot PDF proof before functional completion. |
+| 2026-05-25 | Full-Report vs Snapshot Response Boundary Fix | Complete / ready for assessment `17` retry after worker restart | `app/Services/AiReportGenerationService.php`, `app/Services/AdminFullReportGenerationService.php`, `tests/Feature/AdminPirTier2BriefingWorkflowTest.php`, `docs/RAB_IMPLEMENTATION_STATUS_AUDIT.md` | `php artisan test --filter=AdminPirTier2BriefingWorkflowTest`; `php artisan test --filter=AdminPirTier1ReviewWorkflowTest`; `php artisan test --filter=AdminGenerateReportPromptTest`; `php artisan test --filter=SixReportPathCoverageTest`; `php artisan test --filter=RapidConsultingSecurityTest` | Streamed admin full-report generation now preserves raw assistant text in `output_raw`/`output` and no longer attaches `report` or `snapshot_report_json`; admin full-report storage parses raw full-report text directly, ignores `snapshot_report_json`, rejects snapshot-style keys, and logs source/length diagnostics. | Restart/refresh queue worker before retrying assessment `17`; PIR Tier 2 still needs successful real retry, admin preview inspection, and real Browsershot PDF proof before functional completion. |
+| 2026-05-25 | PIR Tier 2 Stream Output Extraction Debug Fix | Complete / ready for assessment `17` retry | `app/Services/AdminFullReportGenerationService.php`, `app/Services/AiReportGenerationService.php`, `tests/Feature/AdminPirTier2BriefingWorkflowTest.php`, `docs/RAB_IMPLEMENTATION_STATUS_AUDIT.md` | `php artisan test --filter=AdminPirTier2BriefingWorkflowTest`; `php artisan test --filter=AdminPirTier1ReviewWorkflowTest`; `php artisan test --filter=AdminGenerateReportPromptTest`; `php artisan test --filter=SixReportPathCoverageTest` | Streamed wrapper output extraction now scans all balanced JSON objects and prefers candidates with structured report keys, so preliminary metadata JSON before the actual report cannot block storage; assessment `17` failures now write the raw output to private ignored storage and log safe diagnostics only. | Restart/refresh the worker before retrying assessment `17`; if it still fails, inspect the private debug file and safe diagnostics without re-calling Anthropic repeatedly. PIR Tier 2 still needs successful real retry and real PDF proof before functional completion. |
+| 2026-05-25 | PIR Tier 2 Streamed Response Normalisation Fix | Complete / ready for assessment `17` retry | `app/Services/AdminFullReportGenerationService.php`, `app/Services/AiReportGenerationService.php`, `app/Http/Controllers/Admin/AssessmentScoringController.php`, `tests/Feature/AdminPirTier2BriefingWorkflowTest.php`, `docs/RAB_IMPLEMENTATION_STATUS_AUDIT.md` | `php artisan test --filter=AdminPirTier2BriefingWorkflowTest`; `php artisan test --filter=AdminPirTier1ReviewWorkflowTest`; `php artisan test --filter=AdminGenerateReportPromptTest`; `php artisan test --filter=SixReportPathCoverageTest` | Streamed full-report normalisation now parses generated report JSON from wrapper `output`, including raw JSON, fenced JSON, and surrounding text plus JSON object; wrapper metadata keys are not treated as report content; invalid output fails safely without overwriting existing successful report fields; PIR Tier 1 regression remains green. | Assessment `17` still needs retry against Anthropic and real Browsershot PDF export/inspection before PIR Tier 2 can be marked functionally proven. |
+| 2026-05-25 | PIR Tier 2 / Briefing queued streamed implementation | Technical implementation complete / pending real Claude and PDF proof | `app/Http/Controllers/Admin/AssessmentScoringController.php`, `app/Services/AdminFullReportGenerationService.php`, `resources/views/admin/assessments/show.blade.php`, `resources/views/admin/assessments/partials/structured-report-preview.blade.php`, `resources/views/admin/assessments/pdf-report.blade.php`, `tests/Feature/AdminPirTier2BriefingWorkflowTest.php`, `tests/Feature/AdminGenerateReportPromptTest.php`, `tests/Feature/AdminReportPdfExportTest.php`, `tests/Feature/SixReportPathCoverageTest.php`, `docs/RAB_IMPLEMENTATION_STATUS_AUDIT.md` | `php artisan test --filter=AdminPirTier2BriefingWorkflowTest`; `php artisan test --filter=AdminPirTier1ReviewWorkflowTest`; `php artisan test --filter=AdminGenerateReportPromptTest`; `php artisan test --filter=AdminReportPdfExportTest`; `php artisan test --filter=SixReportPathCoverageTest` | PIR Tier 2 now reuses the shared queued `GenerateAdminFullReport` job and streamed Anthropic path; stores `evidence_validated_statement`; renders Stakeholder Intelligence, sponsor/operational positions, divergence areas, governance implication, and evidence validation in admin preview/PDF; focused PIR Tier 2 workflow test proves create, autosave scoring/evidence/stakeholder fields, `pir_full_tier2`, `tier=Briefing`, populated `stakeholder_notes`, streamed fake Claude storage, preview rendering, and fake PDF handoff. | PIR Tier 2 is not functionally proven under the owner standard until real manual Claude generation, stored real `ai_draft_json`, admin preview inspection, and real Browsershot PDF export/inspection are completed. |
 | 2026-05-25 | Commit packaged PIR Tier 1 full-report stabilisation changes | Complete | Full current working tree staged for commit, including queued generation, streamed Anthropic handling, structured preview/PDF fixes, tests, and audit updates | Not rerun during commit packaging; relying on focused runs already recorded below | Prepared the proven PIR Tier 1 stabilisation work for version control with audit status preserved. | Reda/content/design signoff is still required before launch-safe approval; PIR Tier 2, SIR Tier 1, and SIR Tier 2 remain unproven end-to-end. |
 | 2026-05-25 | PIR Tier 1 Manual PDF Export Confirmation | Functionally proven — pending Reda/content/design signoff | `docs/RAB_IMPLEMENTATION_STATUS_AUDIT.md` | Not run; documentation update based on manual assessment `16` PDF export confirmation | Manual PDF export for assessment `16` succeeded after the Risk Heat Map UX fix. Visual inspection confirmed High/Medium/Low risk labels, clear Probability × Impact axes, readable numbered markers, marker-to-risk-title legend, no empty/unreadable grid, required PIR Tier 1 sections present, and a non-blank PDF that opens successfully. | Reda/content/design signoff is still required before calling PIR Tier 1 launch-ready. PIR Tier 2, SIR Tier 1, and SIR Tier 2 remain unproven. |
 | 2026-05-25 | PDF Risk Heat Map UX Fix | Complete / Manually verified on assessment `16` | `resources/views/admin/assessments/pdf-report.blade.php`, `tests/Feature/AdminReportPdfExportTest.php`, `docs/RAB_IMPLEMENTATION_STATUS_AUDIT.md` | `php artisan test --filter=AdminReportPdfExportTest`; `php artisan test --filter=AdminPirTier1ReviewWorkflowTest`; manual PDF export/visual inspection on assessment `16` | PDF Risk Register section now renders a readable `Risk Heat Map — Probability × Impact` block with helper text, full Low/Medium/High labels, numbered risk markers, multi-risk cell support, and a marker-to-risk-title legend; focused tests passed; manual inspection confirmed the downloaded PDF opens, is non-blank, includes required PIR Tier 1 sections, and has a readable heat map. | Reda/content/design signoff is still required; equivalent PDF visual proof is still needed for PIR Tier 2, SIR Tier 1, and SIR Tier 2. |
@@ -638,16 +644,16 @@ Meaning of checklist statuses:
 
 | Workflow item | Status | Evidence / gap |
 | --- | --- | --- |
-| Admin create assessment | Partial | Admin create/store route exists, but no real PIR Tier 2 create-to-report workflow proof exists. |
-| Select framework/tier | Partial | Store validation allows `type=PIR` and `report_tier=Tier 2 Full`; not proven through real UI workflow. |
-| Answer questions | Partial | `score-phi.blade.php` exists; not proven for a complete PIR Tier 2 workflow. |
-| Save scores | Partial | Autosave persists scores and recalculates; not proven through full Tier 2 workflow. |
-| Save evidence fields | Partial | Tier 2 stakeholder divergence fields exist; not proven that all required briefing evidence is captured and saved through the real admin flow. |
-| Build payload | Proven | `AssessmentAiPayloadBuilder` and `SixReportPathCoverageTest` cover PIR Tier 2 framework/tier/payload field selection from saved model data. |
-| Send Claude request | Partial | Fake HTTP coverage proves request shape and `pir_full_tier2` prompt selection; real Claude send is not proven. |
-| Store Claude response | Partial | Fake Claude response storage is covered; real Claude response storage is not proven. |
-| Render report | Partial | PDF template includes Tier 2 stakeholder sections; rendering from a real PIR Tier 2 Claude response is not proven. |
-| Download PDF | Partial | Export route and fake PDF service handoff are covered; actual Browsershot PDF download for PIR Tier 2 is not proven. |
+| Admin create assessment | Partial / automated route proof | `AdminPirTier2BriefingWorkflowTest` creates a PIR Tier 2 assessment through the admin store route; not yet manually proven in the real browser workflow. |
+| Select framework/tier | Partial / automated route proof | Store route test proves `type=PIR` and `report_tier=Tier 2 Full`; not yet manually proven in the real UI workflow. |
+| Answer questions | Partial / automated route proof | `AdminPirTier2BriefingWorkflowTest` saves representative PIR question scores through autosave; not yet manually proven through the browser scoring UI. |
+| Save scores | Partial / automated route proof | Autosave recalculates scores/indices in the focused PIR Tier 2 workflow test; not yet manually proven end-to-end. |
+| Save evidence fields | Partial / automated route proof | Tier 2 global stakeholder fields and per-question `stakeholder_divergence_note` are saved and asserted in `AdminPirTier2BriefingWorkflowTest`; not yet manually proven in the browser. |
+| Build payload | Proven | `AssessmentAiPayloadBuilder`, `SixReportPathCoverageTest`, and `AdminPirTier2BriefingWorkflowTest` cover `tier=Briefing`, `pir_full_tier2`, populated `stakeholder_notes`, and stakeholder divergence evidence from saved model data. |
+| Send Claude request | Partial / fake streamed proof | Fake streamed HTTP coverage proves queued streamed request shape and `pir_full_tier2` prompt selection; real Claude send is not proven. |
+| Store Claude response | Partial / fake streamed proof | Fake streamed Claude response storage is covered, including `stakeholder_intelligence` and `evidence_validated_statement`; real Claude response storage is not proven. |
+| Render report | Partial / fake response proof | Admin preview and PDF template now render Tier 2 stakeholder intelligence and evidence validation from structured fake response data; rendering from a real PIR Tier 2 Claude response is not proven. |
+| Download PDF | Partial / fake service proof | Export route and fake PDF service handoff are covered; actual Browsershot PDF download for PIR Tier 2 is not proven. |
 
 ### SIR Tier 1 / Review Workflow Checklist
 
@@ -740,11 +746,190 @@ Focused test run:
 - `php artisan test --filter=RapidConsultingSecurityTest`: 7 passed, 90 assertions.
 - `php artisan test --filter=SixReportPathCoverageTest`: 10 passed, 86 assertions.
 
+## PIR Tier 2 Streamed Response Normalisation Fix
+
+Date: 2026-05-25
+
+Bug:
+- Assessment `17` (`PIR`, `Tier 2 Full`) successfully received a streamed Anthropic response for `pir_full_tier2`, but storage failed after the stream completed.
+- Logs showed `stream=true`, `stream_event_count=357`, `text_delta_count=347`, and `final_text_length=32503`, followed by `Full assessment AI response missing usable content`.
+- The response wrapper keys were `output`, `provider_response_id`, `prompt_key`, `stream`, and `stream_metadata`; no structured report was stored.
+
+Root cause:
+- The generated report text was inside the wrapper `output` field.
+- Full-report normalisation already checked `output`, but the JSON decoder only accepted exact JSON or a fenced JSON object. If Claude returned surrounding text around the JSON object, extraction failed and the wrapper itself was rejected as metadata-only.
+
+Fix:
+- `AdminFullReportGenerationService` now extracts a balanced JSON object from report text when exact/fenced decoding fails.
+- `AiReportGenerationService` uses the same tolerant extraction before returning decoded report helpers.
+- The legacy synchronous controller normaliser received the same extraction helper to keep shared report parsing behaviour consistent.
+- Wrapper metadata such as `stream_metadata` is still excluded from `ai_draft_json`.
+- Invalid output still marks generation failed and does not overwrite existing successful `ai_draft_json` or `ai_recommendation`.
+
+Focused test run:
+- `php artisan test --filter=AdminPirTier2BriefingWorkflowTest`: 6 passed, 108 assertions.
+- `php artisan test --filter=AdminPirTier1ReviewWorkflowTest`: 2 passed, 146 assertions.
+- `php artisan test --filter=AdminGenerateReportPromptTest`: 9 passed, 55 assertions.
+- `php artisan test --filter=SixReportPathCoverageTest`: 10 passed, 86 assertions.
+
+Status:
+- Assessment `17` can be retried safely.
+- PIR Tier 2 remains pending real retry success, admin preview inspection, and real Browsershot PDF export/inspection before it can be marked functionally proven.
+
+## PIR Tier 2 Stream Output Extraction Debug Fix
+
+Date: 2026-05-25
+
+Bug:
+- Assessment `17` retried successfully through streamed Anthropic transport after the timeout fix.
+- Logs showed `prompt_key=pir_full_tier2`, `stream=true`, `stream_event_count=356`, `text_delta_count=346`, and `final_text_length=33257`.
+- Storage still failed with `Full assessment AI response missing usable content`, and response wrapper keys were only `output`, `provider_response_id`, `prompt_key`, `stream`, and `stream_metadata`.
+
+Root cause:
+- The previous tolerant extractor could still stop on the first balanced JSON object inside the output text.
+- If Claude returned a small preliminary JSON-like object or metadata object before the actual report JSON, the extractor decoded that first object, found no report keys, and never advanced to the later report object.
+
+Fix:
+- Streamed output extraction now scans all balanced JSON objects in the output string and prefers the first candidate containing structured report keys.
+- The AI service decoder also avoids rewriting `output` to a preliminary non-report object when a later report object is present.
+- Failed streamed assessment `17` attempts now write raw output to private ignored storage at `storage/app/private/debug/assessment-17-pir-tier2-stream-output.txt`.
+- Laravel logs include safe diagnostics only: output length, first non-whitespace character, brace/fence presence, direct decode success, balanced extraction success, parsed top-level keys, and found/missing required report keys.
+- Full output is not logged.
+
+Focused test run:
+- `php artisan test --filter=AdminPirTier2BriefingWorkflowTest`: 8 passed, 114 assertions.
+- `php artisan test --filter=AdminPirTier1ReviewWorkflowTest`: 2 passed, 146 assertions.
+- `php artisan test --filter=AdminGenerateReportPromptTest`: 9 passed, 55 assertions.
+- `php artisan test --filter=SixReportPathCoverageTest`: 10 passed, 86 assertions.
+
+Status:
+- Assessment `17` can be retried after restarting/refreshing the worker.
+- If it fails again, inspect the private debug file and safe diagnostic log before making another Anthropic request.
+- PIR Tier 2 remains pending real retry success, admin preview inspection, and real Browsershot PDF export/inspection before it can be marked functionally proven.
+
+## Full-Report vs Snapshot Response Boundary Fix
+
+Date: 2026-05-25
+
+Bug:
+- Assessment `17` streamed successfully with `final_text_length=30868`, but full-report normalisation received only `output_length=1628`.
+- Diagnostics showed parsed keys `opening`, `overall_position`, `primary_concern_statement`, `confidence_statement`, and `scope_statement`.
+- The response wrapper also contained `report` and `snapshot_report_json`, which are snapshot-style helpers and should not be present on an admin full-report streamed response.
+
+Root cause:
+- `AiReportGenerationService::generateStreamed()` decoded the raw streamed assistant text before returning it.
+- When it found a JSON object with snapshot-style keys, it rewrote `output` to that decoded object and attached `report` and `snapshot_report_json`.
+- This reduced the full 30k+ streamed assistant text to a 1.6k snapshot-like object before `AdminFullReportGenerationService` could parse the actual full-report content.
+- Snapshot parsing was therefore leaking into admin full-report generation.
+
+Fix:
+- `AiReportGenerationService::generateStreamed()` now returns raw streamed assistant text unchanged as `output_raw` and `output`.
+- It no longer attaches `report` or `snapshot_report_json` for streamed admin full-report generation.
+- `AdminFullReportGenerationService` now parses raw full-report text directly, prefers `output_raw`, and ignores `snapshot_report_json`.
+- Snapshot-style keys are rejected for PIR Tier 2 full-report generation.
+- Safe diagnostics now include `final_streamed_text_length`, `normalisation_input_length`, and `normalisation_input_source`.
+
+Focused test run:
+- `php artisan test --filter=AdminPirTier2BriefingWorkflowTest`: 11 passed, 126 assertions.
+- `php artisan test --filter=AdminPirTier1ReviewWorkflowTest`: 2 passed, 146 assertions.
+- `php artisan test --filter=AdminGenerateReportPromptTest`: 9 passed, 55 assertions.
+- `php artisan test --filter=SixReportPathCoverageTest`: 10 passed, 86 assertions.
+- `php artisan test --filter=RapidConsultingSecurityTest`: 7 passed, 90 assertions.
+
+Status:
+- Assessment `17` can be retried safely after restarting/refreshing the queue worker.
+- PIR Tier 2 remains pending real retry success, admin preview inspection, and real Browsershot PDF export/inspection before it can be marked functionally proven.
+
+## PIR Tier 2 Prompt Contract Fix
+
+Date: 2026-05-25
+
+Bug:
+- Assessment `17` streamed the full raw assistant output successfully, but normalisation rejected it because the extracted top-level keys were not the canonical PIR Tier 2 full-report keys.
+- Latest diagnostics showed `normalisation_input_source=output_raw`, `normalisation_input_length=30396`, balanced JSON extraction success, and parsed keys such as `opening`, `overall_position`, `key_themes`, and `instruction_to_sponsor`.
+
+Root cause:
+- The streamed transport and full-report/snapshot boundary were working.
+- The active `pir_full_tier2` prompt in `config/ai.php` was only a short delta against `pir_full_tier1` instead of a fully expanded Tier 2 schema contract.
+- Claude treated "Briefing" as a different briefing format and generated alternate top-level keys instead of the app's canonical full-report schema.
+
+Fix:
+- Replaced the active `pir_full_tier2` delta prompt with a fully expanded Programme Intelligence Briefing prompt.
+- The prompt now explicitly says to treat the tier as `Briefing`, return JSON only, use exactly the canonical top-level keys, include `stakeholder_intelligence`, include `evidence_validated_statement`, and omit `tier1_bridge`.
+- The prompt now explicitly says not to use alternate top-level keys such as `opening`, `overall_position`, `key_themes`, or `instruction_to_sponsor`.
+- The app normaliser remains strict and does not silently map alternate schemas.
+
+Canonical PIR Tier 2 keys:
+- `cover_letter`
+- `executive_position`
+- `intelligence_dashboard`
+- `stakeholder_intelligence`
+- `intelligence_profile`
+- `reporting_accuracy_risk_finding`
+- `risk_register`
+- `raid_summary`
+- `root_cause_analysis`
+- `priority_plan`
+- `final_position`
+- `evidence_validated_statement`
+- `compliance_risk_signals`
+
+Focused test run:
+- `php artisan test --filter=AiPromptConfigTest`: 4 passed, 55 assertions.
+- `php artisan test --filter=AdminPirTier2BriefingWorkflowTest`: 11 passed, 126 assertions.
+- `php artisan test --filter=AdminPirTier1ReviewWorkflowTest`: 2 passed, 146 assertions.
+- `php artisan test --filter=AdminGenerateReportPromptTest`: 9 passed, 55 assertions.
+- `php artisan test --filter=SixReportPathCoverageTest`: 10 passed, 86 assertions.
+
+Status:
+- Assessment `17` can be retried safely after restarting/refreshing the queue worker so it loads the new prompt.
+- PIR Tier 2 remains pending real retry success, admin preview inspection, and real Browsershot PDF export/inspection before it can be marked functionally proven.
+
+## PIR Tier 2 Runtime Prompt Verification
+
+Date: 2026-05-25
+
+Scope:
+- Performed final runtime verification before retrying assessment `17`.
+- Did not call Anthropic and did not generate AI insights.
+
+Runtime source:
+- `AssessmentScoringController::generateReport()` resolves the prompt key through `AssessmentAiPayloadBuilder::promptKey()` and reads `config("ai.prompts.{$promptKey}")`.
+- For PIR Tier 1 Rapid and PIR Tier 2 Full, the controller marks generation as `generating` and dispatches the shared `GenerateAdminFullReport` queued job.
+- `AdminFullReportGenerationService::generate()` repeats the same `AssessmentAiPayloadBuilder::promptKey()` and `config("ai.prompts.{$promptKey}")` lookup inside the queued job.
+- No old top-level prompt key is used for admin full-report generation.
+- `php artisan about --only=cache` reported `Config NOT CACHED` and `Routes NOT CACHED`.
+
+Assessment `17` runtime resolution:
+- `type=PIR`
+- `report_tier=Tier 2 Full`
+- `prompt_key=pir_full_tier2`
+- `tier=Briefing`
+- `stakeholder_notes_populated=true`
+- `stream_should_be_true=true`
+- Resolved prompt length: `6593`
+- Resolved prompt fingerprint: `a4dc31356de9cb1d`
+- Canonical key missing list: empty.
+- Alternate terms present only as part of the explicit forbidden-key instruction: `opening`, `overall_position`, `key_themes`, `instruction_to_sponsor`, and `tier1_bridge`.
+
+Safe logging addition:
+- Stream-start logging now includes `prompt_key`, `prompt_contract_version`, short `prompt_hash`, `canonical_prompt_keys_present`, and `canonical_prompt_keys_missing`.
+- It does not log prompt text, payload, client data, evidence notes, or response text.
+
+Focused test run:
+- `php artisan test --filter=AdminGenerateReportPromptTest`: 9 passed, 56 assertions.
+- `php artisan test --filter=AiPromptConfigTest`: 4 passed, 55 assertions.
+- `php artisan test --filter=AdminPirTier2BriefingWorkflowTest`: 11 passed, 126 assertions.
+
+Status:
+- Assessment `17` is safe to retry after `php artisan optimize:clear`, `php artisan queue:restart`, and a manual queue worker restart.
+- PIR Tier 2 remains pending real retry success, admin preview inspection, and real Browsershot PDF export/inspection before it can be marked functionally proven.
+
 ## 13. Critical Blockers
 
-- P0: PIR Tier 2, SIR Tier 1, and SIR Tier 2 full-report paths are not complete under the owner-defined standard. The real admin create-score-evidence-Claude-render-PDF workflow is not proven end-to-end for those three paths.
+- P0: PIR Tier 2, SIR Tier 1, and SIR Tier 2 full-report paths are not complete under the owner-defined standard. PIR Tier 2 now has automated create-score-evidence-stakeholder-fields-queued-streamed-fake-Claude-preview-fake-PDF proof, but the real Claude and real Browsershot PDF workflow is not proven. SIR Tier 1 and SIR Tier 2 remain unproven beyond partial technical coverage.
 - P0: Reda / owner confirmation for Section 0 / Step 8b is not evidenced. Full reports rely on consultant-entered evidence quality and workflow, so client-facing full report generation should not be considered launch-safe. PIR Tier 1 is functionally proven, but still needs Reda/content/design signoff.
-- P1: `SixReportPathCoverageTest` provides useful technical evidence for prompt/payload/request-shape/storage/PDF-service handoff, but it is not full workflow proof because it uses fake Claude responses and fake PDF service handoff. PIR Tier 1 now has separate manual proof on assessment `16`; the limitation still applies to PIR Tier 2, SIR Tier 1, and SIR Tier 2.
+- P1: `SixReportPathCoverageTest` and `AdminPirTier2BriefingWorkflowTest` provide useful technical evidence for prompt/payload/request-shape/storage/preview/PDF-service handoff, but they are not full workflow proof because they use fake Claude responses and fake PDF service handoff. PIR Tier 1 now has separate manual proof on assessment `16`; the limitation still applies to PIR Tier 2, SIR Tier 1, and SIR Tier 2.
 - P1: SIR compliance count from file scan appears to be base 6 + additional 12 = 18, while the guide expects 17 total. This may be a data interpretation issue, but it must be reconciled before final seeding/signoff.
 - P1: Full report PDF footer text differs from the exact guide wording.
 - P2: Top-level snapshot prompts differ from guide-verbatim nested snapshot prompts, while snapshot generation uses top-level prompt keys. This may be intentional strengthened prompt work, but it conflicts with the guide's "paste verbatim into config/ai.php" source-of-truth model.
@@ -756,11 +941,11 @@ Focused test run:
 
 ## 14. Next Safest Action
 
-Status automation is now in place. The current PIR Tier 1 stabilisation work has been packaged for commit; future implementation tasks should update the Implementation Log, Critical Blockers only when blocker status changes, and this Next Safest Action section after each task.
+Status automation is now in place. PIR Tier 2 / Briefing has technical queued streamed implementation coverage, streamed output extraction now prefers report-key JSON candidates, full-report streaming no longer uses snapshot response helpers, the active `pir_full_tier2` prompt now explicitly requires the canonical Briefing JSON schema, and runtime verification confirms assessment `17` resolves to that expanded prompt with hash `a4dc31356de9cb1d`. It is not functionally proven under the owner standard until real Claude retry and real Browsershot PDF proof are completed.
 
-Next safest implementation task: prepare PIR Tier 1 / Review for Reda/content/design signoff using assessment `16` as the proof artifact, including the downloaded PDF, admin preview, structured `ai_draft_json`, and notes on any wording/design concerns.
+Next safest action: restart/refresh the queue worker so it loads the expanded `pir_full_tier2` prompt, retry assessment `17` through the existing queued streamed PIR Tier 2 path, then inspect stored `ai_draft_json`, inspect admin preview, export a real Browsershot PDF, and visually confirm the PDF is non-blank and includes Tier 2 stakeholder intelligence and evidence validation sections. If it fails again, inspect the safe diagnostic log and `storage/app/private/debug/assessment-17-pir-tier2-stream-output.txt` before retrying Anthropic.
 
-Do not mark PIR Tier 2, SIR Tier 1, or SIR Tier 2 complete yet. After PIR Tier 1 signoff preparation, build the same real admin workflow proof for PIR Tier 2 / Briefing, then SIR Tier 1 / Review, then SIR Tier 2 / Briefing: create/select framework and tier, save representative scores/evidence, generate through Claude/queue, assert the stored draft renders, and exercise real Browsershot PDF export.
+Do not mark PIR Tier 2, SIR Tier 1, or SIR Tier 2 complete yet. After PIR Tier 2 real proof, build the same real admin workflow proof for SIR Tier 1 / Review, then SIR Tier 2 / Briefing: create/select framework and tier, save representative scores/evidence, generate through Claude/queue where applicable, assert the stored draft renders, and exercise real Browsershot PDF export.
 
 ## 15. Questions for Reda / Owner
 

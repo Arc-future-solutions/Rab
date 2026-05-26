@@ -3,6 +3,7 @@
     $dashboard = is_array($report['intelligence_dashboard'] ?? null) ? $report['intelligence_dashboard'] : [];
     $overall = is_array($dashboard['overall'] ?? null) ? $dashboard['overall'] : [];
     $indices = is_array($dashboard['indices'] ?? null) ? $dashboard['indices'] : [];
+    $stakeholder = is_array($report['stakeholder_intelligence'] ?? null) ? $report['stakeholder_intelligence'] : null;
     $profile = is_array($report['intelligence_profile'] ?? null) ? $report['intelligence_profile'] : [];
     $riskRegister = is_array($report['risk_register'] ?? null) ? $report['risk_register'] : [];
     $raid = is_array($report['raid_summary'] ?? null) ? $report['raid_summary'] : [];
@@ -219,6 +220,56 @@
         </section>
     @endif
 
+    @if($stakeholder !== null)
+        <section class="bg-white border border-slate-200 shadow-sm p-6">
+            <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Stakeholder Intelligence</h4>
+            @if(!empty($stakeholder['divergence_summary']))
+                <p class="text-sm text-slate-700 leading-7 whitespace-pre-wrap mb-4">{{ $asText($stakeholder['divergence_summary']) }}</p>
+            @endif
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                <div class="bg-blue-50 border border-blue-100 p-4">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-blue-700 mb-1">Sponsor Position</p>
+                    <p class="text-sm text-blue-950 leading-6 whitespace-pre-wrap">{{ $asText($stakeholder['sponsor_position'] ?? $assessment->sponsor_position ?? '') ?: 'Not recorded.' }}</p>
+                </div>
+                <div class="bg-slate-50 border border-slate-100 p-4">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Operational Position</p>
+                    <p class="text-sm text-slate-900 leading-6 whitespace-pre-wrap">{{ $asText($stakeholder['operational_position'] ?? $assessment->operational_position ?? '') ?: 'Not recorded.' }}</p>
+                </div>
+            </div>
+            @if($asList($stakeholder['divergence_areas'] ?? []) !== [])
+                <div class="overflow-x-auto mb-4">
+                    <table class="min-w-full text-sm">
+                        <thead class="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
+                            <tr>
+                                <th class="py-2 pr-4">Area</th>
+                                <th class="py-2 pr-4">Sponsor View</th>
+                                <th class="py-2 pr-4">Operational View</th>
+                                <th class="py-2">Finding</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($stakeholder['divergence_areas'] as $area)
+                                @php $area = is_array($area) ? $area : ['area' => $asText($area)]; @endphp
+                                <tr class="align-top">
+                                    <td class="py-3 pr-4 font-bold text-slate-900">{{ $area['area'] ?? '-' }}</td>
+                                    <td class="py-3 pr-4 text-slate-700">{{ $area['sponsor_view'] ?? '-' }}</td>
+                                    <td class="py-3 pr-4 text-slate-700">{{ $area['operational_view'] ?? '-' }}</td>
+                                    <td class="py-3 text-slate-700">{{ $area['finding'] ?? '-' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+            @if(!empty($stakeholder['governance_implication']))
+                <div class="bg-amber-50 border border-amber-200 p-4">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-amber-700 mb-1">Governance Implication</p>
+                    <p class="text-sm font-bold text-amber-950 leading-6 whitespace-pre-wrap">{{ $asText($stakeholder['governance_implication']) }}</p>
+                </div>
+            @endif
+        </section>
+    @endif
+
     @if($profile !== [])
         <section class="bg-white border border-slate-200 shadow-sm p-6">
             <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Intelligence Profile</h4>
@@ -368,10 +419,17 @@
         </section>
     @endif
 
-    @if(!empty($report['tier1_bridge']))
+    @if($assessment->report_tier !== 'Tier 2 Full' && !empty($report['tier1_bridge']))
         <section class="bg-white border border-slate-200 shadow-sm p-6">
             <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Evidence Gaps / Recommended Deep-Dive</h4>
             <p class="text-sm text-slate-700 leading-7 whitespace-pre-wrap">{{ $asText($report['tier1_bridge']) }}</p>
+        </section>
+    @endif
+
+    @if(array_key_exists('evidence_validated_statement', $report))
+        <section class="bg-white border border-slate-200 shadow-sm p-6">
+            <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Evidence Validated Statement</h4>
+            <p class="text-sm text-slate-700 leading-7 whitespace-pre-wrap">{{ $asText($report['evidence_validated_statement']) ?: 'No evidence validation statement returned.' }}</p>
         </section>
     @endif
 
