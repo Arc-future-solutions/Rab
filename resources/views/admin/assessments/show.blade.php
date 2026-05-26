@@ -26,6 +26,14 @@
         : null;
     $hasStructuredDraft = $fullReportDraft !== null;
     $needsStructuredDraft = !$hasStructuredDraft;
+    $formalAiGenerationStatus = $assessment->ai_generation_status ?: 'idle';
+    $formalAiIsGenerating = $formalAiGenerationStatus === 'generating';
+    $formalAiActionLabel = match (true) {
+        $formalAiIsGenerating => 'Generating...',
+        $formalAiGenerationStatus === 'failed' => 'Retry AI Report Generation',
+        $hasStructuredDraft => 'Regenerate AI Report',
+        default => 'Generate AI Report',
+    };
     $generatedReportPreviewHeading = match (true) {
         $assessment->type === 'PIR' && $assessment->report_tier === 'Tier 2 Full' => 'Generated Programme Intelligence Briefing Preview',
         $assessment->type === 'PIR' => 'Generated Programme Intelligence Review Preview',
@@ -87,15 +95,13 @@
                             <span>Export Report</span>
                         </button>
                     </form>
-                    @if($needsStructuredDraft)
-                        <form action="{{ route('admin.assessments.generateReport', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
-                            @csrf
-                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                <span>{{ $assessment->status === 'completed' ? 'Rebuild AI Insights' : 'Generate AI Insights' }}</span>
-                            </button>
-                        </form>
-                    @endif
+                    <form action="{{ route('admin.assessments.generateReport', $assessment) }}" method="POST" class="flex-1 sm:flex-none">
+                        @csrf
+                        <button type="submit" @disabled($formalAiIsGenerating) class="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <span>{{ $formalAiActionLabel }}</span>
+                        </button>
+                    </form>
                 @endif
                 @if(! $snapshotLead)
                     @if($assessment->status !== 'approved')
@@ -603,12 +609,12 @@
                     <span>Regenerate AI Insights</span>
                 </button>
             </form>
-        @elseif($assessment->overall_score > 0 && ($assessment->status !== 'approved' || $needsStructuredDraft))
+        @elseif($assessment->overall_score > 0 && ($assessment->status !== 'approved' || $needsStructuredDraft || $assessment->ai_generation_status === 'failed'))
             <form action="{{ route('admin.assessments.generateReport', $assessment) }}" method="POST">
                 @csrf
-                <button type="submit" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95">
+                <button type="submit" @disabled($formalAiIsGenerating) class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all active:scale-95">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    <span>{{ $assessment->status === 'completed' ? 'Rebuild AI Insights' : 'Generate AI Insights' }}</span>
+                    <span>{{ $formalAiActionLabel }}</span>
                 </button>
             </form>
         @endif

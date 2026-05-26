@@ -87,9 +87,117 @@ class AdminAssessmentShowTest extends TestCase
         $this->actingAs($admin)
             ->get(route('admin.assessments.show', $assessment))
             ->assertOk()
+            ->assertSee('Generate AI Report')
             ->assertSee(route('admin.assessments.generateReport', $assessment), false)
             ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $assessment->id), false)
+            ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $lead->id), false)
             ->assertDontSee('AI insights can only be regenerated for PIR or SIR snapshot leads.');
+    }
+
+    public function test_formal_completed_pir_tier1_with_ai_draft_shows_regenerate_ai_report_action(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin-formal-tier1-regenerate@example.com',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
+        $lead = $this->snapshotLead(['email' => 'tier1-regenerate@example.com']);
+        $assessment = $this->formalPirTier1Assessment($lead);
+        $assessment->forceFill([
+            'status' => 'completed',
+            'ai_generation_status' => 'completed',
+            'ai_draft_json' => $this->structuredPirTier1Draft(),
+            'ai_recommendation' => json_encode($this->structuredPirTier1Draft()),
+        ])->save();
+
+        $this->actingAs($admin)
+            ->get(route('admin.assessments.show', $assessment))
+            ->assertOk()
+            ->assertSee('Regenerate AI Report')
+            ->assertSee(route('admin.assessments.generateReport', $assessment), false)
+            ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $assessment->id), false)
+            ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $lead->id), false);
+    }
+
+    public function test_formal_completed_pir_tier2_with_ai_draft_shows_regenerate_ai_report_action(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin-formal-tier2-regenerate@example.com',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
+        $lead = $this->snapshotLead(['email' => 'tier2-regenerate@example.com']);
+        $assessment = $this->formalPirTier1Assessment($lead);
+        $assessment->forceFill([
+            'report_tier' => 'Tier 2 Full',
+            'status' => 'completed',
+            'ai_generation_status' => 'completed',
+            'ai_draft_json' => $this->structuredPirTier1Draft(),
+            'ai_recommendation' => json_encode($this->structuredPirTier1Draft()),
+        ])->save();
+
+        $this->actingAs($admin)
+            ->get(route('admin.assessments.show', $assessment))
+            ->assertOk()
+            ->assertSee('Regenerate AI Report')
+            ->assertSee(route('admin.assessments.generateReport', $assessment), false)
+            ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $assessment->id), false)
+            ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $lead->id), false);
+    }
+
+    public function test_formal_failed_assessment_shows_retry_ai_report_generation_action(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin-formal-retry@example.com',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
+        $lead = $this->snapshotLead(['email' => 'formal-retry@example.com']);
+        $assessment = $this->formalPirTier1Assessment($lead);
+        $assessment->forceFill([
+            'ai_generation_status' => 'failed',
+            'ai_generation_error' => 'Claude timed out.',
+        ])->save();
+
+        $this->actingAs($admin)
+            ->get(route('admin.assessments.show', $assessment))
+            ->assertOk()
+            ->assertSee('Retry AI Report Generation')
+            ->assertSee(route('admin.assessments.generateReport', $assessment), false)
+            ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $assessment->id), false)
+            ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $lead->id), false);
+    }
+
+    public function test_formal_generating_assessment_shows_disabled_generating_action(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin-formal-generating@example.com',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
+        $lead = $this->snapshotLead(['email' => 'formal-generating@example.com']);
+        $assessment = $this->formalPirTier1Assessment($lead);
+        $assessment->forceFill([
+            'ai_generation_status' => 'generating',
+        ])->save();
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.assessments.show', $assessment))
+            ->assertOk()
+            ->assertSee('Generating...')
+            ->assertSee(route('admin.assessments.generateReport', $assessment), false)
+            ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $assessment->id), false)
+            ->assertDontSee(route('admin.assessments.regenerateSnapshotAi', $lead->id), false);
+
+        $this->assertStringContainsString('disabled', $response->getContent());
     }
 
     public function test_formal_pir_tier1_generate_action_uses_full_report_generation_route(): void
@@ -223,7 +331,8 @@ class AdminAssessmentShowTest extends TestCase
             ->get(route('admin.assessments.show', $assessment))
             ->assertOk()
             ->assertSee('Assessment Scores &amp; Evidence', false)
-            ->assertSee('Generated PIR Tier 1 Report Preview')
+            ->assertSee('Generated Programme Intelligence Review Preview')
+            ->assertSee('Regenerate AI Report')
             ->assertDontSee('Stored report JSON')
             ->assertSee('Cover Letter')
             ->assertSee('Executive Position')
